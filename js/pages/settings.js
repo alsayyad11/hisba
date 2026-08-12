@@ -84,8 +84,8 @@ function renderPage() {
 
   document.getElementById('btn-change-pw')?.addEventListener('click', async () => { const newPw = document.getElementById('s-new-pw').value; const confirm = document.getElementById('s-confirm-pw').value; let valid = true; if (!validatePassword(newPw)) { showErr('s-pw-err', t('password_min')); valid = false; } else hideErr('s-pw-err'); if (newPw !== confirm) { showErr('s-confirm-err', t('passwords_no_match')); valid = false; } else hideErr('s-confirm-err'); if (!valid) return; const btn = document.getElementById('btn-change-pw'); btn.disabled = true; try { await updatePassword(newPw); toast.success(t('success'), t('saved')); document.getElementById('s-new-pw').value = ''; document.getElementById('s-confirm-pw').value = ''; } catch (err) { toast.error(t('error'), err.message); } btn.disabled = false; });
 
-  document.querySelectorAll('.language-choice').forEach(choice => choice.addEventListener('click', async () => {
-    const nextLanguage = choice.querySelector('input')?.value;
+  document.querySelectorAll('.lang-radio').forEach(radio => radio.addEventListener('change', async () => {
+    const nextLanguage = radio.value;
     if (!nextLanguage || nextLanguage === getLanguage()) return;
     setLanguage(nextLanguage);
     profile.language = nextLanguage;
