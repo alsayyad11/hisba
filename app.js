@@ -267,7 +267,11 @@ async function navigateTo(page, opts = {}) {
   if (!pageLoaders[page]) page = 'dashboard';
 
   currentPage = page;
-  window.location.hash = page;
+  // Keep navigation URLs clean and extension-free.
+  const cleanUrl = page === 'dashboard' ? '/dashboard' : `/${page}`;
+  if (window.location.pathname !== cleanUrl || window.location.hash) {
+    window.history.replaceState({ page }, '', cleanUrl);
+  }
 
   // Update active nav
   document.querySelectorAll('[data-nav]').forEach(el => {
