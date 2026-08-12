@@ -2,7 +2,7 @@
    HISBA — AUTH PAGE
    ============================================================ */
 import { signIn, signUp, resetPassword } from '../services/auth.js';
-import { t, validateEmail, validatePassword, validateRequired, setLanguage, getLanguage, toggleTheme, initTheme, initI18n } from '../utils.js';
+import { t, validateEmail, validatePassword, validateRequired, setLanguage, getLanguage, toggleTheme, initTheme, initI18n } from '../utils.js?v=lang-v5';
 import { toast } from '../toast.js';
 
 let currentView = 'login';
@@ -19,9 +19,8 @@ function renderAuthPage() {
     <div class="auth-page">
       <div class="auth-container">
         <div class="auth-brand">
-          <img class="auth-brand-logo" src="assets/hisba-logo.png" alt="Hisba">
-          <div class="auth-brand-name">حِسبة</div>
-          <div class="auth-brand-tagline" data-i18n="brand_tagline">${t('brand_tagline')}</div>
+          <img class="auth-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="حِسبة | Hisba">
+          <div class="auth-brand-name"><span lang="ar">حِسبة</span><span class="brand-divider" aria-hidden="true">|</span><span lang="en">Hisba</span></div>
         </div>
         <div id="auth-card" class="auth-card animate-scale-in"></div>
         <div id="auth-footer" class="auth-footer"></div>
@@ -35,9 +34,9 @@ function renderAuthPage() {
     </div>
   `;
   document.getElementById('auth-lang-btn').addEventListener('click', () => {
-    const nl = getLanguage().startsWith('ar') ? 'en' : 'ar';
+    const nl = getLanguage().startsWith('ar') ? 'en' : 'ar-eg';
     setLanguage(nl);
-    document.getElementById('auth-lang-btn').textContent = nl === 'ar' ? 'EN' : 'عر';
+    document.getElementById('auth-lang-btn').textContent = nl.startsWith('ar') ? 'EN' : 'ع';
     renderView();
   });
   document.getElementById('auth-theme-btn').addEventListener('click', toggleTheme);
@@ -185,7 +184,7 @@ async function handleLogin(e) {
   setLoading(btn, t('logging_in'));
   try {
     await signIn(email, password);
-    window.location.href = 'index.html';
+    window.location.href = '/dashboard';
   } catch (err) {
     toast.error(t('error'), err.message || t('error'));
     setLoading(btn, t('login'), false);

@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — CATEGORIES PAGE
    ============================================================ */
-import { t, validateRequired, CATEGORY_COLORS, CATEGORY_ICONS, getLanguage, renderIcon } from '../utils.js';
+import { t, validateRequired, CATEGORY_COLORS, CATEGORY_ICONS, getLanguage, renderIcon } from '../utils.js?v=lang-v5';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/data.js';
 import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js';
 import { toast } from '../toast.js';

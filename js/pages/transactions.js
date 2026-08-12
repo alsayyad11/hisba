@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — TRANSACTIONS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon } from '../utils.js';
+import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon } from '../utils.js?v=lang-v5';
 import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getAccounts, getCategories } from '../services/data.js';
 import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js';
 import { toast } from '../toast.js';

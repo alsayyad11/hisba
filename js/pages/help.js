@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — HOW TO USE GUIDE
    ============================================================ */
-import { getLanguage, renderIcon } from '../utils.js';
+import { getLanguage, renderIcon } from '../utils.js?v=lang-v5';
 
 const content = {
   ar: {

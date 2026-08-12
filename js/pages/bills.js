@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — BILLS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, getLanguage } from '../utils.js';
+import { t, formatCurrency, validateRequired, validateAmount, getLanguage } from '../utils.js?v=lang-v5';
 import { getBills, createBill, updateBill, deleteBill, getCategories } from '../services/data.js';
 import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js';
 import { toast } from '../toast.js';
