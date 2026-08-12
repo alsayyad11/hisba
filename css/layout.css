@@ -358,7 +358,7 @@
   .dashboard-grid { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .sidebar {
     position: fixed;
     left: 0;
@@ -996,47 +996,7 @@ html[data-theme="dark"] .sidebar-collapse-toggle:hover {
   color: var(--clr-ink);
 }
 
-@media (max-width: 1024px) {
-  .app-shell.sidebar-collapsed .sidebar {
-    width: 72px !important;
-    min-width: 72px !important;
-    flex-basis: 72px !important;
-  }
-
-  .app-shell.sidebar-collapsed .sidebar-header {
-    padding: var(--sp-xl) var(--sp-xl) var(--sp-lg);
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 0;
-  }
-
-  .app-shell.sidebar-collapsed .sidebar-brand-name,
-  .app-shell.sidebar-collapsed .sidebar-section-label,
-  .app-shell.sidebar-collapsed .sidebar-user-info,
-  .app-shell.sidebar-collapsed .sidebar-user > svg,
-  .app-shell.sidebar-collapsed .nav-item-label {
-    display: initial;
-  }
-
-  .app-shell.sidebar-collapsed .sidebar-nav {
-    padding-inline: var(--sp-md);
-  }
-
-  .app-shell.sidebar-collapsed .nav-item {
-    justify-content: flex-start;
-    padding-inline: 12px;
-  }
-
-  .app-shell.sidebar-collapsed .sidebar-footer {
-    padding-inline: var(--sp-md);
-  }
-
-  .app-shell.sidebar-collapsed .sidebar-user {
-    justify-content: flex-start;
-    padding-inline: var(--sp-md);
-  }
-}
-
+/* The collapsed desktop state intentionally keeps labels hidden. Mobile uses the drawer controls above. */
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
   .sidebar-collapse-toggle,
