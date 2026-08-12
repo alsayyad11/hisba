@@ -933,7 +933,9 @@ body:has(#settings-layout) #settings-layout > .settings-sections > #profile > .c
 }
 
 .app-shell.sidebar-collapsed .sidebar {
-  width: var(--sidebar-collapsed);
+  width: 72px !important;
+  min-width: 72px !important;
+  flex-basis: 72px !important;
 }
 
 .app-shell.sidebar-collapsed .sidebar-header {
