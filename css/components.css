@@ -656,8 +656,9 @@
   font-weight: 700;
   margin-top: auto;
 }
-[data-theme="dark"] .onboarding-step-copy strong { color: var(--clr-ink); }
-[data-theme="dark"] .onboarding-step-copy small { color: var(--clr-body); }
+/* Keep the onboarding copy legible even when global button/text styles load later. */
+html[data-theme="dark"] .onboarding-step-copy strong { color: var(--clr-ink) !important; }
+html[data-theme="dark"] .onboarding-step-copy small { color: var(--clr-body) !important; }
 @media (max-width: 760px) {
   .onboarding-steps { grid-template-columns: 1fr !important; }
   .onboarding-step { min-height: auto; }
