@@ -269,7 +269,7 @@ export const en = {
   theme_system: 'System',
   language_label: 'Language',
   lang_en: 'English',
-  lang_ar: 'Arabic (العربية)',
+  lang_ar: 'Arabic',
   currency_label: 'Default currency',
   export_data: 'Export all data',
   delete_account_action: 'Delete account',

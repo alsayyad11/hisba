@@ -2,7 +2,7 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, toggleTheme, t, getLanguage } from './utils.js?v=lang-v3';
+import { initI18n, initTheme, setLanguage, toggleTheme, t, getLanguage } from './utils.js?v=lang-v5';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
 import { toast } from './toast.js';
 
@@ -43,15 +43,15 @@ async function boot() {
   // Sync stored prefs
   if (currentProfile?.language) setLanguage(currentProfile.language, false);
   // Keep the refreshed light theme as the safe default; only restore an explicit light preference.
-  if (currentProfile?.theme === 'light') import('./utils.js?v=lang-v3').then(u => u.setTheme('light', false));
+  if (currentProfile?.theme === 'light') import('./utils.js?v=lang-v5').then(u => u.setTheme('light', false));
 
   renderShell();
   hideLoadingOverlay();
 
-  // Handle initial route from a clean pathname or legacy hash
+  // Resolve the initial route from the clean pathname; legacy hashes are only a fallback.
   const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
-  const hash = window.location.hash.slice(1);
-  const initialPage = hash.split('?')[0] || (cleanPath && cleanPath !== 'index.html' ? cleanPath : 'dashboard');
+  const legacyHash = window.location.hash.slice(1).split('?')[0];
+  const initialPage = (cleanPath && cleanPath !== 'index.html' ? cleanPath : legacyHash) || 'dashboard';
   await navigateTo(pageLoaders[initialPage] ? initialPage : 'dashboard');
 
   // Listen for navigation events from pages
@@ -76,16 +76,17 @@ async function boot() {
 }
 
 function renderShell() {
+  document.title = 'حِسبة | Hisba';
   const name = currentProfile?.full_name || currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.username || currentUser?.user_metadata?.user_name || currentUser?.email?.split('@')[0] || 'User';
   const initial = name.charAt(0).toUpperCase();
   const avatarMarkup = currentProfile?.avatar_url
-    ? `<img src="${currentProfile.avatar_url}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`
+    ? `<img src="${currentProfile.avatar_url}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`
     : initial;
 
   document.body.innerHTML = `
     <div id="toast-container"></div>
     <div id="loading-overlay" class="loading-overlay hidden">
-      <div class="loading-logo"><img class="hisba-logo-image" src="assets/hisba-logo-gold.png" alt="Hisba"><span class="hisba-logo-wordmark">حِسبة</span><small class="hisba-tagline">يا ترى فلوسي راحت فين؟</small></div>
+      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisba-logo-transparent-gold-final.png" alt="حِسبة | Hisba"><span class="hisba-logo-wordmark"><span class="brand-ar">حِسبة</span><span class="brand-separator"> | </span><span class="brand-en">Hisba</span></span></div>
       <div class="loading-spinner"></div>
     </div>
 
@@ -94,8 +95,8 @@ function renderShell() {
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <a class="sidebar-brand" href="#" data-nav="dashboard">
-            <img class="sidebar-brand-logo" src="assets/hisba-logo-gold.png" alt="Hisba">
-            <span class="sidebar-brand-name">حِسبة</span>
+            <img class="sidebar-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="حِسبة | Hisba">
+            <span class="sidebar-brand-name"><span class="brand-ar">حِسبة</span><span class="brand-separator"> | </span><span class="brand-en">Hisba</span></span>
           </a>
         </div>
 
@@ -233,9 +234,9 @@ function renderShell() {
 
   // Language toggle
   document.getElementById('btn-lang')?.addEventListener('click', () => {
-    const next = getLanguage().startsWith('ar') ? 'en' : 'ar';
+    const next = getLanguage().startsWith('ar') ? 'en' : 'ar-eg';
     setLanguage(next);
-    document.getElementById('btn-lang').textContent = next === 'ar' ? 'EN' : 'عر';
+    document.getElementById('btn-lang').textContent = next.startsWith('ar') ? 'EN' : 'ع';
   });
 
   // User dropdown
@@ -336,7 +337,7 @@ function showLoadingOverlay() {
   const body = document.body;
   body.innerHTML = `
     <div class="loading-overlay">
-      <div class="loading-logo"><img class="hisba-logo-image" src="assets/hisba-logo-gold.png" alt="Hisba"><span class="hisba-logo-wordmark">حِسبة</span><small class="hisba-tagline">يا ترى فلوسي راحت فين؟</small></div>
+      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisba-logo-transparent-gold-final.png" alt="حِسبة | Hisba"><span class="hisba-logo-wordmark"><span class="brand-ar">حِسبة</span><span class="brand-separator"> | </span><span class="brand-en">Hisba</span></span></div>
       <div class="loading-spinner"></div>
     </div>`;
 }

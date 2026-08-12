@@ -2097,3 +2097,28 @@ body:has(#settings-layout) #settings-layout .lang-option.selected { border-color
 
 
 
+
+/* Hisba bilingual brand lockup — keep Arabic and English together beside the logo */
+.sidebar-brand-name,
+.hisba-logo-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+.sidebar-brand-name .brand-ar,
+.hisba-logo-wordmark .brand-ar { font-weight: 800; }
+.sidebar-brand-name .brand-en,
+.hisba-logo-wordmark .brand-en { font-family: var(--font-body); font-weight: 700; letter-spacing: .01em; }
+.brand-separator { opacity: .42; padding-inline: 3px; }
+.hisba-logo-wordmark { font-size: var(--text-xl); }
+.sidebar-brand-name { font-size: var(--text-md); }
+.loading-logo { flex-direction: row !important; flex-wrap: nowrap !important; gap: 10px !important; }
+.loading-logo .hisba-logo-image { width: 64px !important; height: 64px !important; }
+.loading-logo .hisba-tagline { display: none !important; }
+@media (max-width: 640px) {
+  .sidebar-brand-name { font-size: var(--text-sm); }
+  .hisba-logo-wordmark { font-size: var(--text-lg); }
+}
+body:has(.sidebar-brand-name) .hisba-tagline { display: none !important; }
