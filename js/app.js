@@ -2,7 +2,7 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, t, getLanguage } from './utils.js?v=lang-v5';
+import { initI18n, initTheme, setLanguage, t, getLanguage } from './utils.js?v=lang-v5';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
 import { toast } from './toast.js';
 
