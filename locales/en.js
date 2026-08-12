@@ -75,6 +75,16 @@ export const en = {
   this_year: 'This year',
   last_3_months: 'Last 3 months',
   chart_tap_month: 'Tap a month to see details',
+  onboarding_title: 'Start with three simple steps',
+  onboarding_subtitle: 'Set up Hisba once, then recording your daily spending takes a few seconds.',
+  onboarding_step_account: 'Add your first account',
+  onboarding_step_account_sub: 'Choose cash, bank, or card so balances stay accurate.',
+  onboarding_step_transaction: 'Record your first transaction',
+  onboarding_step_transaction_sub: 'Add an income or expense while you still remember it.',
+  onboarding_step_budget: 'Set a monthly budget',
+  onboarding_step_budget_sub: 'Give your spending a clear limit and follow it over time.',
+  onboarding_start: 'Start here',
+  onboarding_continue_transaction: 'Continue to first transaction',
 
   // Transactions
   transactions_title: 'Transactions',
