@@ -998,7 +998,9 @@ html[data-theme="dark"] .sidebar-collapse-toggle:hover {
 
 @media (max-width: 1024px) {
   .app-shell.sidebar-collapsed .sidebar {
-    width: var(--sidebar-width);
+    width: 72px !important;
+    min-width: 72px !important;
+    flex-basis: 72px !important;
   }
 
   .app-shell.sidebar-collapsed .sidebar-header {
