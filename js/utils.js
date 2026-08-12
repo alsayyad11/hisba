@@ -23,7 +23,7 @@ export function setLanguage(lang, save = true) {
   const html = document.documentElement;
   html.lang = currentLocale;
   html.dir  = currentLocale.startsWith('ar') ? 'rtl' : 'ltr';
-  document.title = 'حِسبة | Hisba';
+  document.title = currentLocale.startsWith('ar') ? 'حِسبة' : 'Hisba';
   if (save) localStorage.setItem('Hisba_lang', currentLocale);
 
   // Update all data-i18n elements
