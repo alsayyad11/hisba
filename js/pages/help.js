@@ -39,7 +39,7 @@ const content = {
       ['أهداف التوفير', 'حوّل حاجة نفسك فيها إلى هدف بمبلغ وتقدم واضح، واحتفل بالتقدم حتى لو كان صغيرًا.'],
       ['التقارير', 'قارن الشهور وحلل الفئات وصدّر Excel أو PDF لو محتاج تراجع أو تشارك ملخص مصروفاتك.'],
       ['الإعدادات', 'غيّر اللغة والعملة والمظهر، وراجع بيانات حسابك وتفضيلاتك.'],
-      ['بدون إنترنت', 'سجّل وعدّل بياناتك عادي. مؤشر الاتصال يوضح حالتك، والمزامنة تستأنف عند رجوع الإنترنت.'],
+      ['بدون إنترنت', 'سجّل وعدّل بياناتك عادي. البيانات تفضل محفوظة على جهازك، والمزامنة تستأنف تلقائياً عند رجوع الإنترنت.'],
     ],
     faqTitle: 'أشهر الأسئلة والإجابات',
     faq: [
@@ -94,7 +94,7 @@ const content = {
       ['Savings goals', 'Turn something you want into a target with visible progress, and value every small step.'],
       ['Reports', 'Compare months, analyze categories, and export Excel or PDF reports when needed.'],
       ['Settings', 'Change language, currency, and appearance, and review your account preferences.'],
-      ['Offline mode', 'Add and edit data normally. The connection indicator shows your status and sync resumes when you reconnect.'],
+      ['Offline mode', 'Add and edit data normally. Your data stays saved on the device, and sync resumes automatically when you reconnect.'],
     ],
     faqTitle: 'Frequently asked questions',
     faq: [

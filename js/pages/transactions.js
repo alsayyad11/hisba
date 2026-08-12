@@ -54,6 +54,7 @@ function renderPage() {
       </div>
     </div>
 
+    ${transactions.length ? `
     <!-- Summary Strip -->
     <div style="display:flex;gap:var(--sp-lg);margin-bottom:var(--sp-xl);flex-wrap:wrap;">
       <div class="card" style="flex:1;min-width:160px;padding:var(--sp-lg);">
@@ -75,7 +76,9 @@ function renderPage() {
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${transactions.length}</div>
       </div>
     </div>
+    ` : ''}
 
+    ${transactions.length ? `
     <!-- Filter bar -->
     <div style="display:flex;gap:var(--sp-md);margin-bottom:var(--sp-lg);flex-wrap:wrap;align-items:center;">
       <!-- Type filter -->
@@ -122,6 +125,7 @@ function renderPage() {
         <option value="amount_asc" ${filters.sort === 'amount_asc' ? 'selected' : ''}>${t('sort_amount_low') === 'sort_amount_low' ? (getLanguage().startsWith('ar') ? 'الأقل مبلغاً' : 'Lowest amount') : t('sort_amount_low')}</option>
       </select>
     </div>
+    ` : ''}
 
     <!-- Transactions Table -->
     <div class="card" style="padding:0;overflow:hidden;">
@@ -143,9 +147,9 @@ function renderPage() {
           </table>
         </div>
       ` : `
-        <div class="empty-state">
+        <div class="empty-state first-run-empty-state">
           <div class="empty-state-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-body-mid)" stroke-width="1.5" stroke-linecap="round"><path d="M3 3h18v18H3z" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-primary)" stroke-width="1.5" stroke-linecap="round"><path d="M12 3v18M3 12h18"/></svg>
           </div>
           <p class="empty-state-title">${t('no_transactions')}</p>
           <p class="empty-state-desc">${t('no_transactions_sub')}</p>
@@ -254,7 +258,7 @@ function openAddModal() {
 
 function openTransactionSetupPrompt() {
   const missingAccounts = !accounts.length;
-  const missingCategories = false;
+  const missingCategories = !categories.length;
   createModal({
     id: 'transaction-setup-modal',
     title: t('setup_before_transaction_title'),
@@ -266,9 +270,10 @@ function openTransactionSetupPrompt() {
           <div><strong>${t('account')}</strong><small>${missingAccounts ? t('setup_account_missing') : t('setup_account_ready')}</small></div>
           ${missingAccounts ? '<button class="btn btn-outline btn-sm" id="setup-add-account">' + t('add_account') + '</button>' : ''}
         </div>
-        <div class="setup-check is-ready">
-          <span class="setup-check-icon">${renderIcon('check', 14)}</span>
-          <div><strong>${t('category')}</strong><small>${t('setup_category_ready')}</small></div>
+        <div class="setup-check ${missingCategories ? 'is-missing' : 'is-ready'}">
+          <span class="setup-check-icon">${missingCategories ? '2' : renderIcon('check', 14)}</span>
+          <div><strong>${t('category')}</strong><small>${missingCategories ? t('setup_category_missing') : t('setup_category_ready')}</small></div>
+          ${missingCategories ? '<button class="btn btn-outline btn-sm" id="setup-add-category">' + t('add_category') + '</button>' : ''}
         </div>
       </div>
       <p class="text-caption text-muted" style="margin-top:var(--sp-lg);">${t('setup_before_transaction_note')}</p>
@@ -296,6 +301,7 @@ function openEditModal(id) {
 
 function buildTxModal(tx) {
   const isEdit = !!tx;
+  const isFirstTransaction = !tx && transactions.length === 0;
   const expenseCats = categories.filter(c => c.type === 'expense' || !c.type);
   const incomeCats = categories.filter(c => c.type === 'income');
 
@@ -359,6 +365,7 @@ function buildTxModal(tx) {
           <div class="form-error hidden" id="tx-account-err"></div>
         </div>
       </div>
+      ${isFirstTransaction ? '' : `
       <div class="form-group">
         <label class="form-label">${t('status')}</label>
         <select class="form-select" id="tx-status">
@@ -387,7 +394,7 @@ function buildTxModal(tx) {
             <option value="yearly" ${tx?.frequency === 'yearly' ? 'selected' : ''}>${t('yearly')}</option>
           </select>
         </div>
-      </div>
+      </div>`}
     `,
     footerButtons: [
       `<button class="btn btn-outline" id="tx-cancel">${t('cancel')}</button>`,
@@ -421,7 +428,8 @@ function buildTxModal(tx) {
 
   // Recurring toggle
   document.getElementById('tx-recurring')?.addEventListener('change', (e) => {
-    document.getElementById('recurring-options').style.display = e.target.checked ? '' : 'none';
+    const recurringOptions = document.getElementById('recurring-options');
+    if (recurringOptions) recurringOptions.style.display = e.target.checked ? '' : 'none';
   });
 
   document.getElementById('tx-cancel')?.addEventListener('click', () => closeModal('tx-modal'));
@@ -435,9 +443,9 @@ async function saveTx(isEdit) {
   const description = document.getElementById('tx-description').value.trim();
   const category_id = document.getElementById('tx-category').value;
   const account_id = document.getElementById('tx-account').value;
-  const status = document.getElementById('tx-status').value;
-  const notes = document.getElementById('tx-notes').value.trim();
-  const is_recurring = document.getElementById('tx-recurring').checked;
+  const status = document.getElementById('tx-status')?.value || 'completed';
+  const notes = document.getElementById('tx-notes')?.value.trim() || '';
+  const is_recurring = document.getElementById('tx-recurring')?.checked || false;
   const frequency = document.getElementById('tx-frequency')?.value;
 
   let valid = true;
