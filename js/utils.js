@@ -23,6 +23,7 @@ export function setLanguage(lang, save = true) {
   const html = document.documentElement;
   html.lang = currentLocale;
   html.dir  = currentLocale.startsWith('ar') ? 'rtl' : 'ltr';
+  document.title = 'حِسبة | Hisba';
   if (save) localStorage.setItem('Hisba_lang', currentLocale);
 
   // Update all data-i18n elements
@@ -44,7 +45,8 @@ export function setLanguage(lang, save = true) {
 
 export function t(key, vars = {}) {
   const locale = locales[currentLocale] || en;
-  let str = locale[key] || ar[key] || en[key] || key;
+  // Never fall back to another language: a missing key must remain visible as its key, not mixed copy.
+  let str = locale[key] ?? key;
   Object.entries(vars).forEach(([k, v]) => {
     str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
   });
