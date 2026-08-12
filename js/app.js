@@ -16,7 +16,7 @@ const pageLoaders = {
   reports:      () => import('./pages/reports.js?v=lang-v4'),
   categories:   () => import('./pages/categories.js?v=lang-v4'),
   bills:        () => import('./pages/bills.js?v=lang-v4'),
-  settings:     () => import('./pages/settings.js?v=preferences-v1'),
+  settings:     () => import('./pages/settings.js?v=preferences-v2'),
   help:         () => import('./pages/help.js?v=lang-v4'),
 };
 
