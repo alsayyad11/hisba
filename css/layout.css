@@ -10,11 +10,25 @@
   background: var(--clr-canvas);
 }
 
+/* ── Shared chrome canvas ───────────────────────────────────
+   The shell, sidebar, topbar, and scrollable page canvas must read
+   as one continuous surface. Cards remain elevated via their own
+   surface tokens in components.css / figma-parity.css. */
+.app-shell,
+.main-wrapper,
+.content-area,
+.sidebar,
+.sidebar-header,
+.sidebar-footer,
+.topbar {
+  background-color: var(--clr-canvas);
+}
+
 /* ── Sidebar ─────────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-width);
   height: 100vh;
-  background: var(--clr-canvas-soft);
+  background: var(--clr-canvas);
   border-right: 1px solid var(--clr-border);
   display: flex;
   flex-direction: column;
