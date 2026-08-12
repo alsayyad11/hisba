@@ -73,6 +73,7 @@ function render() {
   if (!el) return;
 
   const { totalBalance = 0, income = 0, expenses = 0, net = 0 } = summaryData;
+  const isFirstRun = !quickAccounts.length && !recentTx.length && !budgets.length;
 
   el.innerHTML = `
     <div class="page-header">
@@ -87,6 +88,33 @@ function render() {
         </button>
       </div>
     </div>
+
+    ${isFirstRun ? `
+      <section class="card onboarding-card" aria-labelledby="onboarding-title" style="margin-bottom:var(--sp-xl);">
+        <div class="card-header" style="align-items:flex-start;">
+          <div>
+            <h2 class="card-title" id="onboarding-title">${t('onboarding_title')}</h2>
+            <p class="text-caption text-muted" style="margin-top:var(--sp-xs);max-width:620px;">${t('onboarding_subtitle')}</p>
+          </div>
+          <span class="badge badge-primary">1 / 3</span>
+        </div>
+        <div class="onboarding-steps" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-md);">
+          <button class="onboarding-step" id="onboarding-add-account" type="button">
+            <span class="onboarding-step-number">1</span>
+            <span class="onboarding-step-copy"><strong>${t('onboarding_step_account')}</strong><small>${t('onboarding_step_account_sub')}</small></span>
+            <span class="onboarding-step-cta">${t('onboarding_start')}</span>
+          </button>
+          <button class="onboarding-step" id="onboarding-add-transaction" type="button">
+            <span class="onboarding-step-number">2</span>
+            <span class="onboarding-step-copy"><strong>${t('onboarding_step_transaction')}</strong><small>${t('onboarding_step_transaction_sub')}</small></span>
+          </button>
+          <button class="onboarding-step" id="onboarding-add-budget" type="button">
+            <span class="onboarding-step-number">3</span>
+            <span class="onboarding-step-copy"><strong>${t('onboarding_step_budget')}</strong><small>${t('onboarding_step_budget_sub')}</small></span>
+          </button>
+        </div>
+      </section>
+    ` : ''}
 
     <!-- Stats grid -->
     <div class="stats-grid">
@@ -227,6 +255,13 @@ function render() {
 
   // Wire up navigation buttons
   document.getElementById('btn-add-tx')?.addEventListener('click', openQuickAddModal);
+  document.getElementById('onboarding-add-account')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'accounts', returnTo: 'transactions', returnAction: 'add' } }));
+  });
+  document.getElementById('onboarding-add-transaction')?.addEventListener('click', openQuickAddModal);
+  document.getElementById('onboarding-add-budget')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'budgets' } }));
+  });
   document.getElementById('btn-view-all-tx')?.addEventListener('click', () => {
     window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'transactions' } }));
   });

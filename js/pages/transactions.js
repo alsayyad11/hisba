@@ -279,7 +279,7 @@ function openTransactionSetupPrompt() {
   document.getElementById('setup-close')?.addEventListener('click', () => closeModal('transaction-setup-modal'));
   document.getElementById('setup-add-account')?.addEventListener('click', () => {
     closeModal('transaction-setup-modal');
-    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'accounts' } }));
+    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'accounts', returnTo: 'transactions', returnAction: 'add' } }));
   });
   document.getElementById('setup-add-category')?.addEventListener('click', () => {
     closeModal('transaction-setup-modal');

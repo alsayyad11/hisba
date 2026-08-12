@@ -9,13 +9,17 @@ import { toast } from '../toast.js';
 let userId, userCurrency = 'USD';
 let accounts = [];
 let editingAcc = null;
+let returnTo = null;
+let returnAction = null;
 
 const ACCOUNT_TYPES = ['checking', 'savings', 'cash', 'credit', 'investment'];
 const TYPE_ICONS = { checking: 'wallet', savings: 'wallet', cash: 'wallet', credit: 'wallet', investment: 'chart' };
 
-export async function initAccounts(uid, profile) {
+export async function initAccounts(uid, profile, opts = {}) {
   userId = uid;
   userCurrency = profile?.currency || 'USD';
+  returnTo = opts.returnTo || null;
+  returnAction = opts.returnAction || null;
   accounts = await getAccounts(userId).catch(() => []);
   renderPage();
 }
@@ -195,8 +199,15 @@ function buildModal(acc) {
       if (isEdit) { await updateAccount(acc.id, userId, payload); toast.success(t('success'), t('updated')); }
       else        { await createAccount(userId, payload); toast.success(t('success'), t('added')); }
       closeModal('acc-modal');
+      const wasFirstAccount = !isEdit && accounts.length === 0;
       accounts = await getAccounts(userId);
       renderPage();
+      if (wasFirstAccount && returnTo === 'transactions') {
+        const nextAction = returnAction || 'add';
+        returnTo = null;
+        returnAction = null;
+        window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'transactions', action: nextAction } }));
+      }
     } catch (err) {
       toast.error(t('error'), err.message);
       btn.disabled = false; btn.textContent = isEdit ? t('save') : t('add');
