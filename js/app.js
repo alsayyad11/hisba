@@ -2,7 +2,7 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, toggleTheme, t, getLanguage } from './utils.js?v=lang-v5';
+import { initI18n, initTheme, t, getLanguage } from './utils.js?v=lang-v5';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
 import { toast } from './toast.js';
 
@@ -156,11 +156,6 @@ function renderShell() {
           </button>
           <div class="topbar-title" id="topbar-title">${t('nav_dashboard')}</div>
           <div class="topbar-actions">
-            <span class="connection-status is-online" id="connection-status" role="status" aria-live="polite"><span class="connection-dot"></span><span class="connection-label">${navigator.onLine ? t('online') : t('offline')}</span></span>
-            <button class="topbar-action-btn" id="btn-theme" title="${t('toggle_theme')}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            </button>
-            <button class="topbar-lang-btn" id="btn-lang">${getLanguage().startsWith('ar') ? 'EN' : 'عر'}</button>
             <div class="dropdown" id="user-dropdown">
               <button class="topbar-action-btn" id="user-menu-btn" aria-haspopup="true">
                 <div class="avatar avatar-sm">${avatarMarkup}</div>
@@ -225,29 +220,7 @@ function renderShell() {
   document.getElementById('sidebar-overlay')?.addEventListener('click', closeSidebar);
   syncSidebarControls();
 
-  // Connectivity indicator: data is saved locally first and syncs when online.
-  const updateConnectivityStatus = () => {
-    const el = document.getElementById('connection-status');
-    if (!el) return;
-    const online = navigator.onLine;
-    el.classList.toggle('is-online', online);
-    el.classList.toggle('is-offline', !online);
-    const label = el.querySelector('.connection-label');
-    if (label) label.textContent = t(online ? 'online' : 'offline');
-  };
-  window.addEventListener('online', updateConnectivityStatus);
-  window.addEventListener('offline', updateConnectivityStatus);
-  updateConnectivityStatus();
-
-  // Theme toggle
-  document.getElementById('btn-theme')?.addEventListener('click', toggleTheme);
-
-  // Language toggle
-  document.getElementById('btn-lang')?.addEventListener('click', () => {
-    const next = getLanguage().startsWith('ar') ? 'en' : 'ar-eg';
-    setLanguage(next);
-    document.getElementById('btn-lang').textContent = next.startsWith('ar') ? 'EN' : 'ع';
-  });
+  // Connectivity, theme, and language are managed from Settings only.
 
   // User dropdown
   const userMenuBtn = document.getElementById('user-menu-btn');

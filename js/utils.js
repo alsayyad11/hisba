@@ -60,9 +60,8 @@ export function isRTL() { return currentLocale.startsWith('ar'); }
 let currentTheme = 'light';
 
 export function initTheme() {
-  // Hisba opens with the calm neutral light palette. The theme toggle remains
-  // available for users who explicitly want dark mode during the current session.
-  setTheme('light', false);
+  const saved = localStorage.getItem('Hisba_theme');
+  setTheme(saved === 'dark' ? 'dark' : 'light', false);
 }
 
 export function setTheme(theme, save = true) {
@@ -269,6 +268,8 @@ const ICON_PATHS = {
   check: '<path d="m5 12 4 4L19 6"/>',
   user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.5 3.1-5.5 7-5.5s6.2 2 7 5.5"/>',
   'alert-triangle': '<path d="m12 3 9 17H3Z"/><path d="M12 9v4M12 17h.01"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
 };
 const ICON_ALIASES = {'🏠':'home','🚗':'car','✈️':'plane','🎓':'school','💍':'star','📱':'phone','💻':'laptop','🏖️':'plane','🛒':'cart','💊':'health','🎉':'star','💰':'wallet','🍔':'food','🚌':'car','🛍️':'shop','🎬':'entertainment','⚡':'bolt','📚':'book','👔':'shop','💅':'star','🐾':'goal','🎁':'gift','🛡️':'goal','🌐':'chart','☕':'coffee','⚽':'goal','🍽️':'food','📈':'chart','🏢':'home','💵':'wallet','📦':'package','🎯':'target','🎪':'star','🎭':'entertainment','🎮':'entertainment','🎨':'star','🏋️':'goal','🧘':'goal','🎵':'entertainment','📷':'phone','🛻':'car','⛽':'bolt','🔧':'bolt','🏥':'health','🎈':'star'};
 export function icon(name = 'package', size = 20, className = 'hisba-icon') {
