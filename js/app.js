@@ -48,10 +48,10 @@ async function boot() {
   renderShell();
   hideLoadingOverlay();
 
-  // Handle initial route from a clean pathname or legacy hash
+  // Resolve the initial route from the clean pathname; legacy hashes are only a fallback.
   const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
-  const hash = window.location.hash.slice(1);
-  const initialPage = hash.split('?')[0] || (cleanPath && cleanPath !== 'index.html' ? cleanPath : 'dashboard');
+  const legacyHash = window.location.hash.slice(1).split('?')[0];
+  const initialPage = (cleanPath && cleanPath !== 'index.html' ? cleanPath : legacyHash) || 'dashboard';
   await navigateTo(pageLoaders[initialPage] ? initialPage : 'dashboard');
 
   // Listen for navigation events from pages
