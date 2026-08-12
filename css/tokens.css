@@ -1,0 +1,214 @@
+/* ============================================================
+   HISBA — Semantic design tokens
+   Arabic-first finance UI | Light/Dark parity
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Accent roles */
+  --clr-primary: #176b73;
+  --clr-primary-hover: #12545b;
+  --clr-on-primary: #ffffff;
+  --clr-primary-subtle: #e4f0f0;
+  --clr-secondary: #6B6B6B;
+  --clr-secondary-hover: #4F4F4F;
+  --clr-on-secondary: #ffffff;
+  --clr-secondary-subtle: #E8E8E8;
+  --clr-tertiary: #8A8A8A;
+  --clr-tertiary-subtle: #EEEEEE;
+  --clr-account-color: var(--clr-primary);
+  --clr-accent: var(--clr-secondary);
+
+  /* Surface roles: canvas → surface → raised */
+  --clr-canvas: #f7f4ee;
+  --clr-canvas-soft: #fbfaf7;
+  --clr-canvas-raised: #ffffff;
+  --clr-surface-container-low: #f4f1eb;
+  --clr-surface-container: #eeeae3;
+  --clr-surface-container-high: #e8e4dc;
+  --clr-surface: var(--clr-canvas-raised);
+  --clr-surface-alt: var(--clr-canvas-soft);
+
+  /* Content roles */
+  --clr-ink: #1d2430;
+  --clr-ink-soft: #303a49;
+  --clr-ink-mid: #596575;
+  --clr-body: #596575;
+  --clr-body-mid: #738093;
+  --clr-mute: #8d98a6;
+  --clr-on-surface-variant: #596575;
+  --clr-ink-muted: #738093;
+
+  /* Status roles */
+  --clr-success: #16805a;
+  --clr-success-bg: #e1f3eb;
+  --clr-warning: #586b73;
+  --clr-warning-bg: #e8eef0;
+  --clr-error: #b63848;
+  --clr-error-bg: #fde8eb;
+  --clr-info: #666666;
+  --clr-info-bg: #EAEAEA;
+
+  /* Outline roles */
+  --clr-border: #dedbd4;
+  --clr-border-strong: #c8c5bd;
+  --clr-border-ink: #9da5af;
+  --clr-focus: #176b73;
+
+  /* Supporting palette */
+  --clr-pink: #777777;
+  --clr-teal: #777777;
+  --clr-lavender: #777777;
+  --clr-peach: #d98261;
+  --clr-ochre: #586b73;
+  --clr-mint: #888888;
+  --clr-coral: #777777;
+
+  /* Typography — one family for UI, one opt-in family for financial values */
+  --font-display: 'Cairo', system-ui, sans-serif;
+  --font-body: 'Cairo', system-ui, sans-serif;
+  --font-numeric: 'IBM Plex Sans Arabic', 'Cairo', system-ui, sans-serif;
+  --font-icon: inherit;
+
+  /* Type scale: display → headings → body → labels → captions */
+  --text-3xl: 2.25rem;
+  --text-2xl: 1.75rem;
+  --text-xl: 1.35rem;
+  --text-lg: 1.125rem;
+  --text-md: 1rem;
+  --text-sm: .9375rem;
+  --text-xs: .8125rem;
+  --text-2xs: .75rem;
+  --text-display: var(--text-3xl);
+  --text-h1: var(--text-2xl);
+  --text-h2: var(--text-xl);
+  --text-h3: var(--text-lg);
+  --text-body: var(--text-md);
+  --text-body-sm: var(--text-sm);
+  --text-label: var(--text-xs);
+  --text-caption: var(--text-2xs);
+  --lh-tight: 1.2;
+  --lh-heading: 1.35;
+  --lh-body: 1.7;
+  --lh-label: 1.45;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+
+  /* Spacing and shape */
+  --sp-xxs: 4px;
+  --sp-xs: 8px;
+  --sp-sm: 12px;
+  --sp-md: 16px;
+  --sp-lg: 20px;
+  --sp-xl: 28px;
+  --sp-2xl: 40px;
+  --sp-3xl: 56px;
+  --sp-4xl: 80px;
+  --radius-none: 0;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 9999px;
+
+  /* Elevation and layout */
+  --shadow-sm: 0 1px 2px rgba(29,36,48,.05);
+  --shadow-md: 0 6px 18px rgba(29,36,48,.08);
+  --shadow-lg: 0 14px 34px rgba(29,36,48,.11);
+  --shadow-xl: 0 22px 52px rgba(29,36,48,.14);
+  --sidebar-width: 248px;
+  --sidebar-collapsed: 72px;
+  --topbar-height: 72px;
+  --content-max-width: 1240px;
+  --bar-height: 72px;
+  --transition-fast: 150ms ease-out;
+  --transition-base: 220ms ease-out;
+  --transition-slow: 320ms ease-out;
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+[data-theme="dark"] {
+  /* The role map stays identical; values change only for low-light surfaces. */
+  --clr-primary: #65b7bd;
+  --clr-primary-hover: #8bd1d4;
+  --clr-on-primary: #102326;
+  --clr-primary-subtle: #203b3e;
+  --clr-secondary: #BDBDBD;
+  --clr-secondary-hover: #D6D6D6;
+  --clr-on-secondary: #1A1A1A;
+  --clr-secondary-subtle: #303030;
+  --clr-tertiary: #AFAFAF;
+  --clr-tertiary-subtle: #353535;
+  --clr-account-color: var(--clr-primary);
+  --clr-accent: var(--clr-secondary);
+
+  --clr-canvas: #11151b;
+  --clr-canvas-soft: #171d25;
+  --clr-canvas-raised: #202934;
+  --clr-surface-container-low: #1a222b;
+  --clr-surface-container: #202934;
+  --clr-surface-container-high: #28333f;
+  --clr-surface: var(--clr-canvas-raised);
+  --clr-surface-alt: var(--clr-canvas-soft);
+
+  --clr-ink: #f5f7fa;
+  --clr-ink-soft: #e6ebf0;
+  --clr-ink-mid: #c0cad4;
+  --clr-body: #b7c1cb;
+  --clr-body-mid: #9aa7b4;
+  --clr-mute: #7d8a98;
+  --clr-on-surface-variant: #b7c1cb;
+  --clr-ink-muted: #9aa7b4;
+
+  --clr-success: #5ed1a3;
+  --clr-success-bg: #173a31;
+  --clr-warning: #9db6bd;
+  --clr-warning-bg: #26363a;
+  --clr-error: #ff98a1;
+  --clr-error-bg: #48232b;
+  --clr-info: #BDBDBD;
+  --clr-info-bg: #303030;
+
+  --clr-border: #303b47;
+  --clr-border-strong: #455360;
+  --clr-border-ink: #718090;
+  --clr-focus: #65b7bd;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.24);
+  --shadow-md: 0 7px 20px rgba(0,0,0,.28);
+  --shadow-lg: 0 16px 38px rgba(0,0,0,.34);
+  --shadow-xl: 0 24px 58px rgba(0,0,0,.42);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --text-3xl: 2rem;
+    --text-2xl: 1.5rem;
+    --text-xl: 1.25rem;
+    --text-lg: 1.0625rem;
+    --text-md: .9375rem;
+    --text-sm: .875rem;
+    --sp-2xl: 28px;
+    --sp-xl: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+[data-theme="dark"] ::selection { background: var(--clr-primary-subtle); color: var(--clr-ink); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--clr-border-strong); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: var(--clr-body-mid); }
