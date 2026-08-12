@@ -339,7 +339,7 @@ function toggleSidebar() {
 }
 
 function toggleSidebarCollapse() {
-  if (window.matchMedia('(max-width: 1024px)').matches) {
+  if (window.matchMedia('(max-width: 768px)').matches) {
     toggleSidebar();
     return;
   }
