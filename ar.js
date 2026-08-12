@@ -73,6 +73,16 @@ export const ar = {
   this_year: 'هذا العام',
   last_3_months: 'آخر 3 أشهر',
   chart_tap_month: 'اضغط على أي شهر لعرض التفاصيل',
+  onboarding_title: 'ابدأ بثلاث خطوات بسيطة',
+  onboarding_subtitle: 'أعدّ حِسبة مرة واحدة، ثم سجّل مصروفاتك اليومية خلال ثوانٍ.',
+  onboarding_step_account: 'أضف حسابك الأول',
+  onboarding_step_account_sub: 'اختر نقداً أو حساباً بنكياً أو بطاقة للحفاظ على دقة الأرصدة.',
+  onboarding_step_transaction: 'سجّل أول معاملة',
+  onboarding_step_transaction_sub: 'أضف دخلاً أو مصروفاً ما دمت تتذكره.',
+  onboarding_step_budget: 'حدّد ميزانية شهرية',
+  onboarding_step_budget_sub: 'ضع حداً واضحاً لإنفاقك وتابعه مع الوقت.',
+  onboarding_start: 'ابدأ من هنا',
+  onboarding_continue_transaction: 'تابع إلى تسجيل أول معاملة',
 
   // Transactions
   transactions_title: 'المعاملات',
