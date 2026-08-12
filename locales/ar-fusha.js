@@ -35,7 +35,7 @@ export const arFusha = {
   onboarding_step_budget_sub: 'ضع حداً واضحاً لإنفاقك وتابعه مع الوقت.',
   onboarding_start: 'ابدأ من هنا',
   onboarding_continue_transaction: 'تابع إلى تسجيل أول معاملة',
-  setup_before_transaction_title: 'لنجهّز الأساس أولاً',
+  setup_before_transaction_title: 'لنُعِدَّ الأساسيات أولاً',
   setup_before_transaction_desc: 'قبل تسجيل أول معاملة، أضف الحساب والتصنيف اللذين ستستخدمهما لضمان ظهور الرصيد والتقارير بصورة صحيحة.',
   setup_account_missing: 'أضف حساباً نقدياً أو بنكياً أو بطاقة لتسجيل المعاملة وتحديث الرصيد تلقائياً.',
   setup_category_missing: 'أضف تصنيفاً يساعدك على معرفة أوجه إنفاق أموالك.',
