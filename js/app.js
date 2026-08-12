@@ -33,7 +33,7 @@ async function boot() {
 
   const session = await getSession();
   if (!session) {
-    window.location.href = 'login.html';
+    window.location.href = '/login';
     return;
   }
 
@@ -48,9 +48,11 @@ async function boot() {
   renderShell();
   hideLoadingOverlay();
 
-  // Handle initial route from hash
-  const hash = window.location.hash.slice(1) || 'dashboard';
-  await navigateTo(hash.split('?')[0] || 'dashboard');
+  // Handle initial route from a clean pathname or legacy hash
+  const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  const hash = window.location.hash.slice(1);
+  const initialPage = hash.split('?')[0] || (cleanPath && cleanPath !== 'index.html' ? cleanPath : 'dashboard');
+  await navigateTo(pageLoaders[initialPage] ? initialPage : 'dashboard');
 
   // Listen for navigation events from pages
   window.addEventListener('navigate', e => {
@@ -69,7 +71,7 @@ async function boot() {
 
   // Auth state changes
   onAuthChange((event, session) => {
-    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
+    if (event === 'SIGNED_OUT') window.location.href = '/login';
   });
 }
 
@@ -257,7 +259,7 @@ function renderShell() {
   // Logout
   document.getElementById('btn-logout')?.addEventListener('click', async () => {
     await signOut().catch(() => {});
-    window.location.href = 'login.html';
+    window.location.href = '/login';
   });
 }
 
@@ -265,7 +267,11 @@ async function navigateTo(page, opts = {}) {
   if (!pageLoaders[page]) page = 'dashboard';
 
   currentPage = page;
-  window.location.hash = page;
+  // Keep navigation URLs clean and extension-free.
+  const cleanUrl = page === 'dashboard' ? '/dashboard' : `/${page}`;
+  if (window.location.pathname !== cleanUrl || window.location.hash) {
+    window.history.replaceState({ page }, '', cleanUrl);
+  }
 
   // Update active nav
   document.querySelectorAll('[data-nav]').forEach(el => {
@@ -361,7 +367,7 @@ function settingsIcon(){ return `<circle cx="12" cy="12" r="3"/><path d="M19.4 1
 // Boot!
 boot().catch(err => {
   console.error('Boot failed:', err);
-  document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;font-family:system-ui;"><div><h2>Something went wrong</h2><p>${err.message}</p><a href="login.html">Back to login</a></div></div>`;
+  document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;font-family:system-ui;"><div><h2>Something went wrong</h2><p>${err.message}</p><a href="/login">Back to login</a></div></div>`;
 });
 
 function catIcon()   { return `<tag><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></tag>`.replace(/tag/g,''); }
