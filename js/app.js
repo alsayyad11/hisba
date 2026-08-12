@@ -8,16 +8,16 @@ import { toast } from './toast.js';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=lang-v3'),
-  transactions: () => import('./pages/transactions.js?v=lang-v3'),
-  accounts:     () => import('./pages/accounts.js?v=lang-v3'),
-  budgets:      () => import('./pages/budgets.js?v=lang-v3'),
-  goals:        () => import('./pages/goals.js?v=lang-v3'),
-  reports:      () => import('./pages/reports.js?v=lang-v3'),
-  categories:   () => import('./pages/categories.js?v=lang-v3'),
-  bills:        () => import('./pages/bills.js?v=lang-v3'),
-  settings:     () => import('./pages/settings.js?v=lang-v4'),
-  help:         () => import('./pages/help.js?v=lang-v3'),
+  dashboard:    () => import('./pages/dashboard.js?v=lang-v4'),
+  transactions: () => import('./pages/transactions.js?v=lang-v4'),
+  accounts:     () => import('./pages/accounts.js?v=lang-v4'),
+  budgets:      () => import('./pages/budgets.js?v=lang-v4'),
+  goals:        () => import('./pages/goals.js?v=lang-v4'),
+  reports:      () => import('./pages/reports.js?v=lang-v4'),
+  categories:   () => import('./pages/categories.js?v=lang-v4'),
+  bills:        () => import('./pages/bills.js?v=lang-v4'),
+  settings:     () => import('./pages/settings.js?v=lang-v5'),
+  help:         () => import('./pages/help.js?v=lang-v4'),
 };
 
 let currentUser = null;
