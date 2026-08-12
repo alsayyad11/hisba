@@ -6,6 +6,7 @@ import { t, validateEmail, validatePassword, validateRequired, setLanguage, getL
 import { toast } from '../toast.js';
 
 let currentView = 'login';
+let signupConfirmationEmail = '';
 
 export function initAuthPage() {
   initI18n();
@@ -51,6 +52,7 @@ function renderView() {
     case 'signup':     renderSignup(card, footer); break;
     case 'reset':      renderReset(card, footer); break;
     case 'reset-sent': renderResetSent(card, footer); break;
+    case 'signup-success': renderSignupSuccess(card, footer); break;
   }
 }
 
@@ -158,6 +160,20 @@ function renderReset(card, footer) {
   document.getElementById('reset-form').addEventListener('submit', handleReset);
 }
 
+function renderSignupSuccess(card, footer) {
+  const email = signupConfirmationEmail;
+  card.innerHTML = `
+    <div style="text-align:center;padding:var(--sp-lg) 0;">
+      <div style="width:56px;height:56px;background:var(--clr-success-bg);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;margin:0 auto var(--sp-xl);">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-success)" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <div class="auth-card-title">${t('success')}</div>
+      <div class="auth-card-subtitle" style="margin-top:var(--sp-sm);">${t('account_created_check_email')}<br><strong>${email}</strong></div>
+    </div>`;
+  footer.innerHTML = `<a href="#" id="go-login-after-signup">${t('back_to_login')}</a>`;
+  document.getElementById('go-login-after-signup')?.addEventListener('click', e => { e.preventDefault(); currentView = 'login'; renderView(); });
+}
+
 function renderResetSent(card, footer) {
   const email = card.dataset.email || '';
   card.innerHTML = `
@@ -207,8 +223,9 @@ async function handleSignup(e) {
   setLoading(btn, t('creating_account'));
   try {
     await signUp(email, password, name);
-    toast.success(t('success'), t('account_created_check_email'));
-    setTimeout(() => { currentView = 'login'; renderView(); }, 1500);
+    signupConfirmationEmail = email;
+    currentView = 'signup-success';
+    renderView();
   } catch (err) {
     toast.error(t('error'), err.message || t('error'));
     setLoading(btn, t('signup'), false);

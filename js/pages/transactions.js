@@ -258,7 +258,6 @@ function openAddModal() {
 
 function openTransactionSetupPrompt() {
   const missingAccounts = !accounts.length;
-  const missingCategories = !categories.length;
   createModal({
     id: 'transaction-setup-modal',
     title: t('setup_before_transaction_title'),
@@ -270,11 +269,6 @@ function openTransactionSetupPrompt() {
           <div><strong>${t('account')}</strong><small>${missingAccounts ? t('setup_account_missing') : t('setup_account_ready')}</small></div>
           ${missingAccounts ? '<button class="btn btn-outline btn-sm" id="setup-add-account">' + t('add_account') + '</button>' : ''}
         </div>
-        <div class="setup-check ${missingCategories ? 'is-missing' : 'is-ready'}">
-          <span class="setup-check-icon">${missingCategories ? '2' : renderIcon('check', 14)}</span>
-          <div><strong>${t('category')}</strong><small>${missingCategories ? t('setup_category_missing') : t('setup_category_ready')}</small></div>
-          ${missingCategories ? '<button class="btn btn-outline btn-sm" id="setup-add-category">' + t('add_category') + '</button>' : ''}
-        </div>
       </div>
       <p class="text-caption text-muted" style="margin-top:var(--sp-lg);">${t('setup_before_transaction_note')}</p>
     `,
@@ -285,10 +279,6 @@ function openTransactionSetupPrompt() {
   document.getElementById('setup-add-account')?.addEventListener('click', () => {
     closeModal('transaction-setup-modal');
     window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'accounts', returnTo: 'transactions', returnAction: 'add' } }));
-  });
-  document.getElementById('setup-add-category')?.addEventListener('click', () => {
-    closeModal('transaction-setup-modal');
-    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'categories' } }));
   });
 }
 
