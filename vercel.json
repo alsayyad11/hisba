@@ -1,19 +1,10 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/dashboard", "destination": "/index.html" },
-    { "source": "/transactions", "destination": "/index.html" },
-    { "source": "/accounts", "destination": "/index.html" },
-    { "source": "/budgets", "destination": "/index.html" },
-    { "source": "/goals", "destination": "/index.html" },
-    { "source": "/reports", "destination": "/index.html" },
-    { "source": "/categories", "destination": "/index.html" },
-    { "source": "/bills", "destination": "/index.html" },
-    { "source": "/settings", "destination": "/index.html" },
-    { "source": "/help", "destination": "/index.html" }
+  "routes": [
+    { "src": "/login/?$", "dest": "/login.html" },
+    { "src": "/(dashboard|transactions|accounts|budgets|goals|reports|categories|bills|settings|help)/?$", "dest": "/index.html" },
+    { "handle": "filesystem" }
   ],
   "headers": [
     {
@@ -38,4 +29,3 @@
     }
   ]
 }
-
