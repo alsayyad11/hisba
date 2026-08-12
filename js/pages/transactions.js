@@ -462,11 +462,13 @@ async function saveTx(isEdit) {
       toast.success(t('success'), t('updated'));
     } else {
       await createTransaction(userId, payload);
-      const ar = getLanguage().startsWith('ar');
+      const language = getLanguage();
+      const ar = language.startsWith('ar');
+      const isFusha = language === 'ar-fusha';
       const humanNote = type === 'expense'
-        ? (ar ? 'تمام، اتسجل. كده هتفتكر مصروفك بسهولة لما تراجع الشهر.' : 'Saved. It will be easier to understand your month when you review it.')
-        : (ar ? 'تمام، اتسجل الدخل. الصورة بتوضح أكتر مع كل معاملة.' : 'Saved. Your picture becomes clearer with every transaction.');
-      toast.success(ar ? 'اتسجلت' : 'Saved', humanNote);
+        ? (isFusha ? 'تم التسجيل. سيسهل عليك تذكّر مصروفك عند مراجعة الشهر.' : (ar ? 'تمام، اتسجل. كده هتفتكر مصروفك بسهولة لما تراجع الشهر.' : 'Saved. It will be easier to understand your month when you review it.'))
+        : (isFusha ? 'تم تسجيل الدخل. تزداد صورتك المالية وضوحاً مع كل معاملة.' : (ar ? 'تمام، اتسجل الدخل. الصورة بتوضح أكتر مع كل معاملة.' : 'Saved. Your picture becomes clearer with every transaction.'));
+      toast.success(isFusha ? 'تم التسجيل' : (ar ? 'اتسجلت' : 'Saved'), humanNote);
     }
     closeModal('tx-modal');
     await loadTransactions();
