@@ -56,8 +56,8 @@ async function boot() {
 
   // Listen for navigation events from pages
   window.addEventListener('navigate', e => {
-    const { page, action } = e.detail || {};
-    navigateTo(page, { action });
+    const { page, action, returnTo, returnAction } = e.detail || {};
+    navigateTo(page, { action, returnTo, returnAction });
   });
 
   // Rebuild the shell and active page exactly once when the language changes.
