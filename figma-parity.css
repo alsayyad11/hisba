@@ -1,0 +1,108 @@
+/* Hisba — Figma parity layer
+   Shared visual rules for the approved Figma screens. Keep this file last. */
+
+:root {
+  --figma-canvas: #f7f4ee;
+  --figma-surface: #fffdfa;
+  --figma-surface-soft: #f2f5f3;
+  --figma-border: #d8ddd8;
+  --figma-teal: #167c80;
+  --figma-teal-dark: #11656a;
+  --figma-ink: #17212b;
+  --figma-muted: #738093;
+  --figma-radius: 18px;
+  --figma-control-height: 44px;
+}
+
+html, body { min-height: 100%; }
+body { background: var(--clr-canvas); }
+
+/* Figma's calm canvas, compact header and consistent vertical rhythm. */
+.app-main, .main-content, .content-area, .page-content { background: var(--clr-canvas); }
+.page-header { margin-bottom: 28px; align-items: flex-start; }
+.page-title { font-size: clamp(1.65rem, 2.4vw, 2.25rem); letter-spacing: -.02em; }
+.page-subtitle { margin-top: 6px; color: var(--clr-body-mid); font-size: .9rem; }
+.page-actions { gap: 10px; }
+
+.card, .stat-card, .auth-card, .modal-card {
+  border: 1px solid var(--clr-border);
+  border-radius: var(--figma-radius);
+  background: var(--clr-canvas-raised);
+  box-shadow: 0 10px 28px rgba(33, 43, 54, .055);
+}
+.card { padding: 22px; }
+.card-header { min-height: 32px; margin-bottom: 18px; }
+.card-title { font-size: 1rem; font-weight: 700; color: var(--clr-ink); }
+.stat-card { padding: 18px 20px; }
+.stat-card-label { color: var(--clr-body-mid); font-size: .78rem; font-weight: 600; }
+.stat-card-value { margin-top: 7px; font-size: 1.42rem; line-height: 1.2; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.btn { min-height: var(--figma-control-height); border-radius: 12px; padding-inline: 16px; font-weight: 700; transition: transform .18s ease, background .18s ease, box-shadow .18s ease; }
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--figma-teal); color: #fff; box-shadow: 0 6px 14px rgba(22,124,128,.18); }
+.btn-primary:hover { background: var(--figma-teal-dark); }
+.btn-ghost { border: 1px solid var(--clr-border); background: var(--clr-canvas-raised); color: var(--clr-ink-soft); }
+.btn-ghost:hover { border-color: var(--figma-teal); color: var(--figma-teal); background: var(--clr-primary-subtle); }
+.btn-danger, .btn-danger:hover, .account-action[data-delete] { color: var(--clr-error) !important; }
+
+input, select, textarea, .search-input {
+  min-height: var(--figma-control-height);
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  background: var(--clr-canvas-raised);
+  color: var(--clr-ink);
+  padding: 10px 13px;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+input:focus, select:focus, textarea:focus, .search-input:focus {
+  border-color: var(--figma-teal);
+  box-shadow: 0 0 0 3px rgba(22,124,128,.13);
+  outline: none;
+}
+
+/* Charts follow the Figma cards and never inherit a legacy white canvas. */
+.chart-container, .chart-card, .chart-wrapper { border-radius: 14px; }
+.chart-container canvas, .chart-card canvas, .chart-wrapper canvas { max-width: 100%; }
+
+/* Account actions: two readable text actions, no forced circular icon button. */
+.account-card-actions { align-items: center; justify-content: flex-start; gap: 8px !important; border-top: 1px solid var(--clr-border); padding-top: 14px; }
+.account-card-actions .btn { min-height: 36px; padding-inline: 10px; border-radius: 10px; }
+.account-card-actions .account-action[data-delete] { border-color: transparent; background: transparent; }
+.account-card-actions .account-action[data-delete]:hover { border-color: var(--clr-error-bg); background: var(--clr-error-bg); }
+
+/* Mobile frames in Figma: content-first layout with bottom navigation and no desktop chrome. */
+@media (max-width: 760px) {
+  body { padding-bottom: 78px; }
+  .app-shell, .app-layout { display: block !important; }
+  .sidebar, .side-nav, .app-sidebar { display: none !important; }
+  .main-content, .content-area, .app-main { width: 100% !important; min-width: 0 !important; margin: 0 !important; padding: 18px 14px 24px !important; }
+  .page-header { margin-bottom: 20px; }
+  .page-title { font-size: 1.55rem; }
+  .page-subtitle { font-size: .78rem; }
+  .page-actions { width: 100%; }
+  .page-actions .btn { flex: 1; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .dashboard-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .card, .stat-card { border-radius: 16px; padding: 16px; }
+  .stat-card { min-height: 112px; }
+  .stat-card-value { font-size: 1.2rem; }
+  .table-wrapper { overflow-x: auto; border-radius: 14px; }
+  .modal { align-items: flex-end !important; padding: 0 !important; }
+  .modal-card { width: 100% !important; max-height: 92vh; border-radius: 22px 22px 0 0; }
+  .bottom-nav, .mobile-bottom-nav, .app-bottom-nav { display: flex !important; position: fixed; z-index: var(--z-sticky); inset-inline: 10px; bottom: 10px; min-height: 62px; padding: 8px; border: 1px solid var(--clr-border); border-radius: 20px; background: color-mix(in srgb, var(--clr-canvas-raised) 94%, transparent); box-shadow: 0 12px 32px rgba(20,30,40,.16); backdrop-filter: blur(16px); }
+  .bottom-nav > *, .mobile-bottom-nav > *, .app-bottom-nav > * { flex: 1; min-width: 0; border-radius: 13px; }
+}
+
+@media (min-width: 761px) {
+  .bottom-nav, .mobile-bottom-nav, .app-bottom-nav { display: none !important; }
+}
+
+[data-theme="dark"] .card, [data-theme="dark"] .stat-card, [data-theme="dark"] .auth-card, [data-theme="dark"] .modal-card { box-shadow: 0 14px 34px rgba(0,0,0,.22); }
+[data-theme="dark"] .btn-ghost { background: var(--clr-surface-container); }
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea, [data-theme="dark"] .search-input { background: var(--clr-surface-container-low); }
+[data-theme="dark"] .account-card-actions { border-color: var(--clr-border); }
+[data-theme="dark"] .account-card-actions .account-action[data-delete]:hover { background: var(--clr-error-bg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover { transform: none; }
+}

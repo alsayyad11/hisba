@@ -1,0 +1,81 @@
+/* Hisba — single source of truth for application typography */
+:where(html, body, button, input, select, textarea) {
+  font-family: var(--font-body);
+}
+
+:where(h1, h2, h3, h4, h5, h6,
+  .page-title, .card-title, .modal-title, .section-title,
+  .auth-card-title, .topbar-title, .empty-state-title,
+  .settings-section-head h2, .settings-subsection-head h3) {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+
+:where(h1, .page-title) {
+  font-size: var(--text-h1) !important;
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-extrabold);
+}
+
+:where(h2, .section-title, .settings-section-head h2) {
+  font-size: var(--text-h2) !important;
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+:where(h3, .card-title, .modal-title, .settings-subsection-head h3) {
+  font-size: var(--text-h3) !important;
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+:where(h4, h5, h6) {
+  line-height: var(--lh-heading);
+}
+
+:where(p, li, td, .page-subtitle, .text-body, .help-step p,
+  .help-callout p, .help-privacy p, .modal-copy) {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-regular);
+}
+
+:where(label, .form-label, .stat-card-label, .sidebar-section-label,
+  .table th, .connection-status, .badge, .status-badge) {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  line-height: var(--lh-label);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+:where(.btn, .nav-item, .dropdown-item, .tab, .lang-option,
+  .form-input, .form-select, .form-textarea, .search-input input) {
+  font-family: var(--font-body);
+}
+
+:where(.stat-card-value, .amount-income, .amount-expense, .amount-neutral,
+  .numeric, [data-numeric="true"], [data-value], .summary-value,
+  .progress-value, .chart-value) {
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0;
+}
+
+.stat-card-value {
+  font-size: var(--text-h2) !important;
+  line-height: 1.25;
+  font-weight: var(--fw-bold);
+}
+
+.amount-income, .amount-expense, .amount-neutral {
+  font-weight: var(--fw-semibold);
+}
+
+@media (max-width: 640px) {
+  :where(h1, .page-title) { font-size: var(--text-h1) !important; }
+  .stat-card-value { font-size: var(--text-h3) !important; }
+}
