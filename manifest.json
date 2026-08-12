@@ -2,7 +2,7 @@
   "name": "Hisba — إدارة المصروفات",
   "short_name": "Hisba",
   "description": "إدارة بسيطة وواضحة للمصروفات والدخل والميزانية",
-  "start_url": "/index.html",
+  "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#fffefb",
   "theme_color": "#0a0a0a",
