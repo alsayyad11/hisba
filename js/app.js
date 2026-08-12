@@ -81,6 +81,9 @@ function renderShell() {
   document.title = brandName;
   const name = currentProfile?.full_name || currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.username || currentUser?.user_metadata?.user_name || currentUser?.email?.split('@')[0] || 'User';
   const initial = name.charAt(0).toUpperCase();
+  const sidebarCollapsed = localStorage.getItem('hisba-sidebar-collapsed') === 'true';
+  const collapseLabel = isArabic ? 'طي الشريط الجانبي' : 'Collapse sidebar';
+  const expandLabel = isArabic ? 'فتح الشريط الجانبي' : 'Expand sidebar';
   const avatarMarkup = currentProfile?.avatar_url
     ? `<img src="${currentProfile.avatar_url}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`
     : initial;
@@ -92,7 +95,7 @@ function renderShell() {
       <div class="loading-spinner"></div>
     </div>
 
-    <div class="app-shell">
+    <div class="app-shell${sidebarCollapsed ? ' sidebar-collapsed' : ''}">
       <!-- Sidebar -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -100,6 +103,9 @@ function renderShell() {
             <img class="sidebar-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="${brandName}">
             <span class="sidebar-brand-name">${brandName}</span>
           </a>
+          <button class="sidebar-collapse-toggle" id="sidebar-collapse-toggle" type="button" aria-label="${sidebarCollapsed ? expandLabel : collapseLabel}" aria-expanded="${!sidebarCollapsed}" title="${sidebarCollapsed ? expandLabel : collapseLabel}">
+            <svg class="collapse-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
         </div>
 
         <nav class="sidebar-nav" id="sidebar-nav">
@@ -213,9 +219,11 @@ function renderShell() {
     if (e.key === 'Enter' || e.key === ' ') openAccountSettings(e);
   });
 
-  // Mobile sidebar toggle
+  // Sidebar controls: collapse on desktop, drawer toggle on smaller screens.
+  document.getElementById('sidebar-collapse-toggle')?.addEventListener('click', toggleSidebarCollapse);
   document.getElementById('menu-toggle')?.addEventListener('click', toggleSidebar);
   document.getElementById('sidebar-overlay')?.addEventListener('click', closeSidebar);
+  syncSidebarControls();
 
   // Connectivity indicator: data is saved locally first and syncs when online.
   const updateConnectivityStatus = () => {
@@ -328,6 +336,33 @@ function toggleSidebar() {
   const isOpen   = sidebar?.classList.contains('open');
   sidebar?.classList.toggle('open', !isOpen);
   overlay?.classList.toggle('visible', !isOpen);
+}
+
+function toggleSidebarCollapse() {
+  if (window.matchMedia('(max-width: 1024px)').matches) {
+    toggleSidebar();
+    return;
+  }
+  const shell = document.querySelector('.app-shell');
+  if (!shell) return;
+  const collapsed = shell.classList.toggle('sidebar-collapsed');
+  localStorage.setItem('hisba-sidebar-collapsed', String(collapsed));
+  syncSidebarControls();
+}
+
+function syncSidebarControls() {
+  const shell = document.querySelector('.app-shell');
+  const button = document.getElementById('sidebar-collapse-toggle');
+  if (!shell || !button) return;
+  const collapsed = shell.classList.contains('sidebar-collapsed');
+  const isArabic = getLanguage().startsWith('ar');
+  const label = collapsed
+    ? (isArabic ? 'فتح الشريط الجانبي' : 'Expand sidebar')
+    : (isArabic ? 'طي الشريط الجانبي' : 'Collapse sidebar');
+  button.setAttribute('aria-label', label);
+  button.setAttribute('title', label);
+  button.setAttribute('aria-expanded', String(!collapsed));
+  button.classList.toggle('is-collapsed', collapsed);
 }
 
 function closeSidebar() {
