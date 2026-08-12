@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hisba — Simple, clear personal finance management">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Hisba — إدارة المصروفات</title>
+
+  <!-- Preconnect fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/tokens.css?v=category-v1">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css?v=category-v1">
+  <link rel="stylesheet" href="css/layout.css?v=category-v1">
+  <link rel="stylesheet" href="css/typography.css?v=type-v1">
+
+  <!-- Public runtime configuration; never put service-role secrets here. -->
+  <script src="js/runtime-config.js?v=security-v1"></script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/hisba-favicon-v3.png">
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!-- App shell renders here via app.js -->
+  <div class="loading-overlay" id="initial-loader">
+    <div class="loading-logo"><img class="hisba-logo-image" src="assets/hisba-logo-gold.png" alt="Hisba"><span class="hisba-logo-wordmark">حِسبة</span><small class="hisba-tagline">يا ترى فلوسي راحت فين؟</small></div>
+    <div class="loading-spinner"></div>
+  </div>
+
+  <script type="module" src="js/app.js?v=lang-v3"></script>
+</body>
+</html>
