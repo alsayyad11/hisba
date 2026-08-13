@@ -2,9 +2,9 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=finance-workspace-v1';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=locale-singleton-v1';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
-import { toast } from './toast.js';
+import { toast } from './toast.js?v=locale-singleton-v1;
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
