@@ -98,7 +98,7 @@ function render() {
           </div>
           <span class="badge badge-primary">1 / 3</span>
         </div>
-        <div class="onboarding-steps" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-md);">
+        <div class="onboarding-steps">
           <button class="onboarding-step" id="onboarding-add-account" type="button">
             <span class="onboarding-step-number">1</span>
             <span class="onboarding-step-copy"><strong>${t('onboarding_step_account')}</strong><small>${t('onboarding_step_account_sub')}</small></span>
