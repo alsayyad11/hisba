@@ -72,6 +72,7 @@ function renderPage() {
   const { summary, transactions, period } = reportData;
 
   el.innerHTML = `
+    <section class="reports-page">
     <div class="page-header">
       <div>
         <h1 class="page-title">${t('reports_title')}</h1>
@@ -80,8 +81,8 @@ function renderPage() {
     </div>
 
     <!-- Controls -->
-    <div class="card" style="margin-bottom:var(--sp-xl);">
-      <div style="display:flex;gap:var(--sp-lg);flex-wrap:wrap;align-items:flex-end;">
+    <div class="card report-control-panel">
+      <div class="report-control-grid">
         <div class="form-group" style="flex:1;min-width:160px;">
           <label class="form-label">${t('report_period')}</label>
           <select class="form-select" id="report-period">
@@ -92,11 +93,11 @@ function renderPage() {
           </select>
         </div>
         <div class="form-group" style="min-width:150px;">
-          <label class="form-label">${getLanguage().startsWith('ar') ? 'من شهر' : 'From month'}</label>
+          <label class="form-label">${t('report_compare_from')}</label>
           <input type="month" class="form-input" id="compare-from" value="${filters.compare_from}">
         </div>
         <div class="form-group" style="min-width:150px;">
-          <label class="form-label">${getLanguage().startsWith('ar') ? 'إلى شهر' : 'To month'}</label>
+          <label class="form-label">${t('report_compare_to')}</label>
           <input type="month" class="form-input" id="compare-to" value="${filters.compare_to}">
         </div>
         <div class="form-group" style="flex:1;min-width:160px;">
@@ -107,7 +108,7 @@ function renderPage() {
           </select>
         </div>
         <div class="form-group" style="flex:1;min-width:160px;">
-          <label class="form-label">Template</label>
+          <label class="form-label">${t('report_type')}</label>
           <select class="form-select" id="report-template">
             <option value="minimal"   ${filters.template === 'minimal'   ? 'selected' : ''}>${t('template_minimal')}</option>
             <option value="corporate" ${filters.template === 'corporate' ? 'selected' : ''}>${t('template_corporate')}</option>
@@ -123,42 +124,42 @@ function renderPage() {
     </div>
 
     <!-- Summary -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-lg);margin-bottom:var(--sp-xl);">
-      <div class="card">
+    <div class="reports-summary">
+      <div class="card report-summary-card report-summary-income">
         <div class="stat-card-label">${t('report_total_income')}</div>
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-success);">${formatCurrency(summary.income || 0, userCurrency)}</div>
       </div>
-      <div class="card">
+      <div class="card report-summary-card report-summary-expense">
         <div class="stat-card-label">${t('report_total_expenses')}</div>
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-error);">${formatCurrency(summary.expenses || 0, userCurrency)}</div>
       </div>
-      <div class="card">
+      <div class="card report-summary-card report-summary-net">
         <div class="stat-card-label">${t('report_net')}</div>
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${(summary.net||0) >= 0 ? 'var(--clr-success)' : 'var(--clr-error)'};">
           ${formatCurrency(summary.net || 0, userCurrency)}
         </div>
       </div>
-      <div class="card">
+      <div class="card report-summary-card report-summary-count">
         <div class="stat-card-label">${t('report_transactions_count')}</div>
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${transactions.length}</div>
       </div>
     </div>
 
     <!-- Monthly comparison -->
-    <div class="card" style="margin-bottom:var(--sp-xl);">
+    <div class="card report-monthly-card">
       <div class="card-header"><span class="card-title">${t('monthly_comparison')}</span><span class="text-caption text-muted">${t('last_6_months')}</span></div>
       ${renderMonthlyComparison(reportData.monthlyComparison)}
     </div>
 
     <!-- Chart + Category -->
-    <div class="dashboard-grid" style="margin-bottom:var(--sp-xl);">
-      <div class="card">
+    <div class="report-analysis-grid">
+      <div class="card report-analysis-card">
         <div class="card-header"><span class="card-title">${t('income_vs_expense')}</span></div>
         <div style="position:relative;height:220px;">
           <canvas id="report-bar-chart" style="width:100%;height:100%;display:block;"></canvas>
         </div>
       </div>
-      <div class="card">
+      <div class="card report-analysis-card">
         <div class="card-header"><span class="card-title">${t('category_breakdown')}</span></div>
         <div style="display:flex;flex-direction:column;gap:var(--sp-sm);">
           ${reportData.categories.slice(0, 6).map(cat => {
@@ -182,21 +183,21 @@ function renderPage() {
     </div>
 
     <!-- Export Buttons -->
-    <div class="card" style="margin-bottom:var(--sp-xl);">
+    <div class="card report-export-card">
       <div class="card-header">
         <span class="card-title">${t('generate_report')}</span>
         <span class="text-caption text-muted">${period || ''}</span>
       </div>
-      <div style="display:flex;gap:var(--sp-md);flex-wrap:wrap;">
-        <button class="btn btn-outline" id="btn-pdf">
+      <div class="report-export-actions">
+        <button class="btn btn-outline report-export-btn" id="btn-pdf">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           ${t('export_pdf')}
         </button>
-        <button class="btn btn-outline" id="btn-csv">
+        <button class="btn btn-outline report-export-btn" id="btn-csv">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
           ${t('export_csv')}
         </button>
-        <button class="btn btn-outline" id="btn-excel">
+        <button class="btn btn-outline report-export-btn" id="btn-excel">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
           ${t('export_excel')}
         </button>
@@ -205,7 +206,7 @@ function renderPage() {
 
     <!-- Transactions table -->
     ${transactions.length ? `
-      <div class="card" style="padding:0;overflow:hidden;">
+      <div class="card report-ledger">
         <div style="padding:var(--sp-lg) var(--sp-xl);border-bottom:1px solid var(--clr-border);">
           <span class="card-title">${t('report_transactions')}</span>
         </div>
@@ -251,6 +252,7 @@ function renderPage() {
         </div>
       </div>
     `}
+    </section>
   `;
 
   // Wire events

@@ -41,6 +41,7 @@ function renderPage() {
   const expenses = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
 
   el.innerHTML = `
+    <section class="transactions-page">
     <div class="page-header">
       <div>
         <h1 class="page-title">${t('transactions_title')}</h1>
@@ -56,22 +57,22 @@ function renderPage() {
 
     ${transactions.length ? `
     <!-- Summary Strip -->
-    <div style="display:flex;gap:var(--sp-lg);margin-bottom:var(--sp-xl);flex-wrap:wrap;">
-      <div class="card" style="flex:1;min-width:160px;padding:var(--sp-lg);">
+    <div class="transactions-summary">
+      <div class="card transaction-summary-card transaction-summary-income">
         <div class="stat-card-label">${t('filter_income')}</div>
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-success);">+${formatCurrency(income, userCurrency)}</div>
       </div>
-      <div class="card" style="flex:1;min-width:160px;padding:var(--sp-lg);">
+      <div class="card transaction-summary-card transaction-summary-expense">
         <div class="stat-card-label">${t('filter_expense')}</div>
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-error);">-${formatCurrency(expenses, userCurrency)}</div>
       </div>
-      <div class="card" style="flex:1;min-width:160px;padding:var(--sp-lg);">
+      <div class="card transaction-summary-card transaction-summary-net">
         <div class="stat-card-label">${t('net_savings')}</div>
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${income - expenses >= 0 ? 'var(--clr-success)' : 'var(--clr-error)'};">
           ${income - expenses >= 0 ? '+' : ''}${formatCurrency(income - expenses, userCurrency)}
         </div>
       </div>
-      <div class="card" style="flex:1;min-width:120px;padding:var(--sp-lg);">
+      <div class="card transaction-summary-card transaction-summary-count">
         <div class="stat-card-label">${t('report_transactions_count')}</div>
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${transactions.length}</div>
       </div>
@@ -80,7 +81,7 @@ function renderPage() {
 
     ${transactions.length ? `
     <!-- Filter bar -->
-    <div style="display:flex;gap:var(--sp-md);margin-bottom:var(--sp-lg);flex-wrap:wrap;align-items:center;">
+    <div class="transactions-filter-panel">
       <!-- Type filter -->
       <div style="display:flex;gap:var(--sp-xs);">
         ${['all','income','expense'].map(type => `
@@ -128,7 +129,7 @@ function renderPage() {
     ` : ''}
 
     <!-- Transactions Table -->
-    <div class="card" style="padding:0;overflow:hidden;">
+    <div class="card transaction-ledger">
       ${transactions.length ? `
         <div class="table-wrapper">
           <table class="table">
@@ -157,6 +158,7 @@ function renderPage() {
         </div>
       `}
     </div>
+    </section>
   `;
 
   // Events
@@ -206,14 +208,14 @@ function txRow(tx) {
   const acc = tx.account;
   const lang = getLanguage();
   return `
-    <tr>
+    <tr class="transaction-row">
       <td>
         <div style="display:flex;align-items:center;gap:var(--sp-sm);">
-          <div class="cat-icon" style="background:${cat?.color ? cat.color + '22' : 'var(--clr-canvas-raised)'};">
+          <div class="cat-icon transaction-category-icon" style="background:${cat?.color ? cat.color + '22' : 'var(--clr-canvas-raised)'};">
             <span style="font-size:14px;">${renderIcon(cat?.icon || 'package', 14)}</span>
           </div>
           <div>
-            <div class="font-medium truncate" style="max-width:200px;">${tx.description || '—'}</div>
+            <div class="font-medium truncate transaction-description" style="max-width:200px;">${tx.description || '—'}</div>
             ${tx.notes ? `<div class="text-fine text-muted truncate" style="max-width:200px;">${tx.notes}</div>` : ''}
           </div>
         </div>
@@ -234,7 +236,7 @@ function txRow(tx) {
         </span>
       </td>
       <td>
-        <div style="display:flex;gap:4px;justify-content:flex-end;">
+        <div class="transaction-row-actions">
           <button class="btn btn-ghost btn-icon-sm" data-edit="${tx.id}" title="${t('edit')}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
