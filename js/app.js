@@ -2,22 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=locale-preference-v1';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=locale-shell-v2';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
 import { toast } from './toast.js';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=locale-preference-v1'),
-  transactions: () => import('./pages/transactions.js?v=locale-preference-v1'),
-  accounts:     () => import('./pages/accounts.js?v=locale-preference-v1'),
-  budgets:      () => import('./pages/budgets.js?v=locale-preference-v1'),
-  goals:        () => import('./pages/goals.js?v=locale-preference-v1'),
-  reports:      () => import('./pages/reports.js?v=locale-preference-v1'),
-  categories:   () => import('./pages/categories.js?v=locale-preference-v1'),
-  bills:        () => import('./pages/bills.js?v=locale-preference-v1'),
-  settings:     () => import('./pages/settings.js?v=locale-preference-v1'),
-  help:         () => import('./pages/help.js?v=locale-preference-v1'),
+  dashboard:    () => import('./pages/dashboard.js?v=locale-shell-v2'),
+  transactions: () => import('./pages/transactions.js?v=locale-shell-v2'),
+  accounts:     () => import('./pages/accounts.js?v=locale-shell-v2'),
+  budgets:      () => import('./pages/budgets.js?v=locale-shell-v2'),
+  goals:        () => import('./pages/goals.js?v=locale-shell-v2'),
+  reports:      () => import('./pages/reports.js?v=locale-shell-v2'),
+  categories:   () => import('./pages/categories.js?v=locale-shell-v2'),
+  bills:        () => import('./pages/bills.js?v=locale-shell-v2'),
+  settings:     () => import('./pages/settings.js?v=locale-shell-v2'),
+  help:         () => import('./pages/help.js?v=locale-shell-v2'),
 };
 
 let currentUser = null;

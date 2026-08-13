@@ -4,10 +4,10 @@
    ============================================================ */
 
 // ── i18n ───────────────────────────────────────────────────
-import { en } from '../locales/en.js?v=profile-v2';
-import { ar } from '../locales/ar.js?v=profile-v2';
-import { arEg } from '../locales/ar-eg.js?v=profile-v2';
-import { arFusha } from '../locales/ar-fusha.js?v=tagline-fusha-v1';
+import { en } from '../locales/en.js?v=locale-shell-v2';
+import { ar } from '../locales/ar.js?v=locale-shell-v2';
+import { arEg } from '../locales/ar-eg.js?v=locale-shell-v2';
+import { arFusha } from '../locales/ar-fusha.js?v=locale-shell-v2';
 
 const locales = { en, ar: arEg, 'ar-eg': arEg, 'ar-fusha': arFusha };
 const LANGUAGE_STORAGE_KEY = 'hisba_lang';
