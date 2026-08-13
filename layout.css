@@ -10,11 +10,25 @@
   background: var(--clr-canvas);
 }
 
+/* ── Shared chrome canvas ───────────────────────────────────
+   The shell, sidebar, topbar, and scrollable page canvas must read
+   as one continuous surface. Cards remain elevated via their own
+   surface tokens in components.css / figma-parity.css. */
+.app-shell,
+.main-wrapper,
+.content-area,
+.sidebar,
+.sidebar-header,
+.sidebar-footer,
+.topbar {
+  background-color: var(--clr-canvas);
+}
+
 /* ── Sidebar ─────────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-width);
   height: 100vh;
-  background: var(--clr-canvas-soft);
+  background: var(--clr-canvas);
   border-right: 1px solid var(--clr-border);
   display: flex;
   flex-direction: column;
@@ -358,7 +372,7 @@
   .dashboard-grid { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .sidebar {
     position: fixed;
     left: 0;
@@ -898,3 +912,259 @@ body:has(#settings-layout) #settings-layout > .settings-sections > #profile > .c
 }
 
 
+
+
+/* ── User-controlled collapsible sidebar ───────────────────── */
+.sidebar-collapse-toggle {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  background: var(--clr-canvas);
+  color: var(--clr-body-mid);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.sidebar-collapse-toggle:hover {
+  background: var(--clr-canvas-raised);
+  color: var(--clr-primary);
+  border-color: var(--clr-primary-subtle);
+}
+
+.sidebar-collapse-toggle:focus-visible,
+.topbar-menu-toggle:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--clr-primary) 30%, transparent);
+  outline-offset: 2px;
+}
+
+.sidebar-collapse-toggle .collapse-icon {
+  transition: transform var(--transition-base);
+}
+
+.app-shell.sidebar-collapsed .sidebar {
+  width: 72px !important;
+  min-width: 72px !important;
+  flex-basis: 72px !important;
+}
+
+.app-shell.sidebar-collapsed .sidebar-header {
+  padding-inline: 18px;
+  justify-content: center;
+}
+
+.app-shell.sidebar-collapsed .sidebar-brand {
+  justify-content: center;
+}
+
+.app-shell.sidebar-collapsed .sidebar-brand-name,
+.app-shell.sidebar-collapsed .sidebar-section-label,
+.app-shell.sidebar-collapsed .sidebar-user-info,
+.app-shell.sidebar-collapsed .sidebar-user > svg {
+  display: none;
+}
+
+.app-shell.sidebar-collapsed .sidebar-header {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.app-shell.sidebar-collapsed .sidebar-nav {
+  padding-inline: 10px;
+}
+
+.app-shell.sidebar-collapsed .nav-item {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.app-shell.sidebar-collapsed .nav-item-label {
+  display: none;
+}
+
+.app-shell.sidebar-collapsed .sidebar-footer {
+  padding-inline: 10px;
+}
+
+.app-shell.sidebar-collapsed .sidebar-user {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.app-shell.sidebar-collapsed .sidebar-collapse-toggle .collapse-icon {
+  transform: rotate(180deg);
+}
+
+html[data-theme="dark"] .sidebar-collapse-toggle {
+  background: var(--clr-canvas-raised);
+  border-color: var(--clr-border-strong);
+  color: var(--clr-ink-mid);
+}
+
+html[data-theme="dark"] .sidebar-collapse-toggle:hover {
+  background: var(--clr-border);
+  color: var(--clr-ink);
+}
+
+/* The collapsed desktop state intentionally keeps labels hidden. Mobile uses the drawer controls above. */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar-collapse-toggle,
+  .sidebar-collapse-toggle .collapse-icon {
+    transition: none !important;
+  }
+}
+
+
+/* ── Sidebar collapse: explicit desktop state ───────────────── */
+@media (min-width: 769px) {
+  .app-shell .sidebar {
+    width: var(--sidebar-width) !important;
+    min-width: var(--sidebar-width) !important;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar {
+    width: 72px !important;
+    min-width: 72px !important;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-header {
+    padding-inline: 16px !important;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-brand {
+    justify-content: center;
+    gap: 0;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-brand-name,
+  .app-shell.sidebar-collapsed .sidebar-section-label,
+  .app-shell.sidebar-collapsed .nav-item-label,
+  .app-shell.sidebar-collapsed .nav-item-badge,
+  .app-shell.sidebar-collapsed .sidebar-user-info,
+  .app-shell.sidebar-collapsed .sidebar-user > svg {
+    display: none !important;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-collapse-toggle {
+    position: absolute;
+    inset-inline-end: 6px;
+    top: 8px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-nav {
+    padding-inline: 10px;
+    align-items: center;
+  }
+
+  .app-shell.sidebar-collapsed .nav-item {
+    width: 48px;
+    justify-content: center;
+    padding-inline: 0;
+    gap: 0;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-footer {
+    padding-inline: 10px;
+  }
+
+  .app-shell.sidebar-collapsed .sidebar-user {
+    justify-content: center;
+    padding-inline: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-shell.sidebar-collapsed .sidebar {
+    width: var(--sidebar-width) !important;
+    min-width: var(--sidebar-width) !important;
+  }
+}
+
+[dir="rtl"] .app-shell.sidebar-collapsed .collapse-icon {
+  transform: rotate(180deg);
+}
+
+/* ── Unified page canvas: one continuous shell surface ─────────
+   Keep elevated cards and controls distinct, but never split the
+   app chrome from the page background. This final rule intentionally
+   wins over legacy dark-mode and refresh overrides above. */
+html body .app-shell,
+html body .app-shell .sidebar,
+html body .app-shell .sidebar-header,
+html body .app-shell .sidebar-footer,
+html body .app-shell .main-wrapper,
+html body .app-shell .topbar,
+html body .app-shell .content-area {
+  background-color: var(--clr-canvas) !important;
+}
+
+.sidebar-collapse-toggle {
+  position: relative;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  background: var(--clr-canvas);
+  color: var(--clr-body-mid);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.sidebar-collapse-toggle:hover {
+  background: var(--clr-primary-subtle);
+  color: var(--clr-primary);
+  border-color: var(--clr-primary);
+}
+
+.app-shell.sidebar-collapsed .collapse-icon {
+  transform: rotate(180deg);
+}
+
+[dir="rtl"] .app-shell.sidebar-collapsed .collapse-icon {
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar-collapse-toggle { display: none; }
+}
+
+
+/* ── Final unified shell canvas override ───────────────────────
+   The app chrome and page canvas share one continuous background.
+   Cards, inputs, and raised controls retain their own surface roles. */
+html body .app-shell,
+html body .app-shell .sidebar,
+html body .app-shell .sidebar-header,
+html body .app-shell .sidebar-footer,
+html body .app-shell .main-wrapper,
+html body .app-shell .topbar,
+html body .app-shell .content-area {
+  background-color: var(--clr-canvas) !important;
+}
+
+html body .app-shell .main-wrapper > .topbar,
+html body .app-shell > .sidebar {
+  background: var(--clr-canvas) !important;
+}
+
+html body .app-shell .content-area {
+  background: var(--clr-canvas) !important;
+}
+
+html body .app-shell .topbar-actions {
+  background: color-mix(in srgb, var(--clr-canvas) 88%, transparent) !important;
+}
