@@ -2,22 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, t, getLanguage } from './utils.js?v=fusha-v2';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=fusha-v2';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
 import { toast } from './toast.js';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=lang-v4'),
-  transactions: () => import('./pages/transactions.js?v=fusha-v2'),
-  accounts:     () => import('./pages/accounts.js?v=lang-v4'),
-  budgets:      () => import('./pages/budgets.js?v=lang-v4'),
-  goals:        () => import('./pages/goals.js?v=lang-v4'),
-  reports:      () => import('./pages/reports.js?v=lang-v4'),
-  categories:   () => import('./pages/categories.js?v=lang-v4'),
-  bills:        () => import('./pages/bills.js?v=lang-v4'),
-  settings:     () => import('./pages/settings.js?v=fusha-v1'),
-  help:         () => import('./pages/help.js?v=fusha-v1'),
+  dashboard:    () => import('./pages/dashboard.js?v=locale-state-v1'),
+  transactions: () => import('./pages/transactions.js?v=locale-state-v1'),
+  accounts:     () => import('./pages/accounts.js?v=locale-state-v1'),
+  budgets:      () => import('./pages/budgets.js?v=locale-state-v1'),
+  goals:        () => import('./pages/goals.js?v=locale-state-v1'),
+  reports:      () => import('./pages/reports.js?v=locale-state-v1'),
+  categories:   () => import('./pages/categories.js?v=locale-state-v1'),
+  bills:        () => import('./pages/bills.js?v=locale-state-v1'),
+  settings:     () => import('./pages/settings.js?v=locale-state-v1'),
+  help:         () => import('./pages/help.js?v=locale-state-v1'),
 };
 
 let currentUser = null;
@@ -43,7 +43,7 @@ async function boot() {
   // Sync stored prefs
   if (currentProfile?.language) setLanguage(currentProfile.language, false);
   // Keep the refreshed light theme as the safe default; only restore an explicit light preference.
-  if (currentProfile?.theme === 'light') import('./utils.js?v=lang-v5').then(u => u.setTheme('light', false));
+  if (currentProfile?.theme === 'light') setTheme('light', false);
 
   renderShell();
   hideLoadingOverlay();
