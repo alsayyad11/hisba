@@ -2,7 +2,7 @@
    HISBA — EXPORT SERVICE
    PDF, CSV, Excel exports
    ============================================================ */
-import { formatCurrency, formatDate, t, getLanguage, isRTL } from '../utils.js';
+import { formatCurrency, formatDate, t, getLanguage, isRTL } from '../utils.js?v=locale-singleton-v1';
 
 // ── Export helpers ──────────────────────────────────────────
 function escapeHtml(value) {
