@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — BILLS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, getLanguage } from '../utils.js?v=locale-singleton-v1';
+import { t, formatCurrency, validateRequired, validateAmount, getLanguage, escapeHTML } from '../utils.js?v=security-audit-v1';
 import { getBills, createBill, updateBill, deleteBill, getCategories } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
+import { toast } from '../toast.js?v=security-audit-v1';
 
 let userId, userCurrency = 'USD';
 let bills = [], categories = [];
@@ -113,8 +113,8 @@ function billRow(b) {
   const catName = lang.startsWith('ar') && b.category?.name_ar ? b.category.name_ar : (b.category?.name || '—');
   return `
     <tr>
-      <td><span class="font-medium">${b.name}</span></td>
-      <td><span class="text-caption text-muted">${catName}</span></td>
+      <td><span class="font-medium">${escapeHTML(b.name)}</span></td>
+      <td><span class="text-caption text-muted">${escapeHTML(catName)}</span></td>
       <td><span class="text-caption">${t('day_number', { day: b.due_day })}</span></td>
       <td><span class="badge ${status.cls} badge-dot">${status.label}</span></td>
       <td style="text-align:right;">
@@ -123,13 +123,13 @@ function billRow(b) {
       <td>
         <div style="display:flex;gap:4px;justify-content:flex-end;">
           ${!b.is_paid ? `
-            <button class="btn btn-ghost btn-sm" data-paid="${b.id}" style="font-size:var(--text-xs);">
+            <button class="btn btn-ghost btn-sm" data-paid="${escapeHTML(b.id)}" style="font-size:var(--text-xs);">
               ${t('mark_paid')}
             </button>` : ''}
-          <button class="btn btn-ghost btn-icon-sm" data-edit="${b.id}">
+          <button class="btn btn-ghost btn-icon-sm" data-edit="${escapeHTML(b.id)}">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button class="btn btn-ghost btn-icon-sm" data-delete="${b.id}" style="color:var(--clr-error);">
+          <button class="btn btn-ghost btn-icon-sm" data-delete="${escapeHTML(b.id)}" style="color:var(--clr-error);">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -150,22 +150,22 @@ function buildModal(b) {
   const lang = getLanguage();
   createModal({
     id: 'bill-modal',
-    title: isEdit ? t('edit_account') : t('add_bill'),
+    title: isEdit ? t('edit') : t('add_bill'),
     content: `
       <div class="form-group">
         <label class="form-label">${t('bill_name')}</label>
-        <input type="text" class="form-input" id="bill-name" placeholder="${t('bill_name')}" value="${b?.name || ''}">
+        <input type="text" class="form-input" id="bill-name" placeholder="${t('bill_name')}" maxlength="100" value="${escapeHTML(b?.name || '')}">
         <div class="form-error hidden" id="bill-name-err"></div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">${t('bill_amount')}</label>
-          <input type="number" class="form-input" id="bill-amount" placeholder="0.00" min="0" step="0.01" value="${b?.amount || ''}">
+          <input type="number" class="form-input" id="bill-amount" placeholder="0.00" min="0.01" step="0.01" value="${Number.isFinite(Number(b?.amount)) ? Number(b.amount) : ''}">
           <div class="form-error hidden" id="bill-amount-err"></div>
         </div>
         <div class="form-group">
           <label class="form-label">${t('bill_due_day')}</label>
-          <input type="number" class="form-input" id="bill-day" placeholder="1-31" min="1" max="31" value="${b?.due_day || ''}">
+          <input type="number" class="form-input" id="bill-day" placeholder="1-31" min="1" max="31" step="1" value="${Number.isInteger(Number(b?.due_day)) ? Number(b.due_day) : ''}">
           <div class="form-error hidden" id="bill-day-err"></div>
         </div>
       </div>
@@ -174,8 +174,8 @@ function buildModal(b) {
         <select class="form-select" id="bill-category">
           <option value="">${t('select')}</option>
           ${categories.filter(c => c.type === 'expense' || !c.type).map(cat => `
-            <option value="${cat.id}" ${b?.category_id === cat.id ? 'selected' : ''}>
-              ${cat.icon || ''} ${lang.startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name}
+            <option value="${escapeHTML(cat.id)}" ${b?.category_id === cat.id ? 'selected' : ''}>
+              ${escapeHTML(cat.icon || '')} ${escapeHTML(lang.startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name)}
             </option>`).join('')}
         </select>
       </div>
@@ -194,9 +194,10 @@ function buildModal(b) {
     const category_id = document.getElementById('bill-category').value || null;
 
     let valid = true;
-    if (!validateRequired(name))   { showErr('bill-name-err', t('required')); valid = false; } else hideErr('bill-name-err');
+    if (!validateRequired(name) || name.length > 100) { showErr('bill-name-err', t('required')); valid = false; } else hideErr('bill-name-err');
     if (!validateAmount(amount))   { showErr('bill-amount-err', t('invalid_amount')); valid = false; } else hideErr('bill-amount-err');
-    if (!due_day || due_day < 1 || due_day > 31) { showErr('bill-day-err', t('day_range_error')); valid = false; } else hideErr('bill-day-err');
+    if (!Number.isInteger(due_day) || due_day < 1 || due_day > 31) { showErr('bill-day-err', t('day_range_error')); valid = false; } else hideErr('bill-day-err');
+    if (category_id && !categories.some(cat => cat.id === category_id && (cat.type === 'expense' || !cat.type))) { toast.error(t('error'), t('error')); return; }
     if (!valid) return;
 
     const btn = document.getElementById('bill-save');
@@ -226,7 +227,7 @@ async function handleMarkPaid(id) {
 
 function confirmDelete(id) {
   showConfirm({
-    title: t('delete_account'),
+    title: t('delete'),
     message: t('delete_confirm_sub'),
     confirmText: t('delete'),
     confirmClass: 'btn-danger',

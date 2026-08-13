@@ -1,12 +1,12 @@
 /* ============================================================
    HISBA — REPORTS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, getDateRange, getLanguage, getMonthRange, getCurrentMonth, renderIcon } from '../utils.js?v=locale-singleton-v1';
+import { t, formatCurrency, formatDate, getDateRange, getLanguage, getMonthRange, getCurrentMonth, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
 import { getTransactions, getAccounts, getDashboardSummary } from '../services/data.js';
-import { exportCSV, exportExcel, exportPDF } from '../services/export.js?v=locale-singleton-v1';
-import { drawBarChart, drawDonutChart } from '../components/charts.js?v=locale-singleton-v1';
+import { exportCSV, exportExcel, exportPDF } from '../services/export.js?v=security-audit-v1';
+import { drawBarChart, drawDonutChart } from '../components/charts.js?v=security-audit-v1';
 import { getCategorySpending } from '../services/data.js';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { toast } from '../toast.js?v=security-audit-v1';
 
 let userId, userCurrency = 'USD';
 let accounts = [];
@@ -63,7 +63,7 @@ async function loadMonthlyComparison() {
 
 function renderMonthlyComparison(rows) {
   const max = Math.max(...rows.map(row => row.total), 1);
-  return `<div class="monthly-comparison" id="monthly-comparison-bars">${rows.map(row => `<button class="monthly-bar" type="button" data-total="${row.total}" data-count="${row.count}" data-label="${row.label}" style="--bar-height:${Math.max(6, Math.round((row.total / max) * 100))}%"><span class="monthly-bar-fill"></span><span class="monthly-bar-label">${row.label}</span></button>`).join('')}</div><div class="monthly-chart-detail text-caption" id="monthly-chart-detail">${t('chart_tap_month')}</div>`;
+  return `<div class="monthly-comparison" id="monthly-comparison-bars">${rows.map(row => `<button class="monthly-bar" type="button" data-total="${Number(row.total) || 0}" data-count="${Number(row.count) || 0}" data-label="${escapeHTML(row.label)}" style="--bar-height:${Math.max(6, Math.round((row.total / max) * 100))}%"><span class="monthly-bar-fill"></span><span class="monthly-bar-label">${escapeHTML(row.label)}</span></button>`).join('')}</div><div class="monthly-chart-detail text-caption" id="monthly-chart-detail">${t('chart_tap_month')}</div>`;
 }
 
 function renderPage() {
@@ -104,7 +104,7 @@ function renderPage() {
           <label class="form-label">${t('report_account')}</label>
           <select class="form-select" id="report-account">
             <option value="">${t('filter_all')}</option>
-            ${accounts.map(a => `<option value="${a.id}" ${filters.account_id === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
+            ${accounts.map(a => `<option value="${escapeHTML(a.id)}" ${filters.account_id === a.id ? 'selected' : ''}>${escapeHTML(a.name)}</option>`).join('')}
           </select>
         </div>
         <div class="form-group" style="flex:1;min-width:160px;">
@@ -169,12 +169,12 @@ function renderPage() {
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
                   <span style="display:flex;align-items:center;gap:var(--sp-sm);font-size:var(--text-xs);">
                     <span class="category-icon-render">${renderIcon(cat.icon || 'package', 18)}</span>
-                    <span>${getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name}</span>
+                    <span>${escapeHTML(getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name)}</span>
                   </span>
                   <span class="text-caption font-semibold">${formatCurrency(cat.total, userCurrency)}</span>
                 </div>
                 <div class="progress-bar" style="height:6px;">
-                  <div class="progress-fill" style="width:${pct}%;background:${cat.color || 'var(--clr-primary)'};"></div>
+                  <div class="progress-fill" style="width:${Math.max(0, Math.min(100, pct))}%;background:${sanitizeColor(cat.color)};"></div>
                 </div>
               </div>`;
           }).join('') || `<p class="text-caption text-muted">${t('no_data')}</p>`}
@@ -186,7 +186,7 @@ function renderPage() {
     <div class="card report-export-card">
       <div class="card-header">
         <span class="card-title">${t('generate_report')}</span>
-        <span class="text-caption text-muted">${period || ''}</span>
+        <span class="text-caption text-muted">${escapeHTML(period || '')}</span>
       </div>
       <div class="report-export-actions">
         <button class="btn btn-outline report-export-btn" id="btn-pdf">
@@ -224,9 +224,9 @@ function renderPage() {
               ${transactions.map(tx => `
                 <tr>
                   <td><span class="text-caption text-muted">${formatDate(tx.date)}</span></td>
-                  <td><span class="font-medium">${tx.description || '—'}</span></td>
-                  <td><span class="text-caption">${getLanguage().startsWith('ar') && tx.category?.name_ar ? tx.category.name_ar : (tx.category?.name || '—')}</span></td>
-                  <td><span class="text-caption">${tx.account?.name || '—'}</span></td>
+                  <td><span class="font-medium">${escapeHTML(tx.description || '—')}</span></td>
+                  <td><span class="text-caption">${escapeHTML(getLanguage().startsWith('ar') && tx.category?.name_ar ? tx.category.name_ar : (tx.category?.name || '—'))}</span></td>
+                  <td><span class="text-caption">${escapeHTML(tx.account?.name || '—')}</span></td>
                   <td>
                     <span class="badge ${tx.type === 'income' ? 'badge-success' : tx.type === 'expense' ? 'badge-error' : 'badge-neutral'}">
                       ${t(tx.type)}

@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — ACCOUNTS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon } from '../utils.js?v=locale-singleton-v1';
+import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
 import { getAccounts, createAccount, updateAccount, deleteAccount, setDefaultAccount } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
+import { toast } from '../toast.js?v=security-audit-v1';
 
 let userId, userCurrency = 'USD';
 let accounts = [];
@@ -84,15 +84,15 @@ function accCard(acc) {
   const typeIcon = TYPE_ICONS[acc.type] || 'wallet';
   return `
     <div class="card card-hover" style="position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${acc.color || '#ff4f00'};"></div>
+      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${sanitizeColor(acc.color).startsWith('#') ? sanitizeColor(acc.color) : ACCOUNT_COLORS[0]};"></div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--sp-lg);margin-top:var(--sp-sm);">
         <div style="display:flex;align-items:center;gap:var(--sp-md);">
-          <div style="width:44px;height:44px;border-radius:var(--radius-md);background:${acc.color || '#ff4f00'}22;display:flex;align-items:center;justify-content:center;font-size:22px;">
+          <div style="width:44px;height:44px;border-radius:var(--radius-md);background:${sanitizeColor(acc.color).startsWith('#') ? `${sanitizeColor(acc.color)}22` : 'var(--clr-canvas-raised)'};display:flex;align-items:center;justify-content:center;font-size:22px;">
             ${renderIcon(typeIcon, 22)}
           </div>
           <div>
-            <div class="font-semibold" style="color:var(--clr-ink);">${acc.name}</div>
-            <div class="text-caption text-muted">${t('account_type_' + acc.type) || acc.type}</div>
+            <div class="font-semibold" style="color:var(--clr-ink);">${escapeHTML(acc.name)}</div>
+            <div class="text-caption text-muted">${t('account_type_' + (ACCOUNT_TYPES.includes(acc.type) ? acc.type : 'cash'))}</div>
           </div>
         </div>
         ${acc.is_default ? `<span class="badge badge-primary">${t('default')}</span>` : ''}
@@ -104,12 +104,12 @@ function accCard(acc) {
         </div>
       </div>
       <div class="account-card-actions" style="display:flex;gap:var(--sp-sm);flex-wrap:wrap;">
-        ${!acc.is_default ? `<button class="btn btn-ghost btn-sm" data-default="${acc.id}">${t('set_default')}</button>` : ''}
-        <button class="btn btn-ghost btn-sm account-action" data-edit="${acc.id}">
+        ${!acc.is_default ? `<button class="btn btn-ghost btn-sm" data-default="${escapeHTML(acc.id)}">${t('set_default')}</button>` : ''}
+        <button class="btn btn-ghost btn-sm account-action" data-edit="${escapeHTML(acc.id)}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           ${t('edit')}
         </button>
-        <button class="btn btn-ghost btn-sm account-action account-delete" data-delete="${acc.id}">
+        <button class="btn btn-ghost btn-sm account-action account-delete" data-delete="${escapeHTML(acc.id)}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
           ${t('delete')}
         </button>
@@ -133,7 +133,7 @@ function buildModal(acc) {
     content: `
       <div class="form-group">
         <label class="form-label">${t('account_name')}</label>
-        <input type="text" class="form-input" id="acc-name" placeholder="${t('account_name')}" value="${acc?.name || ''}">
+        <input type="text" class="form-input" id="acc-name" placeholder="${t('account_name')}" maxlength="80" value="${escapeHTML(acc?.name || '')}">
         <div class="form-error hidden" id="acc-name-err"></div>
       </div>
       <div class="form-row">
@@ -145,7 +145,7 @@ function buildModal(acc) {
         </div>
         <div class="form-group">
           <label class="form-label">${t('account_balance')}</label>
-          <input type="number" class="form-input" id="acc-balance" placeholder="0.00" step="0.01" value="${acc?.balance || '0'}">
+          <input type="number" class="form-input" id="acc-balance" placeholder="0.00" step="0.01" value="${Number.isFinite(Number(acc?.balance)) ? Number(acc.balance) : '0'}">
           <div class="form-error hidden" id="acc-balance-err"></div>
         </div>
       </div>
@@ -188,8 +188,9 @@ function buildModal(acc) {
     const is_default = document.getElementById('acc-default').checked;
 
     let valid = true;
-    if (!validateRequired(name)) { showErr('acc-name-err', t('required')); valid = false; } else hideErr('acc-name-err');
-    if (isNaN(parseFloat(balance))) { showErr('acc-balance-err', t('invalid_amount')); valid = false; } else hideErr('acc-balance-err');
+    if (!validateRequired(name) || name.length > 80) { showErr('acc-name-err', t('required')); valid = false; } else hideErr('acc-name-err');
+    if (!Number.isFinite(Number(balance))) { showErr('acc-balance-err', t('invalid_amount')); valid = false; } else hideErr('acc-balance-err');
+    if (!ACCOUNT_TYPES.includes(type) || !ACCOUNT_COLORS.includes(selectedColor)) { toast.error(t('error'), t('error')); return; }
     if (!valid) return;
 
     const btn = document.getElementById('acc-save');

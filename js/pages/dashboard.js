@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — DASHBOARD PAGE
    ============================================================ */
-import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon } from '../utils.js?v=locale-singleton-v1';
+import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
 import { getDashboardSummary, getMonthlyTrend, getCategorySpending, getTransactions, getBudgets, getBudgetSpending, getAccounts, getCategories, createTransaction } from '../services/data.js';
-import { createModal, openModal, closeModal } from '../components/modal.js?v=locale-singleton-v1';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { createModal, openModal, closeModal } from '../components/modal.js?v=security-audit-v1';
+import { toast } from '../toast.js?v=security-audit-v1';
 import { drawBarChart, drawDonutChart } from '../components/charts.js?v=legend-v3';
 
 let userId, userCurrency = 'USD';
@@ -151,8 +151,8 @@ function render() {
             ${categoryData.slice(0, 5).map(cat => `
               <div class="category-legend-row" role="listitem">
                 <div class="category-legend-main">
-                  <span class="category-color-dot" style="background:${cat.color || 'var(--clr-primary)'};"></span>
-                  <span class="category-legend-name">${getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name}</span>
+                  <span class="category-color-dot" style="background:${sanitizeColor(cat.color)};"></span>
+                  <span class="category-legend-name">${escapeHTML(getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name)}</span>
                 </div>
                 <span class="category-legend-amount" dir="ltr">${formatCurrency(cat.total, userCurrency)}</span>
               </div>
@@ -183,13 +183,13 @@ function render() {
                   <tr>
                     <td>
                       <div style="display:flex;align-items:center;gap:var(--sp-sm);">
-                        <div class="cat-icon" style="background:${tx.category?.color ? tx.category.color + '22' : 'var(--clr-canvas-raised)'};">
+                        <div class="cat-icon" style="background:${tx.category?.color && sanitizeColor(tx.category.color).startsWith('#') ? `${sanitizeColor(tx.category.color)}22` : 'var(--clr-canvas-raised)'};">
                           <span style="font-size:14px;">${renderIcon(tx.category?.icon || 'package', 14)}</span>
                         </div>
-                        <span class="font-medium truncate" style="max-width:160px;">${tx.description || '—'}</span>
+                        <span class="font-medium truncate" style="max-width:160px;">${escapeHTML(tx.description || '—')}</span>
                       </div>
                     </td>
-                    <td><span class="text-caption text-muted">${getLanguage().startsWith('ar') && tx.category?.name_ar ? tx.category.name_ar : (tx.category?.name || '—')}</span></td>
+                    <td><span class="text-caption text-muted">${escapeHTML(getLanguage().startsWith('ar') && tx.category?.name_ar ? tx.category.name_ar : (tx.category?.name || '—'))}</span></td>
                     <td><span class="text-caption text-muted">${formatRelativeDate(tx.date)}</span></td>
                     <td style="text-align:right;">
                       <span class="${tx.type === 'income' ? 'amount-income' : tx.type === 'expense' ? 'amount-expense' : 'amount-neutral'}">
@@ -225,10 +225,10 @@ function render() {
             <div style="margin-bottom:var(--sp-lg);">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-xs);">
                 <div style="display:flex;align-items:center;gap:var(--sp-sm);">
-                  <div class="cat-icon" style="width:28px;height:28px;background:${b.category?.color ? b.category.color + '22' : 'var(--clr-canvas-raised)'};">
+                  <div class="cat-icon" style="width:28px;height:28px;background:${b.category?.color && sanitizeColor(b.category.color).startsWith('#') ? `${sanitizeColor(b.category.color)}22` : 'var(--clr-canvas-raised)'};">
                     <span style="font-size:12px;">${renderIcon(b.category?.icon || 'package', 12)}</span>
                   </div>
-                  <span class="text-caption font-semibold">${b.name}</span>
+                  <span class="text-caption font-semibold">${escapeHTML(b.name)}</span>
                 </div>
                 <span class="text-caption text-muted">${pct}%</span>
               </div>
@@ -294,8 +294,8 @@ function openQuickAddModal() {
         <div class="form-error hidden" id="q-amount-err">${t('invalid_amount')}</div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">${t('account')}</label><select class="form-select" id="q-account">${quickAccounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}</select></div>
-        <div class="form-group"><label class="form-label">${t('category_optional')}</label><select class="form-select" id="q-category"><option value="">${t('no_category')}</option>${expenseCats.map(c => `<option value="${c.id}">${renderIcon(c.icon || 'package', 16)} ${ar && c.name_ar ? c.name_ar : c.name}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">${t('account')}</label><select class="form-select" id="q-account">${quickAccounts.map(a => `<option value="${escapeHTML(a.id)}">${escapeHTML(a.name)}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">${t('category_optional')}</label><select class="form-select" id="q-category"><option value="">${t('no_category')}</option>${expenseCats.map(c => `<option value="${escapeHTML(c.id)}">${renderIcon(c.icon || 'package', 16)} ${escapeHTML(ar && c.name_ar ? c.name_ar : c.name)}</option>`).join('')}</select></div>
       </div>
       <div class="form-group"><label class="form-label">${t('short_description_optional')}</label><input class="form-input" id="q-description" maxlength="160" placeholder="${t('description_example')}"></div>
     `,
@@ -317,7 +317,7 @@ function openQuickAddModal() {
 
 function redrawCharts() {
   drawBarChart('bar-chart', trendData.length ? trendData : [{ month: 'Now', income: summaryData.income || 0, expenses: summaryData.expenses || 0 }]);
-  drawDonutChart('donut-chart', categoryData.slice(0, 6).map(c => ({ color: c.color || '#0a0a0a', value: c.total })),
+  drawDonutChart('donut-chart', categoryData.slice(0, 6).map(c => ({ color: sanitizeColor(c.color, '#0a0a0a'), value: c.total })),
     categoryData.length ? formatCurrency(categoryData.reduce((s, c) => s + c.total, 0), userCurrency) : '');
 }
 

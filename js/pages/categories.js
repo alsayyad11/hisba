@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — CATEGORIES PAGE
    ============================================================ */
-import { t, validateRequired, CATEGORY_COLORS, CATEGORY_ICONS, getLanguage, renderIcon } from '../utils.js?v=locale-singleton-v1';
+import { t, validateRequired, CATEGORY_COLORS, CATEGORY_ICONS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
+import { toast } from '../toast.js?v=security-audit-v1';
 
 let userId;
 let categories = [];
@@ -104,19 +104,19 @@ function catCard(cat, lang, editable) {
   const name = lang.startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name;
   return `
     <div class="card card-hover" style="padding:var(--sp-lg);display:flex;align-items:center;gap:var(--sp-md);">
-      <div class="cat-icon" style="background:${cat.color}22;flex-shrink:0;">
-        <span class="category-icon-render">${renderIcon(cat.icon || 'package', 18)}</span>
+      <div class="cat-icon" style="background:${sanitizeColor(cat.color).startsWith('#') ? `${sanitizeColor(cat.color)}22` : 'var(--clr-canvas-raised)'};flex-shrink:0;">
+        <span class="category-icon-render">${renderIcon(ICON_LIST.includes(cat.icon) ? cat.icon : 'package', 18)}</span>
       </div>
       <div style="flex:1;min-width:0;">
-        <div class="font-semibold truncate">${name}</div>
-        <div class="text-caption text-muted">${cat.type || 'expense'}</div>
+        <div class="font-semibold truncate">${escapeHTML(name)}</div>
+        <div class="text-caption text-muted">${cat.type === 'income' ? t('income') : t('expense')}</div>
       </div>
       ${editable ? `
         <div style="display:flex;gap:4px;flex-shrink:0;">
-          <button class="btn btn-ghost btn-icon-sm" data-edit="${cat.id}">
+          <button class="btn btn-ghost btn-icon-sm" data-edit="${escapeHTML(cat.id)}">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button class="btn btn-ghost btn-icon-sm" data-delete="${cat.id}" style="color:var(--clr-error);">
+          <button class="btn btn-ghost btn-icon-sm" data-delete="${escapeHTML(cat.id)}" style="color:var(--clr-error);">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -143,12 +143,12 @@ function buildModal(cat) {
     content: `
       <div class="form-group">
         <label class="form-label">${t('category_name')}</label>
-        <input type="text" class="form-input" id="cat-name" placeholder="${t('category_name')}" value="${cat?.name || ''}">
+        <input type="text" class="form-input" id="cat-name" placeholder="${t('category_name')}" maxlength="80" value="${escapeHTML(cat?.name || '')}">
         <div class="form-error hidden" id="cat-name-err"></div>
       </div>
       <div class="form-group">
         <label class="form-label">${t('category_name_ar')}</label>
-        <input type="text" class="form-input" id="cat-name-ar" placeholder="الاسم بالعربية" value="${cat?.name_ar || ''}" dir="rtl">
+        <input type="text" class="form-input" id="cat-name-ar" placeholder="الاسم بالعربية" maxlength="80" value="${escapeHTML(cat?.name_ar || '')}" dir="rtl">
       </div>
       <div class="form-group">
         <label class="form-label">${t('category_type')}</label>
@@ -205,7 +205,8 @@ function buildModal(cat) {
     const name    = document.getElementById('cat-name').value.trim();
     const name_ar = document.getElementById('cat-name-ar').value.trim();
     const type    = document.getElementById('cat-type').value;
-    if (!validateRequired(name)) { showErr('cat-name-err', t('required')); return; }
+    if (!validateRequired(name) || name.length > 80 || name_ar.length > 80) { showErr('cat-name-err', t('required')); return; }
+    if (!['expense', 'income'].includes(type) || !ICON_LIST.includes(selectedIcon) || !CATEGORY_COLORS.includes(selectedColor)) { toast.error(t('error'), t('error')); return; }
     hideErr('cat-name-err');
 
     const btn = document.getElementById('cat-save');

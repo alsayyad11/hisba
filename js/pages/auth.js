@@ -2,8 +2,8 @@
    HISBA — AUTH PAGE
    ============================================================ */
 import { signIn, signUp, resetPassword } from '../services/auth.js';
-import { t, validateEmail, validatePassword, validateRequired, setLanguage, getLanguage, toggleTheme, initTheme, initI18n } from '../utils.js?v=locale-singleton-v1';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { t, validateEmail, validatePassword, validateRequired, setLanguage, getLanguage, toggleTheme, initTheme, initI18n, escapeHTML } from '../utils.js?v=security-audit-v1';
+import { toast } from '../toast.js?v=security-audit-v1';
 
 let currentView = 'login';
 let signupConfirmationEmail = '';
@@ -172,7 +172,7 @@ function renderSignupSuccess(card, footer) {
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-success)" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
       </div>
       <div class="auth-card-title">${t('success')}</div>
-      <div class="auth-card-subtitle" style="margin-top:var(--sp-sm);">${t('account_created_check_email')}<br><strong>${email}</strong></div>
+      <div class="auth-card-subtitle" style="margin-top:var(--sp-sm);">${t('account_created_check_email')}<br><strong>${escapeHTML(email)}</strong></div>
     </div>`;
   footer.innerHTML = `<a href="#" id="go-login-after-signup">${t('back_to_login')}</a>`;
   document.getElementById('go-login-after-signup')?.addEventListener('click', e => { e.preventDefault(); currentView = 'login'; renderView(); });
@@ -186,7 +186,7 @@ function renderResetSent(card, footer) {
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-success)" stroke-width="2" stroke-linecap="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
       </div>
       <div class="auth-card-title">${t('reset_sent')}</div>
-      <div class="auth-card-subtitle" style="margin-top:var(--sp-sm);">${t('reset_sent_sub')}<br><strong>${email}</strong></div>
+      <div class="auth-card-subtitle" style="margin-top:var(--sp-sm);">${t('reset_sent_sub')}<br><strong>${escapeHTML(email)}</strong></div>
     </div>`;
   footer.innerHTML = `<a href="#" id="go-login3">${t('back_to_login')}</a>`;
   document.getElementById('go-login3').addEventListener('click', e => { e.preventDefault(); currentView = 'login'; renderView(); });
@@ -218,7 +218,7 @@ async function handleSignup(e) {
   const password = document.getElementById('signup-password').value;
   const confirm = document.getElementById('signup-confirm').value;
   let valid = true;
-  if (!validateRequired(name))     { showErr('signup-name-err', t('required')); valid = false; } else hideErr('signup-name-err');
+    if (!validateRequired(name) || name.length > 80) { showErr('signup-name-err', t('required')); valid = false; } else hideErr('signup-name-err');
   if (!validateEmail(email))       { showErr('signup-email-err', t('invalid_email')); valid = false; } else hideErr('signup-email-err');
   if (!validatePassword(password)) { showErr('signup-pw-err', t('password_min')); valid = false; } else hideErr('signup-pw-err');
   if (password !== confirm)        { showErr('signup-confirm-err', t('passwords_no_match')); valid = false; } else hideErr('signup-confirm-err');

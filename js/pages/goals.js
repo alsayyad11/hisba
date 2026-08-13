@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — SAVINGS GOALS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatPercent, validateRequired, validateAmount, GOAL_ICONS, CATEGORY_COLORS, todayISO, renderIcon } from '../utils.js?v=locale-singleton-v1';
+import { t, formatCurrency, formatDate, formatPercent, validateRequired, validateAmount, GOAL_ICONS, CATEGORY_COLORS, todayISO, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
 import { getGoals, createGoal, updateGoal, deleteGoal, addGoalFunds } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
+import { toast } from '../toast.js?v=security-audit-v1';
 
 let userId, userCurrency = 'USD';
 let goals = [];
@@ -85,7 +85,7 @@ function renderPage() {
 function goalCard(g) {
   const pct = formatPercent(g.current_amount, g.target_amount);
   const isComplete = pct >= 100;
-  const color = g.color || CATEGORY_COLORS[0];
+  const color = CATEGORY_COLORS.includes(g.color) ? g.color : CATEGORY_COLORS[0];
 
   return `
     <div class="card card-hover" style="position:relative;overflow:hidden;">
@@ -93,10 +93,10 @@ function goalCard(g) {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--sp-lg);margin-top:var(--sp-sm);">
         <div style="display:flex;align-items:center;gap:var(--sp-md);">
           <div style="width:44px;height:44px;border-radius:var(--radius-md);background:${color}22;display:flex;align-items:center;justify-content:center;font-size:22px;">
-            ${renderIcon(g.icon || 'target', 22)}
+            ${renderIcon(GOAL_ICONS.includes(g.icon) ? g.icon : 'target', 22)}
           </div>
           <div>
-            <div class="font-semibold" style="color:var(--clr-ink);">${g.name}</div>
+            <div class="font-semibold" style="color:var(--clr-ink);">${escapeHTML(g.name)}</div>
             ${g.deadline ? `<div class="text-caption text-muted">${t('goal_deadline').replace(' (optional)','')}: ${formatDate(g.deadline, 'short')}</div>` : ''}
           </div>
         </div>
@@ -123,15 +123,15 @@ function goalCard(g) {
 
       <div style="display:flex;gap:var(--sp-sm);">
         ${!isComplete ? `
-          <button class="btn btn-primary btn-sm" data-funds="${g.id}">
+          <button class="btn btn-primary btn-sm" data-funds="${escapeHTML(g.id)}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             ${t('add_funds')}
           </button>` : ''}
-        <button class="btn btn-ghost btn-sm" data-edit="${g.id}">
+        <button class="btn btn-ghost btn-sm" data-edit="${escapeHTML(g.id)}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           ${t('edit')}
         </button>
-        <button class="btn btn-ghost btn-sm" data-delete="${g.id}" style="color:var(--clr-error);">
+        <button class="btn btn-ghost btn-sm" data-delete="${escapeHTML(g.id)}" style="color:var(--clr-error);">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
         </button>
       </div>
@@ -157,18 +157,18 @@ function buildGoalModal(g) {
     content: `
       <div class="form-group">
         <label class="form-label">${t('goal_name')}</label>
-        <input type="text" class="form-input" id="g-name" placeholder="${t('goal_name')}" value="${g?.name || ''}">
+        <input type="text" class="form-input" id="g-name" placeholder="${t('goal_name')}" maxlength="100" value="${escapeHTML(g?.name || '')}">
         <div class="form-error hidden" id="g-name-err"></div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">${t('goal_target')}</label>
-          <input type="number" class="form-input" id="g-target" placeholder="0.00" min="0" step="0.01" value="${g?.target_amount || ''}">
+          <input type="number" class="form-input" id="g-target" placeholder="0.00" min="0.01" step="0.01" value="${Number.isFinite(Number(g?.target_amount)) ? Number(g.target_amount) : ''}">
           <div class="form-error hidden" id="g-target-err"></div>
         </div>
         <div class="form-group">
           <label class="form-label">${t('goal_current')}</label>
-          <input type="number" class="form-input" id="g-current" placeholder="0.00" min="0" step="0.01" value="${g?.current_amount || '0'}">
+          <input type="number" class="form-input" id="g-current" placeholder="0.00" min="0" step="0.01" value="${Number.isFinite(Number(g?.current_amount)) ? Number(g.current_amount) : '0'}">
         </div>
       </div>
       <div class="form-group">
@@ -225,8 +225,10 @@ function buildGoalModal(g) {
     const current = document.getElementById('g-current').value || '0';
     const deadline = document.getElementById('g-deadline').value || null;
     let valid = true;
-    if (!validateRequired(name)) { showErr('g-name-err', t('required')); valid = false; } else hideErr('g-name-err');
-    if (!validateAmount(target)) { showErr('g-target-err', t('invalid_amount')); valid = false; } else hideErr('g-target-err');
+    if (!validateRequired(name) || name.length > 100) { showErr('g-name-err', t('required')); valid = false; } else hideErr('g-name-err');
+    if (!validateAmount(target) || !Number.isFinite(Number(current)) || Number(current) < 0) { showErr('g-target-err', t('invalid_amount')); valid = false; } else hideErr('g-target-err');
+    const validDeadline = !deadline || /^\d{4}-\d{2}-\d{2}$/.test(deadline);
+    if (!GOAL_ICONS.includes(selectedIcon) || !CATEGORY_COLORS.includes(selectedColor) || !validDeadline) { toast.error(t('error'), t('error')); return; }
     if (!valid) return;
     const btn = document.getElementById('g-save');
     btn.disabled = true; btn.textContent = t('saving');
@@ -249,7 +251,7 @@ function openFundsModal(id) {
   if (!goal) return;
   createModal({
     id: 'funds-modal',
-    title: t('add_funds_title', { goal: goal.name }),
+    title: t('add_funds_title', { goal: escapeHTML(goal.name) }),
     size: 'modal-sm',
     content: `
       <div class="form-group">

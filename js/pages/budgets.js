@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — BUDGETS PAGE
    ============================================================ */
-import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon } from '../utils.js?v=locale-singleton-v1';
+import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
 import { getBudgets, createBudget, updateBudget, deleteBudget, getCategories, getBudgetSpending } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
+import { toast } from '../toast.js?v=security-audit-v1';
 
 let userId, userCurrency = 'USD';
 let budgets = [], categories = [], spending = {};
@@ -118,21 +118,21 @@ function budgetCard(b) {
     <div class="card card-hover" style="padding:var(--sp-xl);">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--sp-lg);">
         <div style="display:flex;align-items:center;gap:var(--sp-md);">
-          <div class="cat-icon" style="background:${b.category?.color ? b.category.color + '22' : 'var(--clr-canvas-raised)'};">
+          <div class="cat-icon" style="background:${b.category?.color && sanitizeColor(b.category.color).startsWith('#') ? `${sanitizeColor(b.category.color)}22` : 'var(--clr-canvas-raised)'};">
             <span style="font-size:18px;">${renderIcon(b.category?.icon || 'package', 18)}</span>
           </div>
           <div>
-            <div class="font-semibold" style="font-size:var(--text-md);">${b.name}</div>
-            <div class="text-caption text-muted">${lang.startsWith('ar') && b.category?.name_ar ? b.category.name_ar : (b.category?.name || '—')} · ${t('period_' + b.period)}</div>
+            <div class="font-semibold" style="font-size:var(--text-md);">${escapeHTML(b.name)}</div>
+            <div class="text-caption text-muted">${escapeHTML(lang.startsWith('ar') && b.category?.name_ar ? b.category.name_ar : (b.category?.name || '—'))} · ${t('period_' + (b.period === 'weekly' ? 'weekly' : 'monthly'))}</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:var(--sp-md);">
           <span class="badge ${statusClass} badge-dot">${statusLabel}</span>
-          <button class="btn btn-outline btn-sm budget-action-edit" data-edit="${b.id}" type="button" title="${getLanguage().startsWith('ar') ? 'تعديل الميزانية' : 'Edit budget'}" aria-label="${getLanguage().startsWith('ar') ? 'تعديل الميزانية' : 'Edit budget'}">
+          <button class="btn btn-outline btn-sm budget-action-edit" data-edit="${escapeHTML(b.id)}" type="button" title="${getLanguage().startsWith('ar') ? 'تعديل الميزانية' : 'Edit budget'}" aria-label="${getLanguage().startsWith('ar') ? 'تعديل الميزانية' : 'Edit budget'}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             <span>${getLanguage().startsWith('ar') ? 'تعديل' : 'Edit'}</span>
           </button>
-          <button class="btn btn-outline btn-sm budget-action-delete" data-delete="${b.id}" type="button" title="${getLanguage().startsWith('ar') ? 'حذف الميزانية' : 'Delete budget'}" aria-label="${getLanguage().startsWith('ar') ? 'حذف الميزانية' : 'Delete budget'}" style="color:var(--clr-error);">
+          <button class="btn btn-outline btn-sm budget-action-delete" data-delete="${escapeHTML(b.id)}" type="button" title="${getLanguage().startsWith('ar') ? 'حذف الميزانية' : 'Delete budget'}" aria-label="${getLanguage().startsWith('ar') ? 'حذف الميزانية' : 'Delete budget'}" style="color:var(--clr-error);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -169,13 +169,13 @@ function buildModal(b) {
     content: `
       <div class="form-group">
         <label class="form-label">${t('budget_name')}</label>
-        <input type="text" class="form-input" id="b-name" placeholder="${t('budget_name')}" value="${b?.name || ''}">
+        <input type="text" class="form-input" id="b-name" placeholder="${t('budget_name')}" maxlength="100" value="${escapeHTML(b?.name || '')}">
         <div class="form-error hidden" id="b-name-err"></div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">${t('budget_amount')}</label>
-          <input type="number" class="form-input" id="b-amount" placeholder="0.00" min="0" step="0.01" value="${b?.amount || ''}">
+          <input type="number" class="form-input" id="b-amount" placeholder="0.00" min="0.01" step="0.01" value="${Number.isFinite(Number(b?.amount)) ? Number(b.amount) : ''}">
           <div class="form-error hidden" id="b-amount-err"></div>
         </div>
         <div class="form-group">
@@ -199,8 +199,8 @@ function buildModal(b) {
         <select class="form-select" id="b-category">
           <option value="">${t('select')}</option>
           ${categories.filter(c => c.type === 'expense' || !c.type).map(cat => `
-            <option value="${cat.id}" ${b?.category_id === cat.id ? 'selected' : ''}>
-              ${cat.icon || ''} ${lang.startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name}
+            <option value="${escapeHTML(cat.id)}" ${b?.category_id === cat.id ? 'selected' : ''}>
+              ${renderIcon(cat.icon || 'package', 16)} ${escapeHTML(lang.startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name)}
             </option>`).join('')}
         </select>
       </div>
@@ -226,8 +226,12 @@ function buildModal(b) {
     const category_id = document.getElementById('b-category').value || null;
 
     let valid = true;
-    if (!validateRequired(name))   { showErr('b-name-err', t('required')); valid = false; } else hideErr('b-name-err');
-    if (!validateAmount(amount))   { showErr('b-amount-err', t('invalid_amount')); valid = false; } else hideErr('b-amount-err');
+    if (!validateRequired(name) || name.length > 100) { showErr('b-name-err', t('required')); valid = false; } else hideErr('b-name-err');
+    if (!validateAmount(amount)) { showErr('b-amount-err', t('invalid_amount')); valid = false; } else hideErr('b-amount-err');
+    const validPeriod = ['weekly', 'monthly'].includes(period);
+    const validDate = period === 'weekly' ? /^\d{4}-\d{2}-\d{2}$/.test(week_key || '') : /^\d{4}-\d{2}$/.test(month_key || '');
+    const validCategory = !category_id || categories.some(category => category.id === category_id && (category.type === 'expense' || !category.type));
+    if (!validPeriod || !validDate || !validCategory) { toast.error(t('error'), t('error')); return; }
     if (!valid) return;
 
     const btn = document.getElementById('b-save');

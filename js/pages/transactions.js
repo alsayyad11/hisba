@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — TRANSACTIONS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon } from '../utils.js?v=locale-singleton-v1';
+import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
 import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getAccounts, getCategories } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
+import { toast } from '../toast.js?v=security-audit-v1';
 
 let userId, userCurrency = 'USD';
 let transactions = [], accounts = [], categories = [];
@@ -103,11 +103,11 @@ function renderPage() {
       <!-- Advanced filters -->
       <select class="form-select" id="category-filter" style="width:auto;min-width:150px;padding-right:2.5rem;">
         <option value="">${t('filter_category')}</option>
-        ${categories.map(cat => `<option value="${cat.id}" ${filters.category_id === cat.id ? 'selected' : ''}>${getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name}</option>`).join('')}
+        ${categories.map(cat => `<option value="${escapeHTML(cat.id)}" ${filters.category_id === cat.id ? 'selected' : ''}>${escapeHTML(getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name)}</option>`).join('')}
       </select>
       <select class="form-select" id="account-filter" style="width:auto;min-width:140px;padding-right:2.5rem;">
         <option value="">${t('filter_account')}</option>
-        ${accounts.map(acc => `<option value="${acc.id}" ${filters.account_id === acc.id ? 'selected' : ''}>${acc.name}</option>`).join('')}
+        ${accounts.map(acc => `<option value="${escapeHTML(acc.id)}" ${filters.account_id === acc.id ? 'selected' : ''}>${escapeHTML(acc.name)}</option>`).join('')}
       </select>
       <select class="form-select" id="status-filter" style="width:auto;min-width:130px;padding-right:2.5rem;">
         <option value="">${t('filter_status') === 'filter_status' ? (getLanguage().startsWith('ar') ? 'الحالة' : 'Status') : t('filter_status')}</option>
@@ -117,7 +117,7 @@ function renderPage() {
       <!-- Search -->
       <div class="search-input" style="flex:1;min-width:200px;max-width:360px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="search-input" placeholder="${t('search_transactions')}" value="${filters.search}">
+        <input type="text" id="search-input" placeholder="${t('search_transactions')}" value="${escapeHTML(filters.search)}">
       </div>
       <select class="form-select" id="sort-filter" style="width:auto;min-width:145px;padding-right:2.5rem;">
         <option value="date_desc" ${filters.sort === 'date_desc' ? 'selected' : ''}>${t('sort_newest') === 'sort_newest' ? (getLanguage().startsWith('ar') ? 'الأحدث أولاً' : 'Newest first') : t('sort_newest')}</option>
@@ -207,22 +207,24 @@ function txRow(tx) {
   const cat = tx.category;
   const acc = tx.account;
   const lang = getLanguage();
+  const categoryColor = sanitizeColor(cat?.color, 'var(--clr-canvas-raised)');
+  const accountColor = sanitizeColor(acc?.color);
   return `
     <tr class="transaction-row">
       <td>
         <div style="display:flex;align-items:center;gap:var(--sp-sm);">
-          <div class="cat-icon transaction-category-icon" style="background:${cat?.color ? cat.color + '22' : 'var(--clr-canvas-raised)'};">
+          <div class="cat-icon transaction-category-icon" style="background:${categoryColor.startsWith('#') ? `${categoryColor}22` : categoryColor};">
             <span style="font-size:14px;">${renderIcon(cat?.icon || 'package', 14)}</span>
           </div>
           <div>
-            <div class="font-medium truncate transaction-description" style="max-width:200px;">${tx.description || '—'}</div>
-            ${tx.notes ? `<div class="text-fine text-muted truncate" style="max-width:200px;">${tx.notes}</div>` : ''}
+            <div class="font-medium truncate transaction-description" style="max-width:200px;">${escapeHTML(tx.description || '—')}</div>
+            ${tx.notes ? `<div class="text-fine text-muted truncate" style="max-width:200px;">${escapeHTML(tx.notes)}</div>` : ''}
           </div>
         </div>
       </td>
-      <td><span class="text-caption">${lang.startsWith('ar') && cat?.name_ar ? cat.name_ar : (cat?.name || '—')}</span></td>
+      <td><span class="text-caption">${escapeHTML(lang.startsWith('ar') && cat?.name_ar ? cat.name_ar : (cat?.name || '—'))}</span></td>
       <td>
-        ${acc ? `<span class="account-badge" style="--account-color:${acc.color || 'var(--clr-primary)'};">${acc.name}</span>` : '—'}
+        ${acc ? `<span class="account-badge" style="--account-color:${accountColor};">${escapeHTML(acc.name)}</span>` : '—'}
       </td>
       <td><span class="text-caption text-muted">${formatRelativeDate(tx.date)}</span></td>
       <td>
@@ -237,10 +239,10 @@ function txRow(tx) {
       </td>
       <td>
         <div class="transaction-row-actions">
-          <button class="btn btn-ghost btn-icon-sm" data-edit="${tx.id}" title="${t('edit')}">
+          <button class="btn btn-ghost btn-icon-sm" data-edit="${escapeHTML(tx.id)}" title="${t('edit')}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button class="btn btn-ghost btn-icon-sm delete-btn" data-delete="${tx.id}" title="${t('delete')}" aria-label="${t('delete')}" type="button">
+          <button class="btn btn-ghost btn-icon-sm delete-btn" data-delete="${escapeHTML(tx.id)}" title="${t('delete')}" aria-label="${t('delete')}" type="button">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -331,7 +333,7 @@ function buildTxModal(tx) {
       </div>
       <div class="form-group">
         <label class="form-label">${t('description')} <span class="field-optional">(${t('optional')})</span></label>
-        <input type="text" class="form-input" id="tx-description" placeholder="${t('description_optional')}" value="${tx?.description || ''}">
+        <input type="text" class="form-input" id="tx-description" placeholder="${t('description_optional')}" value="${escapeHTML(tx?.description || '')}">
         <div class="form-error hidden" id="tx-desc-err"></div>
       </div>
       <div class="form-row">
@@ -340,8 +342,8 @@ function buildTxModal(tx) {
           <select class="form-select" id="tx-category">
             <option value="">${t('select')}</option>
             ${categories.map(cat => `
-              <option value="${cat.id}" ${tx?.category_id === cat.id ? 'selected' : ''}>
-                ${renderIcon(cat.icon || 'package', 16)} ${getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name}
+              <option value="${escapeHTML(cat.id)}" ${tx?.category_id === cat.id ? 'selected' : ''}>
+                ${renderIcon(cat.icon || 'package', 16)} ${escapeHTML(getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name)}
               </option>`).join('')}
           </select>
         </div>
@@ -350,8 +352,8 @@ function buildTxModal(tx) {
           <select class="form-select" id="tx-account">
             <option value="">${t('select')}</option>
             ${accounts.map(acc => `
-              <option value="${acc.id}" ${(tx?.account_id === acc.id || (!tx && acc.is_default)) ? 'selected' : ''}>
-                ${acc.name}
+              <option value="${escapeHTML(acc.id)}" ${(tx?.account_id === acc.id || (!tx && acc.is_default)) ? 'selected' : ''}>
+                ${escapeHTML(acc.name)}
               </option>`).join('')}
           </select>
           <div class="form-error hidden" id="tx-account-err"></div>
@@ -367,7 +369,7 @@ function buildTxModal(tx) {
       </div>
       <div class="form-group">
         <label class="form-label">${t('notes')}</label>
-        <textarea class="form-textarea" id="tx-notes" placeholder="${t('transaction_notes')}" style="min-height:72px;">${tx?.notes || ''}</textarea>
+        <textarea class="form-textarea" id="tx-notes" placeholder="${t('transaction_notes')}" style="min-height:72px;">${escapeHTML(tx?.notes || '')}</textarea>
       </div>
       <div class="form-group">
         <label class="toggle">
