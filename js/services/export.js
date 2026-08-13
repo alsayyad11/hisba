@@ -2,7 +2,7 @@
    HISBA — EXPORT SERVICE
    PDF, CSV, Excel exports
    ============================================================ */
-import { formatCurrency, formatDate, t, getLanguage, isRTL } from '../utils.js?v=locale-singleton-v1';
+import { formatCurrency, formatDate, t, getLanguage, isRTL } from '../utils.js?v=security-audit-v1';
 
 // ── Export helpers ──────────────────────────────────────────
 function escapeHtml(value) {
@@ -11,7 +11,28 @@ function escapeHtml(value) {
 
 function exportName(item, language = getLanguage()) {
   if (!item) return '';
-  return language === 'ar' && item.name_ar ? item.name_ar : (item.name || '');
+  return language.startsWith('ar') && item.name_ar ? item.name_ar : (item.name || '');
+}
+
+function spreadsheetSafe(value) {
+  const text = String(value ?? '');
+  return /^[\s]*[=+\-@]/.test(text) ? `'${text}` : text;
+}
+
+function safePrintableTransaction(tx = {}) {
+  const safeType = tx.type === 'income' || tx.type === 'expense' ? tx.type : 'expense';
+  const safeAmount = Number.isFinite(Number(tx.amount)) ? Number(tx.amount) : 0;
+  const safeItem = item => item ? { ...item, name: escapeHtml(item.name || ''), name_ar: escapeHtml(item.name_ar || ''), currency: String(item.currency || '').replace(/[^A-Z]/g, '').slice(0, 3) } : null;
+  return {
+    ...tx,
+    type: safeType,
+    amount: safeAmount,
+    description: escapeHtml(tx.description || '—'),
+    notes: escapeHtml(tx.notes || ''),
+    status: escapeHtml(tx.status || ''),
+    category: safeItem(tx.category),
+    account: safeItem(tx.account),
+  };
 }
 
 function exportRow(tx) {
@@ -35,7 +56,7 @@ export function exportCSV(transactions, filename = 'Hisba-transactions') {
   const headers = arabic
     ? ['التاريخ', 'الوصف', 'النوع', 'الفئة', 'الحساب', 'المبلغ', 'الحالة', 'ملاحظات']
     : ['Date', 'Description', 'Type', 'Category', 'Account', 'Amount', 'Status', 'Notes'];
-  const quote = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+  const quote = value => `"${spreadsheetSafe(value).replace(/"/g, '""')}"`;
   const rows = transactions.map(tx => {
     const row = exportRow(tx);
     return [row.date, row.description, row.type, row.category, row.account, row.amount.toFixed(2), row.status, row.notes].map(quote);
@@ -51,12 +72,12 @@ export function exportExcel(transactions, summary, filename = 'Hisba-report', ca
   const amount = value => Number(value || 0).toFixed(2);
   const label = (ar, en) => arabic ? ar : en;
   const rows = transactions.map(exportRow);
-  const categoryRows = (categories || []).map(cat => `<tr><td>${escapeHtml(exportName(cat))}</td><td class="number">${amount(cat.total)}</td><td>${escapeHtml(currency)}</td></tr>`).join('');
+  const categoryRows = (categories || []).map(cat => `<tr><td>${escapeHtml(spreadsheetSafe(exportName(cat)))}</td><td class="number">${amount(cat.total)}</td><td>${escapeHtml(currency)}</td></tr>`).join('');
   const transactionRows = rows.map(row => `<tr>
-    <td>${escapeHtml(row.date)}</td><td>${escapeHtml(row.description)}</td><td>${escapeHtml(row.type)}</td>
-    <td>${escapeHtml(row.category || '—')}</td><td>${escapeHtml(row.account || '—')}</td>
+    <td>${escapeHtml(spreadsheetSafe(row.date))}</td><td>${escapeHtml(spreadsheetSafe(row.description))}</td><td>${escapeHtml(spreadsheetSafe(row.type))}</td>
+    <td>${escapeHtml(spreadsheetSafe(row.category || '—'))}</td><td>${escapeHtml(spreadsheetSafe(row.account || '—'))}</td>
     <td class="number ${row.type === (arabic ? 'دخل' : 'Income') ? 'income' : 'expense'}">${row.type === (arabic ? 'دخل' : 'Income') ? '+' : '-'}${amount(row.amount)}</td>
-    <td>${escapeHtml(row.currency || currency)}</td><td>${escapeHtml(row.status || '—')}</td><td>${escapeHtml(row.notes || '—')}</td>
+    <td>${escapeHtml(spreadsheetSafe(row.currency || currency))}</td><td>${escapeHtml(spreadsheetSafe(row.status || '—'))}</td><td>${escapeHtml(spreadsheetSafe(row.notes || '—'))}</td>
   </tr>`).join('');
   const html = `<!doctype html><html lang="${arabic ? 'ar' : 'en'}" dir="${arabic ? 'rtl' : 'ltr'}">
   <head><meta charset="UTF-8"><style>
@@ -83,15 +104,24 @@ export function exportPDF(data, template = 'minimal') {
   if (!win) { alert('Please allow popups to generate PDF'); return; }
 
   const { transactions = [], summary = {}, period = '', accounts = [] } = data;
-  const currency = summary.currency || 'EGP';
+  const safeTransactions = transactions.map(safePrintableTransaction);
+  const currency = /^[A-Z]{3}$/.test(summary.currency || '') ? summary.currency : 'EGP';
+  const safeSummary = {
+    ...summary,
+    income: Number.isFinite(Number(summary.income)) ? Number(summary.income) : 0,
+    expenses: Number.isFinite(Number(summary.expenses)) ? Number(summary.expenses) : 0,
+    net: Number.isFinite(Number(summary.net)) ? Number(summary.net) : undefined,
+    currency,
+  };
+  const safePeriod = escapeHtml(period);
   const rtl = isRTL();
   const dir = rtl ? 'rtl' : 'ltr';
 
   const templates = {
-    minimal:   buildMinimalTemplate(transactions, summary, period, currency, dir),
-    corporate: buildCorporateTemplate(transactions, summary, period, currency, dir),
-    modern:    buildModernTemplate(transactions, summary, period, currency, dir),
-    dark:      buildDarkTemplate(transactions, summary, period, currency, dir),
+    minimal:   buildMinimalTemplate(safeTransactions, safeSummary, safePeriod, currency, dir),
+    corporate: buildCorporateTemplate(safeTransactions, safeSummary, safePeriod, currency, dir),
+    modern:    buildModernTemplate(safeTransactions, safeSummary, safePeriod, currency, dir),
+    dark:      buildDarkTemplate(safeTransactions, safeSummary, safePeriod, currency, dir),
   };
 
   const html = (templates[template] || templates.minimal).replace(/<img\s+src="assets\/hisba-logo\.png"[^>]*>/g, '');
