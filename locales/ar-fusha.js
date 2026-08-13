@@ -4,6 +4,7 @@ import { ar } from './ar.js';
 export const arFusha = {
   ...ar,
   language_name: 'العربية الفصحى',
+  brand_tagline: 'أين ذهبت أموالي؟',
   lang_ar_eg: 'العربية المصرية',
   lang_ar_fusha: 'العربية الفصحى',
   lang_en: 'الإنجليزية',
