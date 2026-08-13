@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — MODAL COMPONENT
    ============================================================ */
-import { t } from '../utils.js';
+import { t } from '../utils.js?v=locale-singleton-v1';
 
 export function createModal({ id, title, size = '', content = '', footerButtons = [] }) {
   let backdrop = document.getElementById(id);
