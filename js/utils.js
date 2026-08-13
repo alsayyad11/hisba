@@ -14,6 +14,19 @@ const LANGUAGE_STORAGE_KEY = 'hisba_lang';
 const LEGACY_LANGUAGE_STORAGE_KEY = 'Hisba_lang';
 let currentLocale = 'ar-eg';
 
+function normalizeLanguage(lang) {
+  const normalized = lang === 'ar' ? 'ar-eg' : lang;
+  return locales[normalized] ? normalized : 'en';
+}
+
+// Each ES-module URL has its own module instance. Keep every instance aligned
+// with the user's saved choice before it renders localized interface copy.
+function syncLocaleFromStorage() {
+  const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) || localStorage.getItem(LEGACY_LANGUAGE_STORAGE_KEY);
+  if (saved) currentLocale = normalizeLanguage(saved);
+  return currentLocale;
+}
+
 export function initI18n() {
   const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) || localStorage.getItem(LEGACY_LANGUAGE_STORAGE_KEY) || 'ar-eg';
   if (!localStorage.getItem(LANGUAGE_STORAGE_KEY) && localStorage.getItem(LEGACY_LANGUAGE_STORAGE_KEY)) {
@@ -23,8 +36,7 @@ export function initI18n() {
 }
 
 export function setLanguage(lang, save = true) {
-  const normalizedLang = lang === 'ar' ? 'ar-eg' : lang;
-  currentLocale = locales[normalizedLang] ? normalizedLang : 'en';
+  currentLocale = normalizeLanguage(lang);
   const html = document.documentElement;
   html.lang = currentLocale;
   html.dir  = currentLocale.startsWith('ar') ? 'rtl' : 'ltr';
@@ -52,7 +64,7 @@ export function setLanguage(lang, save = true) {
 }
 
 export function t(key, vars = {}) {
-  const locale = locales[currentLocale] || en;
+  const locale = locales[syncLocaleFromStorage()] || en;
   // Never fall back to another language: a missing key must remain visible as its key, not mixed copy.
   let str = locale[key] ?? key;
   Object.entries(vars).forEach(([k, v]) => {
@@ -61,8 +73,8 @@ export function t(key, vars = {}) {
   return str;
 }
 
-export function getLanguage() { return currentLocale; }
-export function isRTL() { return currentLocale.startsWith('ar'); }
+export function getLanguage() { return syncLocaleFromStorage(); }
+export function isRTL() { return getLanguage().startsWith('ar'); }
 
 // ── Theme ──────────────────────────────────────────────────
 let currentTheme = 'light';
