@@ -7,7 +7,7 @@
 import { en } from '../locales/en.js?v=profile-v2';
 import { ar } from '../locales/ar.js?v=profile-v2';
 import { arEg } from '../locales/ar-eg.js?v=profile-v2';
-import { arFusha } from '../locales/ar-fusha.js?v=fusha-v2';
+import { arFusha } from '../locales/ar-fusha.js?v=tagline-fusha-v1';
 
 const locales = { en, ar: arEg, 'ar-eg': arEg, 'ar-fusha': arFusha };
 let currentLocale = 'ar-eg';
