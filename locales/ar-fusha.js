@@ -42,4 +42,6 @@ export const arFusha = {
   setup_category_missing: 'أضف تصنيفاً يساعدك على معرفة أوجه إنفاق أموالك.',
   transaction_description: 'الوصف',
   transaction_notes: 'ملاحظات (اختياري)',
+  report_compare_from: 'من شهر',
+  report_compare_to: 'إلى شهر',
 };

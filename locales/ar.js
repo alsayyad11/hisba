@@ -237,6 +237,8 @@ export const ar = {
   reports_subtitle: 'حلّل نشاطك المالي',
   generate_report: 'إنشاء تقرير',
   report_period: 'الفترة',
+  report_compare_from: 'من شهر',
+  report_compare_to: 'إلى شهر',
   report_type: 'نوع التقرير',
   report_account: 'الحساب',
   export_pdf: 'تصدير PDF',

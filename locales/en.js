@@ -239,6 +239,8 @@ export const en = {
   reports_subtitle: 'Analyze your financial activity',
   generate_report: 'Generate report',
   report_period: 'Period',
+  report_compare_from: 'From month',
+  report_compare_to: 'To month',
   report_type: 'Report type',
   report_account: 'Account',
   export_pdf: 'Export PDF',
