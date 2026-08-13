@@ -2,9 +2,9 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=locale-singleton-v1';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=security-audit-v1';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
-import { toast } from './toast.js?v=locale-singleton-v1';
+import { toast } from './toast.js?v=security-audit-v1';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
@@ -82,12 +82,14 @@ function renderShell() {
   document.title = brandName;
   const name = currentProfile?.full_name || currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.username || currentUser?.user_metadata?.user_name || currentUser?.email?.split('@')[0] || 'User';
   const initial = name.charAt(0).toUpperCase();
+  const safeName = escapeHTML(name);
+  const safeEmail = escapeHTML(currentUser?.email || '');
   const sidebarCollapsed = localStorage.getItem('hisba-sidebar-collapsed') === 'true';
   const collapseLabel = isArabic ? 'طي الشريط الجانبي' : 'Collapse sidebar';
   const expandLabel = isArabic ? 'فتح الشريط الجانبي' : 'Expand sidebar';
   const avatarMarkup = currentProfile?.avatar_url
-    ? `<img src="${currentProfile.avatar_url}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`
-    : initial;
+    ? `<img src="${escapeHTML(currentProfile.avatar_url)}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`
+    : escapeHTML(initial);
 
   document.body.innerHTML = `
     <div id="toast-container"></div>
@@ -137,8 +139,8 @@ function renderShell() {
           <div class="sidebar-user" id="sidebar-user-menu">
             <div class="avatar">${avatarMarkup}</div>
             <div class="sidebar-user-info">
-              <div class="sidebar-user-name">${name}</div>
-              <div class="sidebar-user-email">${currentUser?.email || ''}</div>
+              <div class="sidebar-user-name">${safeName}</div>
+              <div class="sidebar-user-email">${safeEmail}</div>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--clr-body-mid);flex-shrink:0;"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
           </div>
@@ -164,8 +166,8 @@ function renderShell() {
               </button>
               <div class="dropdown-menu hidden" id="user-menu">
                 <div style="padding:var(--sp-sm) var(--sp-md) var(--sp-xs);">
-                  <div class="text-caption font-semibold">${name}</div>
-                  <div class="text-fine text-muted">${currentUser?.email || ''}</div>
+                  <div class="text-caption font-semibold">${safeName}</div>
+                  <div class="text-fine text-muted">${safeEmail}</div>
                 </div>
                 <div class="dropdown-divider"></div>
                 <button class="dropdown-item" data-nav="settings">
@@ -238,7 +240,7 @@ function renderShell() {
     const url = e.detail?.avatar_url;
     if (!url) return;
     document.querySelectorAll('.sidebar-user .avatar, #user-menu-btn .avatar').forEach(el => {
-      el.innerHTML = `<img src="${url}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`;
+      el.innerHTML = `<img src="${escapeHTML(url)}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`;
     });
   });
 
@@ -299,7 +301,7 @@ async function navigateTo(page, opts = {}) {
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-error)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
         <p class="empty-state-title">${t('error')}</p>
-        <p class="empty-state-desc">${err.message}</p>
+        <p class="empty-state-desc">${escapeHTML(err?.message || t('error'))}</p>
         <button class="btn btn-primary" onclick="location.reload()">${t('reload')}</button>
       </div>`;
   }
@@ -381,7 +383,7 @@ function settingsIcon(){ return `<circle cx="12" cy="12" r="3"/><path d="M19.4 1
 // Boot!
 boot().catch(err => {
   console.error('Boot failed:', err);
-  document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;font-family:system-ui;"><div><h2>Something went wrong</h2><p>${err.message}</p><a href="/login">Back to login</a></div></div>`;
+  document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;font-family:system-ui;"><div><h2>Something went wrong</h2><p>${escapeHTML(err?.message || 'Unexpected error')}</p><a href="/login">Back to login</a></div></div>`;
 });
 
 function catIcon()   { return `<tag><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></tag>`.replace(/tag/g,''); }

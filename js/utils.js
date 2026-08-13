@@ -249,6 +249,26 @@ export function validateRequired(val) {
   return val !== null && val !== undefined && String(val).trim() !== '';
 }
 
+// ── Safe dynamic rendering ─────────────────────────────────
+// Escape user-controlled values before interpolating them into HTML templates.
+export function escapeHTML(value = '') {
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char]);
+}
+
+// Only allow simple color values used by the app's saved account/category palette.
+export function sanitizeColor(value, fallback = 'var(--clr-primary)') {
+  const color = String(value || '');
+  const isHex = /^#[0-9a-fA-F]{3,4}([0-9a-fA-F]{3,4})?$/.test(color);
+  const isCssVariable = /^var\(--[a-zA-Z0-9-]+\)$/.test(color);
+  return isHex || isCssVariable ? color : fallback;
+}
+
 // ── Color helpers ──────────────────────────────────────────
 export const CATEGORY_COLORS = [
   '#ff4d8b', '#1a3a3a', '#b8a4ed', '#ffb084',
