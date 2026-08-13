@@ -2,22 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, toggleTheme, t, getLanguage } from './utils.js?v=lang-v5';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=fusha-v2';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
 import { toast } from './toast.js';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=lang-v3'),
-  transactions: () => import('./pages/transactions.js?v=lang-v3'),
-  accounts:     () => import('./pages/accounts.js?v=lang-v3'),
-  budgets:      () => import('./pages/budgets.js?v=lang-v3'),
-  goals:        () => import('./pages/goals.js?v=lang-v3'),
-  reports:      () => import('./pages/reports.js?v=lang-v3'),
-  categories:   () => import('./pages/categories.js?v=lang-v3'),
-  bills:        () => import('./pages/bills.js?v=lang-v3'),
-  settings:     () => import('./pages/settings.js?v=lang-v4'),
-  help:         () => import('./pages/help.js?v=lang-v3'),
+  dashboard:    () => import('./pages/dashboard.js?v=locale-state-v1'),
+  transactions: () => import('./pages/transactions.js?v=locale-state-v1'),
+  accounts:     () => import('./pages/accounts.js?v=locale-state-v1'),
+  budgets:      () => import('./pages/budgets.js?v=locale-state-v1'),
+  goals:        () => import('./pages/goals.js?v=locale-state-v1'),
+  reports:      () => import('./pages/reports.js?v=locale-state-v1'),
+  categories:   () => import('./pages/categories.js?v=locale-state-v1'),
+  bills:        () => import('./pages/bills.js?v=locale-state-v1'),
+  settings:     () => import('./pages/settings.js?v=locale-state-v1'),
+  help:         () => import('./pages/help.js?v=locale-state-v1'),
 };
 
 let currentUser = null;
@@ -43,7 +43,7 @@ async function boot() {
   // Sync stored prefs
   if (currentProfile?.language) setLanguage(currentProfile.language, false);
   // Keep the refreshed light theme as the safe default; only restore an explicit light preference.
-  if (currentProfile?.theme === 'light') import('./utils.js?v=lang-v5').then(u => u.setTheme('light', false));
+  if (currentProfile?.theme === 'light') setTheme('light', false);
 
   renderShell();
   hideLoadingOverlay();
@@ -56,8 +56,8 @@ async function boot() {
 
   // Listen for navigation events from pages
   window.addEventListener('navigate', e => {
-    const { page, action } = e.detail || {};
-    navigateTo(page, { action });
+    const { page, action, returnTo, returnAction } = e.detail || {};
+    navigateTo(page, { action, returnTo, returnAction });
   });
 
   // Rebuild the shell and active page exactly once when the language changes.
@@ -76,9 +76,14 @@ async function boot() {
 }
 
 function renderShell() {
-  document.title = 'حِسبة | Hisba';
+  const isArabic = getLanguage().startsWith('ar');
+  const brandName = isArabic ? 'حِسبة' : 'Hisba';
+  document.title = brandName;
   const name = currentProfile?.full_name || currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.username || currentUser?.user_metadata?.user_name || currentUser?.email?.split('@')[0] || 'User';
   const initial = name.charAt(0).toUpperCase();
+  const sidebarCollapsed = localStorage.getItem('hisba-sidebar-collapsed') === 'true';
+  const collapseLabel = isArabic ? 'طي الشريط الجانبي' : 'Collapse sidebar';
+  const expandLabel = isArabic ? 'فتح الشريط الجانبي' : 'Expand sidebar';
   const avatarMarkup = currentProfile?.avatar_url
     ? `<img src="${currentProfile.avatar_url}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`
     : initial;
@@ -86,18 +91,21 @@ function renderShell() {
   document.body.innerHTML = `
     <div id="toast-container"></div>
     <div id="loading-overlay" class="loading-overlay hidden">
-      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisba-logo-transparent-gold-final.png" alt="حِسبة | Hisba"><span class="hisba-logo-wordmark"><span class="brand-ar">حِسبة</span><span class="brand-separator"> | </span><span class="brand-en">Hisba</span></span></div>
+      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisba-logo-transparent-gold-final.png" alt="${brandName}"><span class="hisba-logo-wordmark">${brandName}</span></div>
       <div class="loading-spinner"></div>
     </div>
 
-    <div class="app-shell">
+    <div class="app-shell${sidebarCollapsed ? ' sidebar-collapsed' : ''}">
       <!-- Sidebar -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <a class="sidebar-brand" href="#" data-nav="dashboard">
-            <img class="sidebar-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="حِسبة | Hisba">
-            <span class="sidebar-brand-name"><span class="brand-ar">حِسبة</span><span class="brand-separator"> | </span><span class="brand-en">Hisba</span></span>
+            <img class="sidebar-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="${brandName}">
+            <span class="sidebar-brand-name">${brandName}</span>
           </a>
+          <button class="sidebar-collapse-toggle" id="sidebar-collapse-toggle" type="button" aria-label="${sidebarCollapsed ? expandLabel : collapseLabel}" aria-expanded="${!sidebarCollapsed}" title="${sidebarCollapsed ? expandLabel : collapseLabel}">
+            <svg class="collapse-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
         </div>
 
         <nav class="sidebar-nav" id="sidebar-nav">
@@ -148,11 +156,6 @@ function renderShell() {
           </button>
           <div class="topbar-title" id="topbar-title">${t('nav_dashboard')}</div>
           <div class="topbar-actions">
-            <span class="connection-status is-online" id="connection-status" role="status" aria-live="polite"><span class="connection-dot"></span><span class="connection-label">${navigator.onLine ? t('online') : t('offline')}</span></span>
-            <button class="topbar-action-btn" id="btn-theme" title="${t('toggle_theme')}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            </button>
-            <button class="topbar-lang-btn" id="btn-lang">${getLanguage().startsWith('ar') ? 'EN' : 'عر'}</button>
             <div class="dropdown" id="user-dropdown">
               <button class="topbar-action-btn" id="user-menu-btn" aria-haspopup="true">
                 <div class="avatar avatar-sm">${avatarMarkup}</div>
@@ -211,33 +214,13 @@ function renderShell() {
     if (e.key === 'Enter' || e.key === ' ') openAccountSettings(e);
   });
 
-  // Mobile sidebar toggle
+  // Sidebar controls: collapse on desktop, drawer toggle on smaller screens.
+  document.getElementById('sidebar-collapse-toggle')?.addEventListener('click', toggleSidebarCollapse);
   document.getElementById('menu-toggle')?.addEventListener('click', toggleSidebar);
   document.getElementById('sidebar-overlay')?.addEventListener('click', closeSidebar);
+  syncSidebarControls();
 
-  // Connectivity indicator: data is saved locally first and syncs when online.
-  const updateConnectivityStatus = () => {
-    const el = document.getElementById('connection-status');
-    if (!el) return;
-    const online = navigator.onLine;
-    el.classList.toggle('is-online', online);
-    el.classList.toggle('is-offline', !online);
-    const label = el.querySelector('.connection-label');
-    if (label) label.textContent = t(online ? 'online' : 'offline');
-  };
-  window.addEventListener('online', updateConnectivityStatus);
-  window.addEventListener('offline', updateConnectivityStatus);
-  updateConnectivityStatus();
-
-  // Theme toggle
-  document.getElementById('btn-theme')?.addEventListener('click', toggleTheme);
-
-  // Language toggle
-  document.getElementById('btn-lang')?.addEventListener('click', () => {
-    const next = getLanguage().startsWith('ar') ? 'en' : 'ar-eg';
-    setLanguage(next);
-    document.getElementById('btn-lang').textContent = next.startsWith('ar') ? 'EN' : 'ع';
-  });
+  // Connectivity, theme, and language are managed from Settings only.
 
   // User dropdown
   const userMenuBtn = document.getElementById('user-menu-btn');
@@ -328,6 +311,33 @@ function toggleSidebar() {
   overlay?.classList.toggle('visible', !isOpen);
 }
 
+function toggleSidebarCollapse() {
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    toggleSidebar();
+    return;
+  }
+  const shell = document.querySelector('.app-shell');
+  if (!shell) return;
+  const collapsed = shell.classList.toggle('sidebar-collapsed');
+  localStorage.setItem('hisba-sidebar-collapsed', String(collapsed));
+  syncSidebarControls();
+}
+
+function syncSidebarControls() {
+  const shell = document.querySelector('.app-shell');
+  const button = document.getElementById('sidebar-collapse-toggle');
+  if (!shell || !button) return;
+  const collapsed = shell.classList.contains('sidebar-collapsed');
+  const isArabic = getLanguage().startsWith('ar');
+  const label = collapsed
+    ? (isArabic ? 'فتح الشريط الجانبي' : 'Expand sidebar')
+    : (isArabic ? 'طي الشريط الجانبي' : 'Collapse sidebar');
+  button.setAttribute('aria-label', label);
+  button.setAttribute('title', label);
+  button.setAttribute('aria-expanded', String(!collapsed));
+  button.classList.toggle('is-collapsed', collapsed);
+}
+
 function closeSidebar() {
   document.getElementById('sidebar')?.classList.remove('open');
   document.getElementById('sidebar-overlay')?.classList.remove('visible');
@@ -335,9 +345,10 @@ function closeSidebar() {
 
 function showLoadingOverlay() {
   const body = document.body;
+  const brandName = getLanguage().startsWith('ar') ? 'حِسبة' : 'Hisba';
   body.innerHTML = `
     <div class="loading-overlay">
-      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisba-logo-transparent-gold-final.png" alt="حِسبة | Hisba"><span class="hisba-logo-wordmark"><span class="brand-ar">حِسبة</span><span class="brand-separator"> | </span><span class="brand-en">Hisba</span></span></div>
+      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisba-logo-transparent-gold-final.png" alt="${brandName}"><span class="hisba-logo-wordmark">${brandName}</span></div>
       <div class="loading-spinner"></div>
     </div>`;
 }
