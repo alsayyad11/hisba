@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — SAVINGS GOALS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatPercent, validateRequired, validateAmount, GOAL_ICONS, CATEGORY_COLORS, todayISO, renderIcon } from '../utils.js?v=locale-shell-v2';
+import { t, formatCurrency, formatDate, formatPercent, validateRequired, validateAmount, GOAL_ICONS, CATEGORY_COLORS, todayISO, renderIcon } from '../utils.js?v=locale-singleton-v1';
 import { getGoals, createGoal, updateGoal, deleteGoal, addGoalFunds } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js';
-import { toast } from '../toast.js';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1;
+import { toast } from '../toast.js?v=locale-singleton-v1;
 
 let userId, userCurrency = 'USD';
 let goals = [];

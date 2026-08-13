@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — BUDGETS PAGE
    ============================================================ */
-import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon } from '../utils.js?v=locale-shell-v2';
+import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon } from '../utils.js?v=locale-singleton-v1';
 import { getBudgets, createBudget, updateBudget, deleteBudget, getCategories, getBudgetSpending } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js';
-import { toast } from '../toast.js';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1;
+import { toast } from '../toast.js?v=locale-singleton-v1;
 
 let userId, userCurrency = 'USD';
 let budgets = [], categories = [], spending = {};
