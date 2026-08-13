@@ -10,10 +10,15 @@ import { arEg } from '../locales/ar-eg.js?v=profile-v2';
 import { arFusha } from '../locales/ar-fusha.js?v=tagline-fusha-v1';
 
 const locales = { en, ar: arEg, 'ar-eg': arEg, 'ar-fusha': arFusha };
+const LANGUAGE_STORAGE_KEY = 'hisba_lang';
+const LEGACY_LANGUAGE_STORAGE_KEY = 'Hisba_lang';
 let currentLocale = 'ar-eg';
 
 export function initI18n() {
-  const saved = localStorage.getItem('Hisba_lang') || 'ar-eg';
+  const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) || localStorage.getItem(LEGACY_LANGUAGE_STORAGE_KEY) || 'ar-eg';
+  if (!localStorage.getItem(LANGUAGE_STORAGE_KEY) && localStorage.getItem(LEGACY_LANGUAGE_STORAGE_KEY)) {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, saved);
+  }
   setLanguage(saved, false);
 }
 
@@ -24,7 +29,10 @@ export function setLanguage(lang, save = true) {
   html.lang = currentLocale;
   html.dir  = currentLocale.startsWith('ar') ? 'rtl' : 'ltr';
   document.title = currentLocale.startsWith('ar') ? 'حِسبة' : 'Hisba';
-  if (save) localStorage.setItem('Hisba_lang', currentLocale);
+  if (save) {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, currentLocale);
+    localStorage.removeItem(LEGACY_LANGUAGE_STORAGE_KEY);
+  }
 
   // Update all data-i18n elements
   document.querySelectorAll('[data-i18n]').forEach(el => {

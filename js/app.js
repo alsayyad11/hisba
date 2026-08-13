@@ -2,22 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=fusha-v3';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=locale-preference-v1';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
 import { toast } from './toast.js';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=locale-state-v1'),
-  transactions: () => import('./pages/transactions.js?v=locale-state-v1'),
-  accounts:     () => import('./pages/accounts.js?v=locale-state-v1'),
-  budgets:      () => import('./pages/budgets.js?v=locale-state-v1'),
-  goals:        () => import('./pages/goals.js?v=locale-state-v1'),
-  reports:      () => import('./pages/reports.js?v=locale-state-v1'),
-  categories:   () => import('./pages/categories.js?v=locale-state-v1'),
-  bills:        () => import('./pages/bills.js?v=locale-state-v1'),
-  settings:     () => import('./pages/settings.js?v=locale-state-v1'),
-  help:         () => import('./pages/help.js?v=locale-state-v1'),
+  dashboard:    () => import('./pages/dashboard.js?v=locale-preference-v1'),
+  transactions: () => import('./pages/transactions.js?v=locale-preference-v1'),
+  accounts:     () => import('./pages/accounts.js?v=locale-preference-v1'),
+  budgets:      () => import('./pages/budgets.js?v=locale-preference-v1'),
+  goals:        () => import('./pages/goals.js?v=locale-preference-v1'),
+  reports:      () => import('./pages/reports.js?v=locale-preference-v1'),
+  categories:   () => import('./pages/categories.js?v=locale-preference-v1'),
+  bills:        () => import('./pages/bills.js?v=locale-preference-v1'),
+  settings:     () => import('./pages/settings.js?v=locale-preference-v1'),
+  help:         () => import('./pages/help.js?v=locale-preference-v1'),
 };
 
 let currentUser = null;
@@ -40,8 +40,9 @@ async function boot() {
   currentUser = await getUser();
   currentProfile = await getProfile(currentUser.id);
 
-  // Sync stored prefs
-  if (currentProfile?.language) setLanguage(currentProfile.language, false);
+  // A language explicitly selected on this device takes precedence over a stale remote profile preference.
+  const storedLanguage = localStorage.getItem('hisba_lang') || localStorage.getItem('Hisba_lang');
+  if (!storedLanguage && currentProfile?.language) setLanguage(currentProfile.language, false);
   // Keep the refreshed light theme as the safe default; only restore an explicit light preference.
   if (currentProfile?.theme === 'light') setTheme('light', false);
 
