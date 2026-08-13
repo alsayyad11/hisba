@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — SETTINGS PAGE
    ============================================================ */
-import { t, setLanguage, getLanguage, getTheme, setTheme, validateRequired, validatePassword, renderIcon } from '../utils.js?v=fusha-v3';
+import { t, setLanguage, getLanguage, getTheme, setTheme, validateRequired, validatePassword, renderIcon } from '../utils.js?v=locale-preference-v1';
 import { getProfile, updateProfile, updatePassword, uploadProfileAvatar, signOut } from '../services/auth.js';
 import { showConfirm } from '../components/modal.js';
 import { toast } from '../toast.js';

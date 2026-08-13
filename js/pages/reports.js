@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — REPORTS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, getDateRange, getLanguage, getMonthRange, getCurrentMonth, renderIcon } from '../utils.js?v=fusha-v3';
+import { t, formatCurrency, formatDate, getDateRange, getLanguage, getMonthRange, getCurrentMonth, renderIcon } from '../utils.js?v=locale-preference-v1';
 import { getTransactions, getAccounts, getDashboardSummary } from '../services/data.js';
 import { exportCSV, exportExcel, exportPDF } from '../services/export.js';
 import { drawBarChart, drawDonutChart } from '../components/charts.js';

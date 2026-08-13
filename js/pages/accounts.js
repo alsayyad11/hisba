@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — ACCOUNTS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon } from '../utils.js?v=fusha-v3';
+import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon } from '../utils.js?v=locale-preference-v1';
 import { getAccounts, createAccount, updateAccount, deleteAccount, setDefaultAccount } from '../services/data.js';
 import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js';
 import { toast } from '../toast.js';
