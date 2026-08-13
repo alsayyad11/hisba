@@ -2,7 +2,7 @@
    HISBA — AUTH PAGE
    ============================================================ */
 import { signIn, signUp, resetPassword } from '../services/auth.js';
-import { t, validateEmail, validatePassword, validateRequired, setLanguage, getLanguage, toggleTheme, initTheme, initI18n } from '../utils.js?v=locale-preference-v1';
+import { t, validateEmail, validatePassword, validateRequired, setLanguage, getLanguage, toggleTheme, initTheme, initI18n } from '../utils.js?v=locale-shell-v2';
 import { toast } from '../toast.js';
 
 let currentView = 'login';

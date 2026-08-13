@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — DASHBOARD PAGE
    ============================================================ */
-import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon } from '../utils.js?v=locale-preference-v1';
+import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon } from '../utils.js?v=locale-shell-v2';
 import { getDashboardSummary, getMonthlyTrend, getCategorySpending, getTransactions, getBudgets, getBudgetSpending, getAccounts, getCategories, createTransaction } from '../services/data.js';
 import { createModal, openModal, closeModal } from '../components/modal.js';
 import { toast } from '../toast.js';
