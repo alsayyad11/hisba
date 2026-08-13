@@ -155,6 +155,7 @@ function renderShell() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <div class="topbar-title" id="topbar-title">${t('nav_dashboard')}</div>
+          <div class="topbar-tagline" id="topbar-tagline" aria-label="${t('brand_tagline')}">${t('brand_tagline')}</div>
           <div class="topbar-actions">
             <div class="dropdown" id="user-dropdown">
               <button class="topbar-action-btn" id="user-menu-btn" aria-haspopup="true">
