@@ -2,18 +2,18 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=locale-shell-v2';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage } from './utils.js?v=finance-workspace-v1';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
 import { toast } from './toast.js';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
   dashboard:    () => import('./pages/dashboard.js?v=locale-shell-v2'),
-  transactions: () => import('./pages/transactions.js?v=locale-shell-v2'),
+  transactions: () => import('./pages/transactions.js?v=finance-workspace-v1'),
   accounts:     () => import('./pages/accounts.js?v=locale-shell-v2'),
   budgets:      () => import('./pages/budgets.js?v=locale-shell-v2'),
   goals:        () => import('./pages/goals.js?v=locale-shell-v2'),
-  reports:      () => import('./pages/reports.js?v=locale-shell-v2'),
+  reports:      () => import('./pages/reports.js?v=finance-workspace-v1'),
   categories:   () => import('./pages/categories.js?v=locale-shell-v2'),
   bills:        () => import('./pages/bills.js?v=locale-shell-v2'),
   settings:     () => import('./pages/settings.js?v=locale-shell-v2'),
