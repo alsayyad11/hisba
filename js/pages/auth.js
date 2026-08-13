@@ -15,19 +15,24 @@ export function initAuthPage() {
 }
 
 function renderAuthPage() {
+  const language = getLanguage();
+  const isArabic = language.startsWith('ar');
+  const brandName = isArabic ? 'حِسبة' : 'Hisba';
+  const languageButtonLabel = isArabic ? 'EN' : 'ع';
+
   document.body.innerHTML = `
     <div id="toast-container"></div>
     <div class="auth-page">
       <div class="auth-container">
         <div class="auth-brand">
-          <img class="auth-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="حِسبة | Hisba">
-          <div class="auth-brand-name"><span lang="ar">حِسبة</span><span class="brand-divider" aria-hidden="true">|</span><span lang="en">Hisba</span></div>
+          <div class="auth-brand-name" lang="${isArabic ? 'ar' : 'en'}">${brandName}</div>
+          <img class="auth-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="${brandName}">
         </div>
         <div id="auth-card" class="auth-card animate-scale-in"></div>
         <div id="auth-footer" class="auth-footer"></div>
       </div>
       <div style="position:fixed;top:var(--sp-xl);right:var(--sp-xl);display:flex;gap:var(--sp-sm);">
-        <button id="auth-lang-btn" class="topbar-lang-btn">عر</button>
+        <button id="auth-lang-btn" class="topbar-lang-btn" aria-label="Change language">${languageButtonLabel}</button>
         <button id="auth-theme-btn" class="topbar-action-btn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
@@ -37,8 +42,7 @@ function renderAuthPage() {
   document.getElementById('auth-lang-btn').addEventListener('click', () => {
     const nl = getLanguage().startsWith('ar') ? 'en' : 'ar-eg';
     setLanguage(nl);
-    document.getElementById('auth-lang-btn').textContent = nl.startsWith('ar') ? 'EN' : 'ع';
-    renderView();
+    renderAuthPage();
   });
   document.getElementById('auth-theme-btn').addEventListener('click', toggleTheme);
   renderView();
