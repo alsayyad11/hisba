@@ -270,8 +270,27 @@
   font-size: var(--text-lg);
   font-weight: var(--fw-bold);
   color: var(--clr-ink);
-  flex: 1;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
+
+.topbar-tagline {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-inline: var(--sp-md);
+  color: var(--clr-body-mid);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  line-height: 1.4;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: .9;
+}
+
+[dir="rtl"] .topbar-tagline { direction: rtl; }
 
 .topbar-search {
   flex: 1;
@@ -462,8 +481,16 @@
 }
 
 .auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   text-align: center;
-  margin-bottom: var(--sp-2xl);
+  margin-bottom: var(--sp-xl);
+}
+
+.auth-brand-logo {
+  order: 1;
 }
 
 .auth-brand-mark {
@@ -482,9 +509,11 @@
 }
 
 .auth-brand-name {
+  order: 2;
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   font-weight: var(--fw-bold);
+  line-height: 1.15;
   color: var(--clr-ink);
 }
 
@@ -581,7 +610,7 @@
 .stats-grid { gap:16px; margin-bottom:24px; }
 .dashboard-grid { gap:20px; }
 .auth-page { padding:24px; }
-.auth-brand { margin-bottom:28px; }
+.auth-brand { gap:10px; margin-bottom:24px; }
 .auth-brand-name { font-size:var(--text-2xl); }
 .auth-brand-tagline { font-size:var(--text-sm); }
 .auth-card { padding:28px; border-radius:20px; }
@@ -595,12 +624,13 @@
 }
 @media (max-width:640px) {
   .topbar { height:64px; padding:0 14px; gap:10px; }
-  .topbar-title { font-size:var(--text-md); }
+  .topbar-title { font-size:var(--text-md); max-width:34%; overflow:hidden; text-overflow:ellipsis; }
+  .topbar-tagline { font-size:var(--text-xs); padding-inline:var(--sp-xs); }
   .content-area { padding:18px 14px 28px; }
   .auth-page { padding:16px; align-items:flex-start; padding-top:42px; }
   .auth-card { padding:22px 18px; }
-  .auth-brand { margin-bottom:22px; }
-  .auth-brand-name { font-size:var(--text-xl); }
+.auth-brand { gap:8px; margin-bottom:20px; }
+.auth-brand-name { font-size:var(--text-xl); }
 }
 
 
@@ -1094,20 +1124,6 @@ html[data-theme="dark"] .sidebar-collapse-toggle:hover {
   transform: rotate(180deg);
 }
 
-/* ── Unified page canvas: one continuous shell surface ─────────
-   Keep elevated cards and controls distinct, but never split the
-   app chrome from the page background. This final rule intentionally
-   wins over legacy dark-mode and refresh overrides above. */
-html body .app-shell,
-html body .app-shell .sidebar,
-html body .app-shell .sidebar-header,
-html body .app-shell .sidebar-footer,
-html body .app-shell .main-wrapper,
-html body .app-shell .topbar,
-html body .app-shell .content-area {
-  background-color: var(--clr-canvas) !important;
-}
-
 .sidebar-collapse-toggle {
   position: relative;
   z-index: 2;
@@ -1140,31 +1156,4 @@ html body .app-shell .content-area {
 
 @media (max-width: 768px) {
   .sidebar-collapse-toggle { display: none; }
-}
-
-
-/* ── Final unified shell canvas override ───────────────────────
-   The app chrome and page canvas share one continuous background.
-   Cards, inputs, and raised controls retain their own surface roles. */
-html body .app-shell,
-html body .app-shell .sidebar,
-html body .app-shell .sidebar-header,
-html body .app-shell .sidebar-footer,
-html body .app-shell .main-wrapper,
-html body .app-shell .topbar,
-html body .app-shell .content-area {
-  background-color: var(--clr-canvas) !important;
-}
-
-html body .app-shell .main-wrapper > .topbar,
-html body .app-shell > .sidebar {
-  background: var(--clr-canvas) !important;
-}
-
-html body .app-shell .content-area {
-  background: var(--clr-canvas) !important;
-}
-
-html body .app-shell .topbar-actions {
-  background: color-mix(in srgb, var(--clr-canvas) 88%, transparent) !important;
 }
