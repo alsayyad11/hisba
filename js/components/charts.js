@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — CHARTS (Pure Canvas, no deps)
    ============================================================ */
-import { formatCurrency, getLanguage, t } from '../utils.js?v=locale-singleton-v1';
+import { formatCurrency, getLanguage, t } from '../utils.js?v=security-audit-v1';
 
 function getStyle(varName) {
   return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
