@@ -9,7 +9,7 @@ import { toast } from './toast.js';
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
   dashboard:    () => import('./pages/dashboard.js?v=lang-v4'),
-  transactions: () => import('./pages/transactions.js?v=lang-v4'),
+  transactions: () => import('./pages/transactions.js?v=fusha-v2'),
   accounts:     () => import('./pages/accounts.js?v=lang-v4'),
   budgets:      () => import('./pages/budgets.js?v=lang-v4'),
   goals:        () => import('./pages/goals.js?v=lang-v4'),
