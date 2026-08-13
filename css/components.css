@@ -3,119 +3,138 @@
    ============================================================ */
 
 /* ── Buttons ─────────────────────────────────────────────── */
+/* A deliberate product-control system: calm surfaces, clear hierarchy, no decorative pills. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-sm);
-  padding: var(--sp-md) var(--sp-xl);
+  gap: var(--sp-xs);
+  min-height: 40px;
+  padding: 0 var(--sp-md);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--fw-semibold);
-  line-height: 1.5;
-  border-radius: var(--radius-md);
+  line-height: 1;
+  letter-spacing: 0;
   border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
   text-decoration: none;
   white-space: nowrap;
   user-select: none;
 }
+.btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--clr-focus) 28%, transparent);
+  outline-offset: 2px;
+}
 .btn:disabled {
-  opacity: 0.5;
+  opacity: .48;
   cursor: not-allowed;
   pointer-events: none;
+  box-shadow: none;
 }
 .btn-sm {
-  padding: var(--sp-xs) var(--sp-md);
+  min-height: 32px;
+  padding-inline: 10px;
   font-size: var(--text-xs);
-  border-radius: var(--radius-sm);
+  border-radius: 7px;
 }
 .btn-lg {
-  padding: var(--sp-lg) var(--sp-2xl);
+  min-height: 48px;
+  padding-inline: var(--sp-lg);
   font-size: var(--text-md);
+  border-radius: 10px;
 }
 .btn-icon {
-  padding: var(--sp-sm);
   width: 40px;
+  min-width: 40px;
   height: 40px;
-  border-radius: var(--radius-md);
-}
-.btn-icon-sm {
-  padding: var(--sp-xs);
-  width: 32px;
-  height: 32px;
+  padding: 0;
   border-radius: var(--radius-sm);
 }
+.btn-icon-sm {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 7px;
+}
 
-/* Primary — orange CTA */
+/* Primary — the single strong action in each context. */
 .btn-primary {
-  background-color: var(--clr-primary);
+  background: var(--clr-primary);
   color: var(--clr-on-primary);
   border-color: var(--clr-primary);
+  box-shadow: 0 1px 2px rgba(29, 36, 48, .10);
 }
 .btn-primary:hover {
-  background-color: var(--clr-primary-hover);
+  background: var(--clr-primary-hover);
   border-color: var(--clr-primary-hover);
+  box-shadow: 0 3px 8px rgba(29, 36, 48, .16);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 79, 0, 0.35);
 }
-.btn-primary:active { transform: translateY(0); }
+.btn-primary:active {
+  box-shadow: 0 1px 2px rgba(29, 36, 48, .10);
+  transform: translateY(0);
+}
 
-/* Secondary — dark ink */
+/* Secondary — an intentionally quiet, dark-ink action. */
 .btn-secondary {
-  background-color: var(--clr-ink);
-  color: var(--clr-canvas);
+  background: var(--clr-ink);
+  color: var(--clr-canvas-raised);
   border-color: var(--clr-ink);
 }
 .btn-secondary:hover {
-  background-color: var(--clr-ink-soft);
+  background: var(--clr-ink-soft);
   border-color: var(--clr-ink-soft);
-  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(29, 36, 48, .12);
 }
 
-/* Tertiary — outline */
+/* Outline — paired actions and safe cancellation. */
 .btn-outline {
-  background-color: transparent;
+  background: var(--clr-canvas-raised);
   color: var(--clr-ink);
   border-color: var(--clr-border-strong);
 }
 .btn-outline:hover {
-  background-color: var(--clr-canvas-soft);
-  border-color: var(--clr-ink);
+  background: var(--clr-surface-container-low);
+  border-color: var(--clr-border-ink);
 }
 
-/* Ghost */
+/* Ghost — low-priority navigation and inline actions. */
 .btn-ghost {
-  background-color: transparent;
-  color: var(--clr-body);
+  background: transparent;
+  color: var(--clr-ink-mid);
   border-color: transparent;
 }
 .btn-ghost:hover {
-  background-color: var(--clr-canvas-soft);
+  background: var(--clr-surface-container-low);
   color: var(--clr-ink);
 }
 
-/* Danger */
+/* Danger — clearly destructive, without making every delete control visually loud. */
 .btn-danger {
-  background-color: var(--clr-error-bg);
+  background: transparent;
   color: var(--clr-error);
-  border-color: transparent;
+  border-color: color-mix(in srgb, var(--clr-error) 42%, var(--clr-border));
 }
 .btn-danger:hover {
-  background-color: var(--clr-error);
+  background: var(--clr-error);
   color: #fff;
+  border-color: var(--clr-error);
 }
 
-/* Success */
+/* Success — positive completion without a prominent green CTA. */
 .btn-success {
-  background-color: var(--clr-success-bg);
+  background: var(--clr-success-bg);
   color: var(--clr-success);
-  border-color: transparent;
+  border-color: color-mix(in srgb, var(--clr-success) 26%, var(--clr-success-bg));
 }
 .btn-success:hover {
-  background-color: var(--clr-success);
+  background: var(--clr-success);
   color: #fff;
+  border-color: var(--clr-success);
 }
 
 /* Loading spinner inside button */
