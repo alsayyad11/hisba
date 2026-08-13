@@ -3,8 +3,8 @@
    ============================================================ */
 import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon } from '../utils.js?v=locale-singleton-v1';
 import { getAccounts, createAccount, updateAccount, deleteAccount, setDefaultAccount } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1;
-import { toast } from '../toast.js?v=locale-singleton-v1;
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=locale-singleton-v1';
+import { toast } from '../toast.js?v=locale-singleton-v1';
 
 let userId, userCurrency = 'USD';
 let accounts = [];

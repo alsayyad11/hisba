@@ -3,10 +3,10 @@
    ============================================================ */
 import { t, formatCurrency, formatDate, getDateRange, getLanguage, getMonthRange, getCurrentMonth, renderIcon } from '../utils.js?v=locale-singleton-v1';
 import { getTransactions, getAccounts, getDashboardSummary } from '../services/data.js';
-import { exportCSV, exportExcel, exportPDF } from '../services/export.js?v=locale-singleton-v1;
-import { drawBarChart, drawDonutChart } from '../components/charts.js?v=locale-singleton-v1;
+import { exportCSV, exportExcel, exportPDF } from '../services/export.js?v=locale-singleton-v1';
+import { drawBarChart, drawDonutChart } from '../components/charts.js?v=locale-singleton-v1';
 import { getCategorySpending } from '../services/data.js';
-import { toast } from '../toast.js?v=locale-singleton-v1;
+import { toast } from '../toast.js?v=locale-singleton-v1';
 
 let userId, userCurrency = 'USD';
 let accounts = [];

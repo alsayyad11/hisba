@@ -3,8 +3,8 @@
    ============================================================ */
 import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon } from '../utils.js?v=locale-singleton-v1';
 import { getDashboardSummary, getMonthlyTrend, getCategorySpending, getTransactions, getBudgets, getBudgetSpending, getAccounts, getCategories, createTransaction } from '../services/data.js';
-import { createModal, openModal, closeModal } from '../components/modal.js?v=locale-singleton-v1;
-import { toast } from '../toast.js?v=locale-singleton-v1;
+import { createModal, openModal, closeModal } from '../components/modal.js?v=locale-singleton-v1';
+import { toast } from '../toast.js?v=locale-singleton-v1';
 import { drawBarChart, drawDonutChart } from '../components/charts.js?v=legend-v3';
 
 let userId, userCurrency = 'USD';
