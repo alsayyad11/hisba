@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — HOW TO USE GUIDE
    ============================================================ */
-import { getLanguage, renderIcon } from '../utils.js?v=fusha-v2';
+import { getLanguage, renderIcon } from '../utils.js?v=fusha-v3';
 
 const content = {
   ar: {

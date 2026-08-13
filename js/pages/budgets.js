@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — BUDGETS PAGE
    ============================================================ */
-import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon } from '../utils.js?v=fusha-v2';
+import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon } from '../utils.js?v=fusha-v3';
 import { getBudgets, createBudget, updateBudget, deleteBudget, getCategories, getBudgetSpending } from '../services/data.js';
 import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js';
 import { toast } from '../toast.js';
