@@ -2249,3 +2249,322 @@ html[data-theme="dark"] .first-run-empty-state .empty-state-icon {
 html[data-theme="dark"] .setup-check small {
   color: var(--clr-body);
 }
+
+/* ── Finance workspace design system: transactions + reports ── */
+.transactions-page,
+.reports-page {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.transactions-page .page-header,
+.reports-page .page-header {
+  align-items: end;
+  margin-bottom: var(--sp-xl);
+}
+
+.transactions-summary,
+.reports-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-md);
+  margin-bottom: var(--sp-xl);
+}
+
+.transaction-summary-card,
+.report-summary-card {
+  position: relative;
+  min-height: 114px;
+  padding: var(--sp-lg) !important;
+  border: 1px solid var(--clr-border) !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--clr-canvas-raised) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.transaction-summary-card::before,
+.report-summary-card::before {
+  content: '';
+  position: absolute;
+  inset-block: var(--sp-md);
+  inset-inline-start: 0;
+  width: 3px;
+  background: var(--clr-primary);
+}
+
+.transaction-summary-income::before,
+.report-summary-income::before { background: var(--clr-success); }
+.transaction-summary-expense::before,
+.report-summary-expense::before { background: var(--clr-error); }
+.transaction-summary-net::before,
+.report-summary-net::before { background: var(--clr-primary); }
+.transaction-summary-count::before,
+.report-summary-count::before { background: var(--clr-secondary); }
+
+.transactions-page .stat-card-label,
+.reports-page .stat-card-label {
+  margin-bottom: var(--sp-xs);
+  color: var(--clr-body-mid);
+  font-size: var(--text-xs) !important;
+  font-weight: var(--fw-semibold) !important;
+}
+
+.transactions-page .stat-card-label + div,
+.reports-page .stat-card-label + div {
+  font-family: var(--font-numeric) !important;
+  font-size: var(--text-xl) !important;
+  font-weight: var(--fw-bold) !important;
+  letter-spacing: 0 !important;
+}
+
+.transactions-filter-panel {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-lg);
+  padding: var(--sp-md);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  background: var(--clr-canvas-soft);
+}
+
+.transactions-page .filter-chip {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm) !important;
+  background: transparent;
+  color: var(--clr-body);
+  font-weight: var(--fw-semibold);
+  box-shadow: none;
+}
+
+.transactions-page .filter-chip:hover {
+  border-color: var(--clr-border-strong);
+  background: var(--clr-canvas-raised);
+  color: var(--clr-ink);
+}
+
+.transactions-page .filter-chip.active {
+  border-color: var(--clr-primary);
+  background: var(--clr-primary);
+  color: var(--clr-on-primary);
+}
+
+.transactions-page .form-select,
+.transactions-page .search-input {
+  min-height: 40px;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+}
+
+.transactions-page .search-input {
+  background: var(--clr-canvas-raised) !important;
+  border-color: var(--clr-border) !important;
+}
+
+.transactions-page .search-input:focus-within {
+  border-color: var(--clr-primary) !important;
+  box-shadow: 0 0 0 3px var(--clr-primary-subtle) !important;
+  transform: none;
+}
+
+.transaction-ledger,
+.report-ledger {
+  padding: 0 !important;
+  overflow: hidden;
+  border-radius: var(--radius-md) !important;
+  box-shadow: none !important;
+}
+
+.transactions-page .table-wrapper,
+.reports-page .table-wrapper {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.transactions-page .table th,
+.reports-page .table th {
+  height: 44px;
+  background: var(--clr-canvas-soft) !important;
+  color: var(--clr-body-mid) !important;
+  font-size: var(--text-2xs) !important;
+  font-weight: var(--fw-bold) !important;
+  letter-spacing: .04em;
+}
+
+.transactions-page .table td,
+.reports-page .table td {
+  height: 64px;
+  border-color: var(--clr-border) !important;
+}
+
+.transactions-page .table tbody tr:hover,
+.reports-page .table tbody tr:hover {
+  background: var(--clr-primary-subtle) !important;
+}
+
+.transaction-category-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm) !important;
+}
+
+.transaction-description { color: var(--clr-ink); }
+.transaction-row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+.transaction-row-actions .btn { min-width: 32px; min-height: 32px; border-radius: 6px !important; }
+
+.report-control-panel {
+  margin-bottom: var(--sp-xl);
+  padding: var(--sp-lg) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: none !important;
+}
+
+.report-control-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.2fr) minmax(135px, 1fr) minmax(135px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr) auto;
+  gap: var(--sp-md);
+  align-items: end;
+}
+
+.report-control-grid .form-group { margin: 0; min-width: 0 !important; }
+.report-control-grid .form-input,
+.report-control-grid .form-select {
+  min-height: 42px;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+}
+
+.report-control-grid .btn {
+  min-height: 42px;
+  white-space: nowrap;
+  border-radius: var(--radius-sm) !important;
+}
+
+.report-monthly-card,
+.report-analysis-card,
+.report-export-card {
+  margin-bottom: var(--sp-xl);
+  border-radius: var(--radius-md) !important;
+  box-shadow: none !important;
+}
+
+.report-monthly-card .card-header,
+.report-analysis-card .card-header,
+.report-export-card .card-header {
+  min-height: 44px;
+  padding-bottom: var(--sp-md);
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.reports-page .card-title {
+  font-size: var(--text-sm) !important;
+  font-weight: var(--fw-bold) !important;
+}
+
+.reports-page .monthly-comparison {
+  min-height: 184px;
+  padding: var(--sp-lg) var(--sp-sm) var(--sp-sm);
+  border-bottom: 0;
+}
+
+.reports-page .monthly-bar-fill {
+  border-radius: 4px 4px 0 0;
+  background: var(--clr-primary);
+}
+
+.reports-page .monthly-bar:hover .monthly-bar-fill,
+.reports-page .monthly-bar.is-selected .monthly-bar-fill {
+  background: var(--clr-primary-hover);
+  box-shadow: none;
+  filter: none;
+}
+
+.report-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-lg);
+  margin-bottom: var(--sp-xl);
+}
+
+.report-analysis-card { min-height: 300px; }
+.reports-page .progress-bar { height: 6px; border-radius: 3px; background: var(--clr-surface-container); }
+.reports-page .progress-fill { border-radius: 3px; }
+
+.report-export-card { padding: var(--sp-lg) !important; }
+.report-export-actions { display: flex; flex-wrap: wrap; gap: var(--sp-sm); }
+.report-export-btn { min-height: 40px; border-radius: var(--radius-sm) !important; box-shadow: none !important; }
+.report-export-btn:hover { transform: translateY(-1px); }
+
+html[data-theme="dark"] .transaction-summary-card,
+html[data-theme="dark"] .report-summary-card,
+html[data-theme="dark"] .report-control-panel,
+html[data-theme="dark"] .report-monthly-card,
+html[data-theme="dark"] .report-analysis-card,
+html[data-theme="dark"] .report-export-card,
+html[data-theme="dark"] .transaction-ledger,
+html[data-theme="dark"] .report-ledger {
+  background: var(--clr-canvas-soft) !important;
+  border-color: var(--clr-border) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .transactions-filter-panel,
+html[data-theme="dark"] .transactions-page .table th,
+html[data-theme="dark"] .reports-page .table th {
+  background: var(--clr-canvas-raised) !important;
+  border-color: var(--clr-border) !important;
+}
+
+html[data-theme="dark"] .transactions-page .filter-chip:hover {
+  background: var(--clr-surface-container-high);
+  border-color: var(--clr-border-strong);
+}
+
+html[data-theme="dark"] .transactions-page .filter-chip.active {
+  background: var(--clr-primary);
+  border-color: var(--clr-primary);
+  color: var(--clr-on-primary);
+}
+
+@media (max-width: 1120px) {
+  .report-control-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .report-control-grid .btn { justify-self: start; }
+}
+
+@media (max-width: 820px) {
+  .transactions-summary,
+  .reports-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report-analysis-grid { grid-template-columns: 1fr; }
+  .transactions-filter-panel > * { flex: 1 1 calc(50% - var(--sp-sm)); }
+  .transactions-filter-panel > .search-input { flex-basis: 100%; max-width: none !important; }
+  .report-control-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .transactions-page .page-header,
+  .reports-page .page-header { align-items: stretch; }
+  .transactions-page .page-actions,
+  .transactions-page .page-actions .btn { width: 100%; }
+  .transactions-summary,
+  .reports-summary,
+  .report-control-grid { grid-template-columns: 1fr; }
+  .transaction-summary-card,
+  .report-summary-card { min-height: 96px; }
+  .transactions-filter-panel { padding: var(--sp-sm); }
+  .transactions-filter-panel > * { flex-basis: 100%; }
+  .transactions-page .filter-chip { flex: 1 1 0; justify-content: center; }
+  .report-control-grid .btn { width: 100%; justify-content: center; }
+  .report-export-actions { display: grid; grid-template-columns: 1fr; }
+  .report-export-btn { width: 100%; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report-export-btn,
+  .transactions-page .filter-chip,
+  .transactions-page .table tbody tr { transition: none !important; }
+}
