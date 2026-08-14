@@ -42,6 +42,7 @@ export const en = {
   nav_goals: 'Savings Goals',
   nav_reports: 'Reports',
   nav_accounts: 'Accounts',
+  nav_bills: 'Bills',
   nav_categories: 'Categories',
   nav_settings: 'Settings',
 
