@@ -616,88 +616,74 @@
 }
 
 /* ── First-run onboarding ───────────────────────────────── */
-.onboarding-card {
-  border: 1px solid color-mix(in srgb, var(--clr-primary) 18%, var(--clr-border));
-  background: linear-gradient(135deg, var(--clr-surface), var(--clr-canvas-raised));
-}
-.onboarding-steps {
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--sp-md);
-  width: 100%;
-  margin-top: var(--sp-md);
-}
-.onboarding-step {
-  appearance: none;
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  min-height: 148px;
-  margin: 0;
-  padding: var(--sp-md);
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  justify-content: flex-start;
-  gap: var(--sp-sm);
-  overflow: hidden;
-  border: 1px solid var(--clr-border) !important;
-  border-radius: var(--radius-md);
-  background: var(--clr-surface) !important;
-  color: var(--clr-ink) !important;
+.onboarding-dialog {
+  display: grid;
+  gap: var(--sp-lg);
   text-align: start;
-  cursor: pointer;
-  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
-.onboarding-step > * { max-width: 100%; }
-.onboarding-step:hover,
-.onboarding-step:focus-visible {
-  border-color: var(--clr-primary);
-  box-shadow: 0 8px 24px rgba(31, 111, 104, .12);
-  transform: translateY(-2px);
-  outline: none;
+.onboarding-dialog-progress,
+.onboarding-form-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-md);
 }
-.onboarding-step-number {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+.onboarding-dialog-kicker,
+.onboarding-form-progress > span:first-child {
+  color: var(--clr-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-bold);
+}
+.onboarding-progress-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  direction: ltr;
+}
+.onboarding-progress-dots i {
+  display: block;
+  width: 20px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--clr-border);
+}
+.onboarding-progress-dots i.is-active {
+  background: var(--clr-primary);
+}
+.onboarding-dialog-icon {
+  width: 52px;
+  height: 52px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--clr-primary);
-  color: #fff;
-  font-weight: 700;
-  font-size: var(--text-sm);
-}
-.onboarding-step-copy { display: grid !important; gap: 4px; min-width: 0; width: 100%; }
-.onboarding-step-copy strong {
-  display: block;
-  color: var(--clr-ink);
-  font-size: var(--text-sm);
-  font-weight: var(--fw-bold);
-  line-height: 1.45;
-}
-.onboarding-step-copy small {
-  display: block;
-  color: var(--clr-body);
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-.onboarding-step-cta {
+  border: 1px solid var(--clr-primary-border);
+  border-radius: var(--radius-md);
   color: var(--clr-primary);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  margin-top: auto;
+  background: var(--clr-primary-subtle);
 }
-/* Keep the onboarding copy legible even when global button/text styles load later. */
-html[data-theme="dark"] .onboarding-step-copy strong { color: var(--clr-ink) !important; }
-html[data-theme="dark"] .onboarding-step-copy small { color: var(--clr-body) !important; }
-@media (max-width: 760px) {
-  .onboarding-steps { grid-template-columns: 1fr !important; }
-  .onboarding-step { min-height: auto; }
+.onboarding-dialog-title {
+  margin: 0 0 var(--sp-xs);
+  color: var(--clr-ink);
+  font-size: var(--text-xl);
+  line-height: 1.35;
+}
+.onboarding-dialog-copy {
+  margin: 0;
+  color: var(--clr-body);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+.onboarding-form-progress {
+  padding: 0 0 var(--sp-md);
+  border-bottom: 1px solid var(--clr-border);
+}
+@media (max-width: 560px) {
+  .onboarding-dialog-icon { width: 46px; height: 46px; }
+  .onboarding-dialog-title { font-size: var(--text-lg); }
+  .onboarding-progress-dots i { width: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .onboarding-step { transition: none; }
+  .onboarding-progress-dots i { transition: none; }
 }
 
 /* ── Toasts ───────────────────────────────────────────────── */
