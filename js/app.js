@@ -8,7 +8,7 @@ import { toast } from './toast.js?v=release-2.3.0';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=release-2.3.1'),
+  dashboard:    () => import('./pages/dashboard.js?v=release-2.3.2'),
   transactions: () => import('./pages/transactions.js?v=release-2.3.0'),
   accounts:     () => import('./pages/accounts.js?v=release-2.3.0'),
   budgets:      () => import('./pages/budgets.js?v=release-2.3.0'),
