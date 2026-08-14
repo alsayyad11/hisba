@@ -58,9 +58,11 @@ export async function syncUser(userId, remote) {
         }
       } else {
         const q = remote.from(op.table);
-        if (op.action === 'upsert') await q.upsert({ ...op.payload, user_id: userId }, { onConflict: 'id' });
-        if (op.action === 'update') await q.update(op.payload).eq('id', op.id).eq('user_id', userId);
-        if (op.action === 'delete') await q.delete().eq('id', op.id).eq('user_id', userId);
+        let result;
+        if (op.action === 'upsert') result = await q.upsert({ ...op.payload, user_id: userId }, { onConflict: 'id' });
+        if (op.action === 'update') result = await q.update(op.payload).eq('id', op.id).eq('user_id', userId);
+        if (op.action === 'delete') result = await q.delete().eq('id', op.id).eq('user_id', userId);
+        if (result?.error) throw result.error;
       }
       removeQueueItem(userId, op.opId); synced++;
     } catch { break; }
