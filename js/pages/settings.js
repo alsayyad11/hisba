@@ -1,29 +1,33 @@
 /* ============================================================
    HISBA — SETTINGS PAGE
    ============================================================ */
-import { t, setLanguage, getLanguage, getTheme, setTheme, validateRequired, validatePassword, renderIcon } from '../utils.js?v=locale-singleton-v1';
+import { t, setLanguage, getLanguage, getTheme, setTheme, validateRequired, validatePassword, renderIcon } from '../utils.js?v=release-2.2.1';
 import { getProfile, updateProfile, updatePassword, uploadProfileAvatar, signOut } from '../services/auth.js';
-import { showConfirm } from '../components/modal.js?v=locale-singleton-v1';
-import { toast } from '../toast.js?v=locale-singleton-v1';
+import { showConfirm } from '../components/modal.js?v=release-2.2.1';
+import { toast } from '../toast.js?v=release-2.2.1';
 
 let userId, profile = {};
 
 const CURRENCIES = [
-  { code: 'USD', name: 'US Dollar ($)' },
-  { code: 'EUR', name: 'Euro (€)' },
-  { code: 'GBP', name: 'British Pound (£)' },
-  { code: 'SAR', name: 'Saudi Riyal (ر.س)' },
-  { code: 'AED', name: 'UAE Dirham (د.إ)' },
-  { code: 'EGP', name: 'Egyptian Pound (E£)' },
-  { code: 'KWD', name: 'Kuwaiti Dinar (KD)' },
-  { code: 'QAR', name: 'Qatari Riyal (QR)' },
-  { code: 'JOD', name: 'Jordanian Dinar (JD)' },
-  { code: 'MAD', name: 'Moroccan Dirham (DH)' },
-  { code: 'CAD', name: 'Canadian Dollar (C$)' },
-  { code: 'AUD', name: 'Australian Dollar (A$)' },
-  { code: 'JPY', name: 'Japanese Yen (¥)' },
-  { code: 'TRY', name: 'Turkish Lira (₺)' },
+  { code: 'USD', en: 'US Dollar ($)', ar: 'الدولار الأمريكي ($)' },
+  { code: 'EUR', en: 'Euro (€)', ar: 'اليورو (€)' },
+  { code: 'GBP', en: 'British Pound (£)', ar: 'الجنيه الإسترليني (£)' },
+  { code: 'SAR', en: 'Saudi Riyal (ر.س)', ar: 'الريال السعودي (ر.س)' },
+  { code: 'AED', en: 'UAE Dirham (د.إ)', ar: 'الدرهم الإماراتي (د.إ)' },
+  { code: 'EGP', en: 'Egyptian Pound (E£)', ar: 'الجنيه المصري (E£)' },
+  { code: 'KWD', en: 'Kuwaiti Dinar (KD)', ar: 'الدينار الكويتي (KD)' },
+  { code: 'QAR', en: 'Qatari Riyal (QR)', ar: 'الريال القطري (QR)' },
+  { code: 'JOD', en: 'Jordanian Dinar (JD)', ar: 'الدينار الأردني (JD)' },
+  { code: 'MAD', en: 'Moroccan Dirham (DH)', ar: 'الدرهم المغربي (DH)' },
+  { code: 'CAD', en: 'Canadian Dollar (C$)', ar: 'الدولار الكندي (C$)' },
+  { code: 'AUD', en: 'Australian Dollar (A$)', ar: 'الدولار الأسترالي (A$)' },
+  { code: 'JPY', en: 'Japanese Yen (¥)', ar: 'الين الياباني (¥)' },
+  { code: 'TRY', en: 'Turkish Lira (₺)', ar: 'الليرة التركية (₺)' },
 ];
+
+function currencyName(currency, language) {
+  return language.startsWith('ar') ? currency.ar : currency.en;
+}
 
 export async function initSettings(uid, prof) {
   userId = uid;
@@ -68,7 +72,7 @@ function renderPage() {
       </section>
       <section class="settings-card settings-section" id="language"><div class="settings-section-head"><div class="settings-section-icon">${renderIcon('book', 18)}</div><div><h2>${t('language_region')}</h2><p>${label('Choose the language that feels most natural to you.', 'اختار اللغة الأقرب لطريقتك في الاستخدام.', 'اختر اللغة الأقرب إلى أسلوب استخدامك.')}</p></div></div><div class="language-list" role="radiogroup" aria-label="${t('language_label')}">${['en','ar-eg','ar-fusha'].map(lang => `<label class="language-choice ${currentLang === lang ? 'is-selected' : ''}"><input type="radio" name="lang" value="${lang}" ${currentLang === lang ? 'checked' : ''} class="lang-radio"><span class="language-choice-copy"><strong>${lang === 'ar-eg' ? t('lang_ar_eg') : lang === 'ar-fusha' ? t('lang_ar_fusha') : t('lang_en')}</strong><small>${isArabic ? (lang === 'en' ? 'الإنجليزية' : lang === 'ar-eg' ? 'عامية مصرية' : 'صياغة عربية رسمية') : (lang === 'en' ? 'English' : lang === 'ar-eg' ? 'Egyptian Arabic' : 'Standard Arabic')}</small></span><span class="language-choice-mark">${renderIcon('check', 16)}</span></label>`).join('')}</div></section>
       <section class="settings-card settings-section" id="appearance"><div class="settings-section-head"><div class="settings-section-icon">${renderIcon('settings', 18)}</div><div><h2>${label('Appearance', 'المظهر')}</h2><p>${label('Choose how Hisba looks on your device.', 'اختار شكل حِسبة على جهازك.', 'اختر مظهر حِسبة على جهازك.')}</p></div></div><div class="language-list theme-list" role="radiogroup" aria-label="${label('Appearance', 'المظهر')}">${['light','dark'].map(theme => `<label class="language-choice ${getTheme() === theme ? 'is-selected' : ''}"><input type="radio" name="theme" value="${theme}" ${getTheme() === theme ? 'checked' : ''} class="theme-radio"><span class="language-choice-copy"><strong>${theme === 'dark' ? label('Dark mode', 'الوضع الداكن', 'الوضع الداكن') : label('Light mode', 'الوضع الفاتح', 'الوضع الفاتح')}</strong><small>${theme === 'dark' ? label('A darker palette for low-light use.', 'ألوان أغمق للاستخدام في الإضاءة الهادية.', 'ألوان داكنة للاستخدام في الإضاءة المنخفضة.') : label('A bright, clear interface for daytime.', 'واجهة واضحة ومريحة للاستخدام النهاري.', 'واجهة واضحة ومريحة للاستخدام النهاري.')}</small></span><span class="language-choice-mark">${renderIcon(theme === 'dark' ? 'moon' : 'sun', 16)}</span></label>`).join('')}</div></section>
-      <section class="settings-card settings-section" id="currency"><div class="settings-section-head"><div class="settings-section-icon">${renderIcon('wallet', 18)}</div><div><h2>${t('currency_settings')}</h2><p>${label('This currency is used across budgets, transactions, and reports.', 'العملة دي هتظهر في الميزانيات والمعاملات والتقارير.', 'تُستخدم هذه العملة في الميزانيات والمعاملات والتقارير.')}</p></div></div><div class="settings-form single-column-form compact-form"><div class="form-group"><label class="form-label" for="s-currency">${t('currency_label')}</label><select class="form-select" id="s-currency">${CURRENCIES.map(c => `<option value="${c.code}" ${(profile.currency || 'USD') === c.code ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div><button class="btn btn-primary settings-action" id="btn-save-currency">${t('save_changes')}</button></div></section>
+      <section class="settings-card settings-section" id="currency"><div class="settings-section-head"><div class="settings-section-icon">${renderIcon('wallet', 18)}</div><div><h2>${t('currency_settings')}</h2><p>${label('This currency is used across budgets, transactions, and reports.', 'العملة دي هتظهر في الميزانيات والمعاملات والتقارير.', 'تُستخدم هذه العملة في الميزانيات والمعاملات والتقارير.')}</p></div></div><div class="settings-form single-column-form compact-form"><div class="form-group"><label class="form-label" for="s-currency">${t('currency_label')}</label><select class="form-select" id="s-currency">${CURRENCIES.map(c => `<option value="${c.code}" ${(profile.currency || 'USD') === c.code ? 'selected' : ''}>${currencyName(c, currentLang)}</option>`).join('')}</select></div><button class="btn btn-primary settings-action" id="btn-save-currency">${t('save_changes')}</button></div></section>
       <section class="settings-card settings-section settings-danger" id="danger"><div class="settings-section-head"><div class="settings-section-icon is-danger">${renderIcon('alert-triangle', 18)}</div><div><h2>${t('danger_zone')}</h2><p>${label('These actions cannot be undone.', 'الإجراءات دي نهائية ومش ممكن التراجع عنها.', 'هذه الإجراءات نهائية ولا يمكن التراجع عنها.')}</p></div></div><div class="danger-action-row"><div><strong>${t('delete_account_action')}</strong><p>${t('delete_account_warning')}</p></div><button class="btn btn-danger" id="btn-delete-account">${t('delete_account_action')}</button></div></section>
     </main>
   `;
