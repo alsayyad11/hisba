@@ -2,22 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.0.1';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.1.0';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
-import { toast } from './toast.js?v=release-2.0.1';
+import { toast } from './toast.js?v=release-2.1.0';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=release-2.0.1'),
-  transactions: () => import('./pages/transactions.js?v=release-2.0.1'),
-  accounts:     () => import('./pages/accounts.js?v=release-2.0.1'),
-  budgets:      () => import('./pages/budgets.js?v=release-2.0.1'),
-  goals:        () => import('./pages/goals.js?v=release-2.0.1'),
-  reports:      () => import('./pages/reports.js?v=release-2.0.1'),
-  categories:   () => import('./pages/categories.js?v=release-2.0.1'),
-  bills:        () => import('./pages/bills.js?v=release-2.0.1'),
-  settings:     () => import('./pages/settings.js?v=release-2.0.1'),
-  help:         () => import('./pages/help.js?v=release-2.0.1'),
+  dashboard:    () => import('./pages/dashboard.js?v=release-2.1.0'),
+  transactions: () => import('./pages/transactions.js?v=release-2.1.0'),
+  accounts:     () => import('./pages/accounts.js?v=release-2.1.0'),
+  budgets:      () => import('./pages/budgets.js?v=release-2.1.0'),
+  goals:        () => import('./pages/goals.js?v=release-2.1.0'),
+  reports:      () => import('./pages/reports.js?v=release-2.1.0'),
+  categories:   () => import('./pages/categories.js?v=release-2.1.0'),
+  bills:        () => import('./pages/bills.js?v=release-2.1.0'),
+  settings:     () => import('./pages/settings.js?v=release-2.1.0'),
+  help:         () => import('./pages/help.js?v=release-2.1.0'),
 };
 
 let currentUser = null;
@@ -202,6 +202,13 @@ function renderShell() {
     <button class="mobile-quick-entry" id="mobile-quick-entry" type="button" aria-label="${t('quick_add')}" title="${t('quick_add')}">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
+    <nav class="mobile-bottom-nav" aria-label="${t('menu')}">
+      ${mobileNavItem('dashboard', t('nav_dashboard'), dashIcon())}
+      ${mobileNavItem('transactions', t('nav_transactions'), txIcon())}
+      <button class="mobile-nav-add" id="mobile-nav-add" type="button" aria-label="${t('quick_add')}" title="${t('quick_add')}"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      ${mobileNavItem('budgets', t('nav_budgets'), budgetIcon())}
+      ${mobileNavItem('reports', t('nav_reports'), reportIcon())}
+    </nav>
   `;
 
   // Sidebar nav clicks
@@ -235,9 +242,9 @@ function renderShell() {
   syncSidebarControls();
 
   document.getElementById('privacy-toggle')?.addEventListener('click', togglePrivacyMode);
-  document.getElementById('mobile-quick-entry')?.addEventListener('click', () => {
-    navigateTo('transactions', { action: 'add' });
-  });
+  const openQuickEntry = () => navigateTo('transactions', { action: 'add' });
+  document.getElementById('mobile-quick-entry')?.addEventListener('click', openQuickEntry);
+  document.getElementById('mobile-nav-add')?.addEventListener('click', openQuickEntry);
 
   // Connectivity, theme, and language are managed from Settings only.
 
@@ -401,6 +408,10 @@ function navItem(id, label, icon) {
       <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${icon}</svg>
       <span class="nav-item-label">${label}</span>
     </button>`;
+}
+
+function mobileNavItem(id, label, icon) {
+  return `<button class="mobile-nav-item" data-nav="${id}" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg><span>${label}</span></button>`;
 }
 
 function dashIcon()    { return `<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>`; }
