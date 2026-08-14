@@ -2568,3 +2568,107 @@ html[data-theme="dark"] .transactions-page .filter-chip.active {
   .transactions-page .filter-chip,
   .transactions-page .table tbody tr { transition: none !important; }
 }
+
+/* ── Spending calendar ───────────────────────────────────── */
+.report-calendar-card { overflow: hidden; }
+.spending-calendar { width: 100%; }
+.spending-calendar-weekdays,
+.spending-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.spending-calendar-weekdays {
+  margin-bottom: 6px;
+  color: var(--clr-body-mid);
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-semibold);
+  text-align: center;
+}
+.spending-calendar-day,
+.spending-calendar-blank {
+  min-height: 66px;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  background: var(--clr-canvas-raised);
+}
+.spending-calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 8px;
+  color: var(--clr-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+.spending-calendar-day.has-spending {
+  background: color-mix(in srgb, var(--clr-primary) calc(var(--spending-level) * 34%), var(--clr-canvas-raised));
+  border-color: color-mix(in srgb, var(--clr-primary) calc(var(--spending-level) * 54%), var(--clr-border));
+}
+.spending-calendar-day small {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--clr-ink-mid);
+  font-family: var(--font-number);
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spending-calendar-day:hover,
+.spending-calendar-day.is-selected {
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 3px var(--clr-primary-subtle);
+}
+.spending-calendar-day:hover { transform: translateY(-1px); }
+.spending-calendar-day:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--clr-focus) 28%, transparent);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .spending-calendar-weekdays,
+  .spending-calendar-days { gap: 4px; }
+  .spending-calendar-day,
+  .spending-calendar-blank { min-height: 51px; }
+  .spending-calendar-day { padding: 6px 4px; }
+  .spending-calendar-day small { font-size: 9px; }
+}
+
+/* ── Privacy view ─────────────────────────────────────────── */
+.privacy-mask .sensitive-value,
+.privacy-mask .stat-card-value,
+.privacy-mask .summary-amount,
+.privacy-mask .transaction-amount,
+.privacy-mask .budget-amount {
+  color: transparent !important;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--clr-ink) 76%, transparent);
+  user-select: none;
+}
+.privacy-mask .sensitive-value::selection { color: transparent; background: transparent; }
+
+/* ── Mobile quick entry ───────────────────────────────────── */
+.mobile-quick-entry {
+  display: none;
+  position: fixed;
+  z-index: 55;
+  inset-inline-end: var(--sp-lg);
+  bottom: calc(var(--sp-lg) + env(safe-area-inset-bottom));
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--clr-primary);
+  border-radius: var(--radius-md);
+  background: var(--clr-primary);
+  color: var(--clr-on-primary);
+  box-shadow: var(--shadow-lg);
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 768px) {
+  .mobile-quick-entry { display: inline-flex; }
+}
+
