@@ -2,22 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.1.0';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.2.0';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
-import { toast } from './toast.js?v=release-2.1.0';
+import { toast } from './toast.js?v=release-2.2.0';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=release-2.1.0'),
-  transactions: () => import('./pages/transactions.js?v=release-2.1.0'),
-  accounts:     () => import('./pages/accounts.js?v=release-2.1.0'),
-  budgets:      () => import('./pages/budgets.js?v=release-2.1.0'),
-  goals:        () => import('./pages/goals.js?v=release-2.1.0'),
-  reports:      () => import('./pages/reports.js?v=release-2.1.0'),
-  categories:   () => import('./pages/categories.js?v=release-2.1.0'),
-  bills:        () => import('./pages/bills.js?v=release-2.1.0'),
-  settings:     () => import('./pages/settings.js?v=release-2.1.0'),
-  help:         () => import('./pages/help.js?v=release-2.1.0'),
+  dashboard:    () => import('./pages/dashboard.js?v=release-2.2.0'),
+  transactions: () => import('./pages/transactions.js?v=release-2.2.0'),
+  accounts:     () => import('./pages/accounts.js?v=release-2.2.0'),
+  budgets:      () => import('./pages/budgets.js?v=release-2.2.0'),
+  goals:        () => import('./pages/goals.js?v=release-2.2.0'),
+  reports:      () => import('./pages/reports.js?v=release-2.2.0'),
+  categories:   () => import('./pages/categories.js?v=release-2.2.0'),
+  bills:        () => import('./pages/bills.js?v=release-2.2.0'),
+  settings:     () => import('./pages/settings.js?v=release-2.2.0'),
+  help:         () => import('./pages/help.js?v=release-2.2.0'),
 };
 
 let currentUser = null;
@@ -85,6 +85,7 @@ function renderShell() {
   const initial = name.charAt(0).toUpperCase();
   const safeName = escapeHTML(name);
   const safeEmail = escapeHTML(currentUser?.email || '');
+  const safeJobTitle = escapeHTML(currentProfile?.job_title || '');
   const sidebarCollapsed = localStorage.getItem('hisba-sidebar-collapsed') === 'true';
   const privacyEnabled = localStorage.getItem('hisba_privacy') === '1';
   const privacyLabel = t('privacy_mode');
@@ -115,26 +116,21 @@ function renderShell() {
         </div>
 
         <nav class="sidebar-nav" id="sidebar-nav">
-          <span class="sidebar-section-label" data-i18n="nav_dashboard">${t('nav_dashboard')}</span>
           ${navItem('dashboard', t('nav_dashboard'), dashIcon())}
 
-          <span class="sidebar-section-label" style="margin-top:var(--sp-lg);">${t('nav_finance')}</span>
+          <span class="sidebar-section-label">${t('nav_finance')}</span>
           ${navItem('transactions', t('nav_transactions'), txIcon())}
           ${navItem('accounts',     t('nav_accounts'),     accIcon())}
           ${navItem('budgets',      t('nav_budgets'),      budgetIcon())}
           ${navItem('goals',        t('nav_goals'),        goalIcon())}
+          ${navItem('categories',   t('nav_categories'),   catIcon())}
 
-          <span class="sidebar-section-label" style="margin-top:var(--sp-lg);">${t('nav_insights')}</span>
+          <span class="sidebar-section-label">${t('nav_insights')}</span>
           ${navItem('reports', t('nav_reports'), reportIcon())}
           ${navItem('bills', t('bills_title'), billsIcon())}
 
-          <span class="sidebar-section-label" style="margin-top:var(--sp-lg);">${t('nav_manage')}</span>
-          ${navItem('categories', t('nav_categories'), catIcon())}
-
-          <span class="sidebar-section-label" style="margin-top:var(--sp-lg);">${t('nav_account_section')}</span>
+          <span class="sidebar-section-label">${t('nav_account_section')}</span>
           ${navItem('settings', t('nav_settings'), settingsIcon())}
-
-          <span class="sidebar-section-label" style="margin-top:var(--sp-lg);">${t('nav_support')}</span>
           ${navItem('help', t('nav_help'), helpIcon())}
         </nav>
 
@@ -143,7 +139,7 @@ function renderShell() {
             <div class="avatar">${avatarMarkup}</div>
             <div class="sidebar-user-info">
               <div class="sidebar-user-name">${safeName}</div>
-              <div class="sidebar-user-email">${safeEmail}</div>
+              ${safeJobTitle ? `<div class="sidebar-user-role">${safeJobTitle}</div>` : ''}
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--clr-body-mid);flex-shrink:0;"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
           </div>
