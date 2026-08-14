@@ -1,11 +1,11 @@
 /* ============================================================
    HISBA — BUDGETS PAGE
    ============================================================ */
-import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.1';
+import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.2.0';
 import { getBudgets, createBudget, updateBudget, deleteBudget, getCategories, getBudgetSpending, getTransactions, getMonthClosures, saveMonthClosure } from '../services/data.js';
 import { getDailyBudgetIndicator, getBudgetAlerts, buildMonthClosure, currentMonthKey, hasClosure } from '../services/budget-insights.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.1';
-import { toast } from '../toast.js?v=release-2.0.1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.2.0';
+import { toast } from '../toast.js?v=release-2.2.0';
 
 let userId, userCurrency = 'USD';
 let budgets = [], categories = [], spending = {}, transactions = [], closures = [];
@@ -96,7 +96,7 @@ function renderPage() {
       <div class="card">
         <div class="stat-card-label">${t('overspent_label')}</div>
         <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${overBudgetCount > 0 ? 'var(--clr-error)' : 'var(--clr-success)'};">
-          ${overBudgetCount} ${t('budgets_title').toLowerCase()}
+          ${overBudgetCount}
         </div>
       </div>
     </div>
@@ -163,11 +163,11 @@ function budgetCard(b) {
         </div>
         <div style="display:flex;align-items:center;gap:var(--sp-md);">
           <span class="badge ${statusClass} badge-dot">${statusLabel}</span>
-          <button class="btn btn-outline btn-sm budget-action-edit" data-edit="${escapeHTML(b.id)}" type="button" title="${getLanguage().startsWith('ar') ? 'تعديل الميزانية' : 'Edit budget'}" aria-label="${getLanguage().startsWith('ar') ? 'تعديل الميزانية' : 'Edit budget'}">
+          <button class="btn btn-outline btn-sm budget-action-edit" data-edit="${escapeHTML(b.id)}" type="button" title="${t('edit_budget')}" aria-label="${t('edit_budget')}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            <span>${getLanguage().startsWith('ar') ? 'تعديل' : 'Edit'}</span>
+            <span>${t('edit')}</span>
           </button>
-          <button class="btn btn-outline btn-sm budget-action-delete" data-delete="${escapeHTML(b.id)}" type="button" title="${getLanguage().startsWith('ar') ? 'حذف الميزانية' : 'Delete budget'}" aria-label="${getLanguage().startsWith('ar') ? 'حذف الميزانية' : 'Delete budget'}" style="color:var(--clr-error);">
+          <button class="btn btn-outline btn-sm budget-action-delete" data-delete="${escapeHTML(b.id)}" type="button" title="${t('delete_budget')}" aria-label="${t('delete_budget')}" style="color:var(--clr-error);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -217,21 +217,21 @@ function buildModal(b) {
         <div class="form-group">
           <label class="form-label">${t('budget_period')}</label>
           <select class="form-select" id="b-period">
-            <option value="weekly" ${b?.period === 'weekly' ? 'selected' : ''}>${getLanguage().startsWith('ar') ? 'أسبوعية' : 'Weekly'}</option>
+            <option value="weekly" ${b?.period === 'weekly' ? 'selected' : ''}>${t('period_weekly')}</option>
             <option value="monthly" ${b?.period !== 'weekly' ? 'selected' : ''}>${t('period_monthly')}</option>
           </select>
         </div>
       </div>
       <div class="form-group" id="b-month-wrap" style="${b?.period === 'weekly' ? 'display:none;' : ''}">
-        <label class="form-label">${getLanguage().startsWith('ar') ? 'شهر الميزانية' : 'Budget month'}</label>
+        <label class="form-label">${t('budget_month')}</label>
         <input type="month" class="form-input" id="b-month" value="${b?.month_key || (() => { const c = getCurrentMonth(); return `${c.year}-${String(c.month).padStart(2, '0')}`; })()}">
       </div>
       <div class="form-group" id="b-week-wrap" style="${b?.period === 'weekly' ? '' : 'display:none;'}">
-        <label class="form-label">${getLanguage().startsWith('ar') ? 'بداية الأسبوع' : 'Week starting'}</label>
+        <label class="form-label">${t('week_starting')}</label>
         <input type="date" class="form-input" id="b-week" value="${b?.week_key || getDateRange('this_week').start.slice(0, 10)}">
       </div>
       <div class="form-group">
-        <label class="form-label">${t('budget_category')} <span class="text-caption text-muted">(${getLanguage().startsWith('ar') ? 'اختياري — ميزانية لكل المصروفات عند تركه فارغًا' : 'optional — leave empty for all expenses'})</span></label>
+        <label class="form-label">${t('budget_category')} <span class="text-caption text-muted">(${t('budget_category_optional')})</span></label>
         <select class="form-select" id="b-category">
           <option value="">${t('select')}</option>
           ${categories.filter(c => c.type === 'expense' || !c.type).map(cat => `

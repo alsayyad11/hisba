@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — BILLS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, getLanguage, escapeHTML } from '../utils.js?v=release-2.0.2';
+import { t, formatCurrency, validateRequired, validateAmount, getLanguage, escapeHTML } from '../utils.js?v=release-2.2.0';
 import { getBills, createBill, updateBill, deleteBill, getCategories } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.2';
-import { toast } from '../toast.js?v=release-2.0.2';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.2.0';
+import { toast } from '../toast.js?v=release-2.2.0';
 
 let userId, userCurrency = 'USD';
 let bills = [], categories = [];
@@ -48,7 +48,7 @@ function renderPage() {
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-lg);margin-bottom:var(--sp-xl);">
+    <div class="bills-summary">
       <div class="card">
         <div class="stat-card-label">${t('monthly_total')}</div>
         <div class="sensitive-value bill-summary-value" style="font-size:var(--text-xl);font-weight:700;">${formatCurrency(totalMonthly, userCurrency)}</div>
@@ -64,7 +64,7 @@ function renderPage() {
     </div>
 
     ${bills.length ? `
-      <div class="card" style="padding:0;overflow:hidden;">
+      <div class="card bills-ledger">
         <div class="table-wrapper">
           <table class="table">
             <thead><tr>
@@ -112,7 +112,7 @@ function billRow(b) {
   const lang = getLanguage();
   const catName = lang.startsWith('ar') && b.category?.name_ar ? b.category.name_ar : (b.category?.name || '—');
   return `
-    <tr>
+    <tr class="bill-row">
       <td><span class="font-medium">${escapeHTML(b.name)}</span></td>
       <td><span class="text-caption text-muted">${escapeHTML(catName)}</span></td>
       <td><span class="text-caption">${t('day_number', { day: b.due_day })}</span></td>
@@ -121,15 +121,15 @@ function billRow(b) {
         <span class="font-semibold sensitive-value bill-amount">${formatCurrency(b.amount, userCurrency)}</span>
       </td>
       <td>
-        <div style="display:flex;gap:4px;justify-content:flex-end;">
+        <div class="bill-row-actions">
           ${!b.is_paid ? `
-            <button class="btn btn-ghost btn-sm" data-paid="${escapeHTML(b.id)}" style="font-size:var(--text-xs);">
+            <button class="btn btn-ghost btn-sm bill-mark-paid" data-paid="${escapeHTML(b.id)}">
               ${t('mark_paid')}
             </button>` : ''}
           <button class="btn btn-ghost btn-icon-sm" data-edit="${escapeHTML(b.id)}">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button class="btn btn-ghost btn-icon-sm" data-delete="${escapeHTML(b.id)}" style="color:var(--clr-error);">
+          <button class="btn btn-ghost btn-icon-sm bill-delete" data-delete="${escapeHTML(b.id)}" aria-label="${t('delete')}">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>

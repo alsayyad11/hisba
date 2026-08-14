@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — SAVINGS GOALS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatPercent, validateRequired, validateAmount, GOAL_ICONS, CATEGORY_COLORS, todayISO, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
+import { t, formatCurrency, formatDate, formatPercent, validateRequired, validateAmount, GOAL_ICONS, CATEGORY_COLORS, todayISO, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.2.0';
 import { getGoals, createGoal, updateGoal, deleteGoal, addGoalFunds } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.0';
-import { toast } from '../toast.js?v=release-2.0.0';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.2.0';
+import { toast } from '../toast.js?v=release-2.2.0';
 
 let userId, userCurrency = 'USD';
 let goals = [];
@@ -39,7 +39,7 @@ function renderPage() {
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-lg);margin-bottom:var(--sp-xl);">
+    <div class="goals-summary">
       <div class="card">
         <div class="stat-card-label">${t('goal_target')}</div>
         <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${formatCurrency(totalTarget, userCurrency)}</div>
@@ -88,7 +88,7 @@ function goalCard(g) {
   const color = CATEGORY_COLORS.includes(g.color) ? g.color : CATEGORY_COLORS[0];
 
   return `
-    <div class="card card-hover" style="position:relative;overflow:hidden;">
+    <div class="card card-hover goal-card" style="position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${color};"></div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--sp-lg);margin-top:var(--sp-sm);">
         <div style="display:flex;align-items:center;gap:var(--sp-md);">
@@ -121,7 +121,7 @@ function goalCard(g) {
       </div>
       <div class="text-caption text-muted" style="margin-bottom:var(--sp-lg);">${pct}% ${t('budget_of')} ${t('goal_target').toLowerCase()}</div>
 
-      <div style="display:flex;gap:var(--sp-sm);">
+      <div class="goal-card-actions">
         ${!isComplete ? `
           <button class="btn btn-primary btn-sm" data-funds="${escapeHTML(g.id)}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -131,7 +131,7 @@ function goalCard(g) {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           ${t('edit')}
         </button>
-        <button class="btn btn-ghost btn-sm" data-delete="${escapeHTML(g.id)}" style="color:var(--clr-error);">
+        <button class="btn btn-ghost btn-sm goal-delete" data-delete="${escapeHTML(g.id)}" aria-label="${t('delete')}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
         </button>
       </div>

@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — TRANSACTIONS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.1';
+import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.2.0';
 import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getAccounts, getCategories, getTags, createTag, setTransactionTags } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.1';
-import { toast } from '../toast.js?v=release-2.0.1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.2.0';
+import { toast } from '../toast.js?v=release-2.2.0';
 
 let userId, userCurrency = 'USD';
 let transactions = [], accounts = [], categories = [], tags = [];
@@ -100,7 +100,7 @@ function renderPage() {
           ['this_week', t('this_week')],
           ['last_week', t('last_week')],
           ['today', t('today')],
-          ['this_year', t('this_year') === 'this_year' ? 'هذا العام' : t('this_year')],
+          ['this_year', t('this_year')],
         ].map(([val, lbl]) => `<option value="${val}" ${filters.period === val ? 'selected' : ''}>${lbl}</option>`).join('')}
       </select>
       <!-- Advanced filters -->
@@ -113,7 +113,7 @@ function renderPage() {
         ${accounts.map(acc => `<option value="${escapeHTML(acc.id)}" ${filters.account_id === acc.id ? 'selected' : ''}>${escapeHTML(acc.name)}</option>`).join('')}
       </select>
       <select class="form-select" id="status-filter" style="width:auto;min-width:130px;padding-right:2.5rem;">
-        <option value="">${t('filter_status') === 'filter_status' ? (getLanguage().startsWith('ar') ? 'الحالة' : 'Status') : t('filter_status')}</option>
+        <option value="">${t('filter_status')}</option>
         <option value="completed" ${filters.status === 'completed' ? 'selected' : ''}>${t('status_completed')}</option>
         <option value="pending" ${filters.status === 'pending' ? 'selected' : ''}>${t('status_pending')}</option>
       </select>
@@ -123,10 +123,10 @@ function renderPage() {
         <input type="text" id="search-input" placeholder="${t('search_transactions')}" value="${escapeHTML(filters.search)}">
       </div>
       <select class="form-select" id="sort-filter" style="width:auto;min-width:145px;padding-right:2.5rem;">
-        <option value="date_desc" ${filters.sort === 'date_desc' ? 'selected' : ''}>${t('sort_newest') === 'sort_newest' ? (getLanguage().startsWith('ar') ? 'الأحدث أولاً' : 'Newest first') : t('sort_newest')}</option>
-        <option value="date_asc" ${filters.sort === 'date_asc' ? 'selected' : ''}>${t('sort_oldest') === 'sort_oldest' ? (getLanguage().startsWith('ar') ? 'الأقدم أولاً' : 'Oldest first') : t('sort_oldest')}</option>
-        <option value="amount_desc" ${filters.sort === 'amount_desc' ? 'selected' : ''}>${t('sort_amount_high') === 'sort_amount_high' ? (getLanguage().startsWith('ar') ? 'الأعلى مبلغاً' : 'Highest amount') : t('sort_amount_high')}</option>
-        <option value="amount_asc" ${filters.sort === 'amount_asc' ? 'selected' : ''}>${t('sort_amount_low') === 'sort_amount_low' ? (getLanguage().startsWith('ar') ? 'الأقل مبلغاً' : 'Lowest amount') : t('sort_amount_low')}</option>
+        <option value="date_desc" ${filters.sort === 'date_desc' ? 'selected' : ''}>${t('sort_newest')}</option>
+        <option value="date_asc" ${filters.sort === 'date_asc' ? 'selected' : ''}>${t('sort_oldest')}</option>
+        <option value="amount_desc" ${filters.sort === 'amount_desc' ? 'selected' : ''}>${t('sort_amount_high')}</option>
+        <option value="amount_asc" ${filters.sort === 'amount_asc' ? 'selected' : ''}>${t('sort_amount_low')}</option>
       </select>
     </div>
     ` : ''}
@@ -198,11 +198,22 @@ function renderPage() {
     }, 350);
   });
 
-  document.getElementById('tx-tbody')?.addEventListener('click', e => {
+  const transactionBody = document.getElementById('tx-tbody');
+  transactionBody?.addEventListener('click', e => {
     const editBtn = e.target.closest('[data-edit]');
     const deleteBtn = e.target.closest('[data-delete]');
+    const row = e.target.closest('[data-tx]');
     if (editBtn) openEditModal(editBtn.dataset.edit);
-    if (deleteBtn) confirmDelete(deleteBtn.dataset.delete);
+    else if (deleteBtn) confirmDelete(deleteBtn.dataset.delete);
+    else if (row) openEditModal(row.dataset.tx);
+  });
+  transactionBody?.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target.closest('button')) return;
+    const row = e.target.closest('[data-tx]');
+    if (!row) return;
+    e.preventDefault();
+    openEditModal(row.dataset.tx);
   });
 }
 
@@ -213,14 +224,14 @@ function txRow(tx) {
   const categoryColor = sanitizeColor(cat?.color, 'var(--clr-canvas-raised)');
   const accountColor = sanitizeColor(acc?.color);
   return `
-    <tr class="transaction-row">
+    <tr class="transaction-row" data-tx="${escapeHTML(tx.id)}" tabindex="0" aria-label="${t('edit_transaction')}">
       <td>
         <div style="display:flex;align-items:center;gap:var(--sp-sm);">
           <div class="cat-icon transaction-category-icon" style="background:${categoryColor.startsWith('#') ? `${categoryColor}22` : categoryColor};">
             <span style="font-size:14px;">${renderIcon(cat?.icon || 'package', 14)}</span>
           </div>
           <div>
-            <div class="font-medium truncate transaction-description" style="max-width:200px;">${escapeHTML(tx.description || '—')}</div>
+            <div class="font-medium truncate transaction-description" style="max-width:200px;">${escapeHTML(tx.description || t('transaction_untitled'))}</div>
             ${tx.notes ? `<div class="text-fine text-muted truncate" style="max-width:200px;">${escapeHTML(tx.notes)}</div>` : ''}
             ${Array.isArray(tx.tags) && tx.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;">${tx.tags.slice(0, 3).map(tag => `<span class="badge" style="background:var(--clr-primary-subtle);color:var(--clr-primary);border:1px solid var(--clr-primary-border);font-size:10px;">${escapeHTML(tag.name)}</span>`).join('')}</div>` : ''}
           </div>

@@ -1,17 +1,24 @@
 /* ============================================================
    HISBA — REPORTS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, getDateRange, getLanguage, getMonthRange, getCurrentMonth, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
+import { t, formatCurrency, formatDate, getDateRange, getLanguage, getMonthRange, getCurrentMonth, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.2.0';
 import { getTransactions, getAccounts, getDashboardSummary } from '../services/data.js';
-import { exportCSV, exportExcel, exportPDF } from '../services/export.js?v=release-2.0.0';
-import { drawBarChart, drawDonutChart } from '../components/charts.js?v=release-2.0.0';
+import { exportCSV, exportExcel, exportPDF } from '../services/export.js?v=release-2.2.0';
+import { drawBarChart, drawDonutChart } from '../components/charts.js?v=release-2.2.0';
 import { getCategorySpending } from '../services/data.js';
-import { toast } from '../toast.js?v=release-2.0.0';
+import { toast } from '../toast.js?v=release-2.2.0';
 
 let userId, userCurrency = 'USD';
 let accounts = [];
 let reportData = { transactions: [], summary: {}, categories: [], monthlyComparison: [] };
 let filters = { period: 'this_month', account_id: '', template: 'minimal', compare_from: '', compare_to: '' };
+
+function displayLocale() {
+  const language = getLanguage();
+  if (language === 'ar-eg') return 'ar-EG';
+  if (language === 'ar-fusha') return 'ar';
+  return 'en-US';
+}
 
 export async function initReports(uid, profile) {
   userId = uid;
@@ -56,7 +63,7 @@ async function loadMonthlyComparison() {
   const rows = await Promise.all(months.map(async ({ year, month }) => {
     const range = getMonthRange(year, month);
     const txs = await getTransactions(userId, { start_date: range.start, end_date: range.end, type: 'expense', ...(filters.account_id ? { account_id: filters.account_id } : {}) }).catch(() => []);
-    return { year, month, total: txs.reduce((sum, tx) => sum + Number(tx.amount || 0), 0), count: txs.length, label: new Date(year, month - 1, 1).toLocaleDateString(getLanguage().startsWith('ar') ? 'ar-EG' : 'en-US', { month: 'short' }) };
+    return { year, month, total: txs.reduce((sum, tx) => sum + Number(tx.amount || 0), 0), count: txs.length, label: new Date(year, month - 1, 1).toLocaleDateString(displayLocale(), { month: 'short' }) };
   }));
   return rows;
 }
@@ -72,7 +79,7 @@ function renderSpendingCalendar(transactions, startDate) {
   const month = reference.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = new Date(year, month, 1).getDay();
-  const locale = getLanguage().startsWith('ar') ? 'ar-EG' : 'en-US';
+  const locale = displayLocale();
   const daily = new Map();
   transactions.filter(tx => tx.type === 'expense').forEach(tx => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(tx.date || '')) return;
@@ -254,7 +261,7 @@ function renderPage() {
               ${transactions.map(tx => `
                 <tr>
                   <td><span class="text-caption text-muted">${formatDate(tx.date)}</span></td>
-                  <td><span class="font-medium">${escapeHTML(tx.description || '—')}</span></td>
+                  <td><span class="font-medium">${escapeHTML(tx.description || t('transaction_untitled'))}</span></td>
                   <td><span class="text-caption">${escapeHTML(getLanguage().startsWith('ar') && tx.category?.name_ar ? tx.category.name_ar : (tx.category?.name || '—'))}</span></td>
                   <td><span class="text-caption">${escapeHTML(tx.account?.name || '—')}</span></td>
                   <td>
@@ -306,7 +313,7 @@ function renderPage() {
 
   document.querySelectorAll('.spending-calendar-day').forEach(day => day.addEventListener('click', () => {
     const detail = document.getElementById('spending-calendar-detail');
-    const date = new Date(`${day.dataset.date}T12:00:00`).toLocaleDateString(getLanguage().startsWith('ar') ? 'ar-EG' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+    const date = new Date(`${day.dataset.date}T12:00:00`).toLocaleDateString(displayLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
     if (detail) detail.textContent = `${date}: ${formatCurrency(Number(day.dataset.amount || 0), userCurrency)}`;
     document.querySelectorAll('.spending-calendar-day').forEach(item => item.classList.remove('is-selected'));
     day.classList.add('is-selected');
