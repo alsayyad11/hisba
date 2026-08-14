@@ -1,11 +1,11 @@
 /* ============================================================
    HISBA — DASHBOARD PAGE
    ============================================================ */
-import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.1';
+import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.2';
 import { getDashboardSummary, getMonthlyTrend, getCategorySpending, getTransactions, getBudgets, getBudgetSpending, getAccounts, getCategories, createTransaction } from '../services/data.js';
-import { createModal, openModal, closeModal } from '../components/modal.js?v=release-2.0.1';
-import { toast } from '../toast.js?v=release-2.0.1';
-import { drawBarChart, drawDonutChart } from '../components/charts.js?v=release-2.0.1';
+import { createModal, openModal, closeModal } from '../components/modal.js?v=release-2.0.2';
+import { toast } from '../toast.js?v=release-2.0.2';
+import { drawBarChart, drawDonutChart } from '../components/charts.js?v=release-2.0.2';
 
 let userId, userCurrency = 'USD';
 let summaryData = {}, trendData = [], categoryData = [], recentTx = [], budgets = [], quickAccounts = [], quickCategories = [];
@@ -81,44 +81,120 @@ function render() {
         <h1 class="page-title">${t('dashboard_title')}</h1>
         <p class="page-subtitle">${t('dashboard_subtitle')}</p>
       </div>
-      <div class="page-actions">
-        <button class="btn btn-primary" id="btn-add-tx">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          ${getLanguage().startsWith('ar') ? 'تسجيل سريع' : 'Quick add'}
+
+    </div>
+
+
+    <section class="dashboard-hero" aria-label="${t('total_balance')}">
+      <div class="dashboard-hero-main">
+        <div>
+          <p class="dashboard-hero-kicker">${t('total_balance')}</p>
+          <p class="dashboard-hero-balance sensitive-value" dir="ltr">${formatCurrency(totalBalance, userCurrency)}</p>
+          <p class="dashboard-hero-caption">${t('this_month')}</p>
+        </div>
+        <button class="dashboard-hero-add" id="btn-add-tx" type="button">
+          <span aria-hidden="true">+</span>
+          <span>${t('quick_add')}</span>
         </button>
       </div>
-    </div>
-
-
-    <!-- Stats grid -->
-    <div class="stats-grid">
-      ${statCard(t('total_balance'), formatCurrency(totalBalance, userCurrency), 'balance', null, '#1f6f68')}
-      ${statCard(t('monthly_income'), formatCurrency(income, userCurrency), 'income', null, '#238b5a')}
-      ${statCard(t('monthly_expenses'), formatCurrency(expenses, userCurrency), 'expense', null, 'var(--clr-error)')}
-      ${statCard(t('net_savings'), formatCurrency(net, userCurrency), 'savings', null, net >= 0 ? '#238b5a' : '#d94f87')}
-    </div>
-
-    <!-- Charts row -->
-    <div class="dashboard-grid">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">${t('income_vs_expense')}</span>
-          <span class="text-caption text-muted">${t('this_month')}</span>
+      <div class="dashboard-hero-metrics">
+        <div class="dashboard-hero-metric is-income">
+          <span>${t('monthly_income')}</span>
+          <strong class="sensitive-value" dir="ltr">${formatCurrency(income, userCurrency)}</strong>
         </div>
-        <div style="position:relative;height:260px;">
-          <canvas id="bar-chart" style="width:100%;height:100%;display:block;"></canvas>
+        <div class="dashboard-hero-metric is-expense">
+          <span>${t('monthly_expenses')}</span>
+          <strong class="sensitive-value" dir="ltr">${formatCurrency(expenses, userCurrency)}</strong>
+        </div>
+        <div class="dashboard-hero-metric">
+          <span>${t('net_savings')}</span>
+          <strong class="sensitive-value" dir="ltr">${formatCurrency(net, userCurrency)}</strong>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">${t('category_breakdown')}</span>
+    </section>
+
+    <div class="dashboard-insight-grid">
+      <section class="dashboard-panel dashboard-trend-panel">
+        <div class="dashboard-panel-header">
+          <div>
+            <h2 class="dashboard-panel-title">${t('income_vs_expense')}</h2>
+            <p class="dashboard-panel-caption">${t('this_month')}</p>
+          </div>
+        </div>
+        <div class="dashboard-chart-shell">
+          <canvas id="bar-chart" aria-label="${t('income_vs_expense')}" role="img"></canvas>
+        </div>
+      </section>
+      <section class="dashboard-panel dashboard-budget-panel">
+        <div class="dashboard-panel-header">
+          <div>
+            <h2 class="dashboard-panel-title">${t('top_budgets')}</h2>
+            <p class="dashboard-panel-caption">${t('this_month')}</p>
+          </div>
+          <button class="dashboard-text-action" id="btn-view-all-budgets" type="button">${t('view_all')}</button>
+        </div>
+        <div class="dashboard-budget-list">
+          ${budgets.length ? budgets.slice(0, 3).map(b => {
+            const pct = formatPercent(b.spent, b.amount);
+            const status = pct >= 100 ? 'error' : pct >= 80 ? 'warning' : 'success';
+            return `
+              <div class="dashboard-budget-row">
+                <div class="dashboard-budget-row-head">
+                  <div class="dashboard-budget-name">
+                    <span class="dashboard-category-icon" style="--category-color:${b.category?.color && sanitizeColor(b.category.color).startsWith('#') ? sanitizeColor(b.category.color) : 'var(--clr-primary)'};">${renderIcon(b.category?.icon || 'package', 15)}</span>
+                    <span>${escapeHTML(b.name)}</span>
+                  </div>
+                  <span class="dashboard-budget-percent">${pct}%</span>
+                </div>
+                <div class="dashboard-budget-track"><span class="is-${status}" style="width:${Math.min(pct, 100)}%;"></span></div>
+                <p class="dashboard-budget-amount sensitive-value" dir="ltr">${formatCurrency(b.spent, userCurrency)} / ${formatCurrency(b.amount, userCurrency)}</p>
+              </div>
+            `;
+          }).join('') : `<div class="dashboard-compact-empty">${t('no_budgets_sub')}</div>`}
+        </div>
+      </section>
+    </div>
+
+    <div class="dashboard-content-grid">
+      <section class="dashboard-panel dashboard-transactions-panel">
+        <div class="dashboard-panel-header">
+          <div>
+            <h2 class="dashboard-panel-title">${t('recent_transactions')}</h2>
+            <p class="dashboard-panel-caption">${t('this_month')}</p>
+          </div>
+          <button class="dashboard-text-action" id="btn-view-all-tx" type="button">${t('view_all')}</button>
+        </div>
+        ${recentTx.length ? `
+          <div class="dashboard-transaction-list">
+            ${recentTx.slice(0, 6).map(tx => `
+              <article class="dashboard-transaction-row">
+                <span class="dashboard-category-icon" style="--category-color:${tx.category?.color && sanitizeColor(tx.category.color).startsWith('#') ? sanitizeColor(tx.category.color) : 'var(--clr-primary)'};">${renderIcon(tx.category?.icon || 'package', 16)}</span>
+                <div class="dashboard-transaction-copy">
+                  <strong>${escapeHTML(tx.description || '—')}</strong>
+                  <span>${escapeHTML(getLanguage().startsWith('ar') && tx.category?.name_ar ? tx.category.name_ar : (tx.category?.name || '—'))} <i aria-hidden="true">·</i> ${formatRelativeDate(tx.date)}</span>
+                </div>
+                <strong class="dashboard-transaction-amount sensitive-value ${tx.type === 'income' ? 'is-income' : tx.type === 'expense' ? 'is-expense' : ''}" dir="ltr">${tx.type === 'income' ? '+' : tx.type === 'expense' ? '−' : ''}${formatCurrency(tx.amount, tx.account?.currency || userCurrency)}</strong>
+              </article>
+            `).join('')}
+          </div>
+        ` : `
+          <div class="dashboard-compact-empty">${t('no_transactions_sub')}</div>
+        `}
+      </section>
+
+      <section class="dashboard-panel dashboard-categories-panel">
+        <div class="dashboard-panel-header">
+          <div>
+            <h2 class="dashboard-panel-title">${t('category_breakdown')}</h2>
+            <p class="dashboard-panel-caption">${t('monthly_expenses')}</p>
+          </div>
         </div>
         <div class="category-breakdown-layout" dir="${getLanguage().startsWith('ar') ? 'rtl' : 'ltr'}">
           <div class="category-chart-panel">
             <div class="category-chart-wrap">
               <canvas id="donut-chart" aria-label="${t('category_breakdown')}" role="img"></canvas>
             </div>
-            <div class="category-total-label">${getLanguage().startsWith('ar') ? 'إجمالي الإنفاق' : 'Total spending'}</div>
+            <div class="category-total-label">${t('monthly_expenses')}</div>
             <div class="category-total-value sensitive-value">${categoryData.length ? formatCurrency(categoryData.reduce((s, c) => s + c.total, 0), userCurrency) : formatCurrency(0, userCurrency)}</div>
           </div>
           <div class="category-legend" aria-label="${t('category_breakdown')}" role="list">
@@ -133,97 +209,7 @@ function render() {
             `).join('') || `<p class="category-empty text-caption text-muted">${t('no_data')}</p>`}
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Bottom row: Recent Transactions + Budget Status -->
-    <div class="dashboard-grid" style="margin-top:var(--sp-xl);">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">${t('recent_transactions')}</span>
-          <button class="btn btn-ghost btn-sm" id="btn-view-all-tx">${t('view_all')}</button>
-        </div>
-        ${recentTx.length ? `
-          <div class="table-wrapper">
-            <table class="table">
-              <thead><tr>
-                <th>${t('description')}</th>
-                <th>${t('category')}</th>
-                <th>${t('date')}</th>
-                <th style="text-align:right;">${t('amount')}</th>
-              </tr></thead>
-              <tbody>
-                ${recentTx.map(tx => `
-                  <tr>
-                    <td>
-                      <div style="display:flex;align-items:center;gap:var(--sp-sm);">
-                        <div class="cat-icon" style="background:${tx.category?.color && sanitizeColor(tx.category.color).startsWith('#') ? `${sanitizeColor(tx.category.color)}22` : 'var(--clr-canvas-raised)'};">
-                          <span style="font-size:14px;">${renderIcon(tx.category?.icon || 'package', 14)}</span>
-                        </div>
-                        <span class="font-medium truncate" style="max-width:160px;">${escapeHTML(tx.description || '—')}</span>
-                      </div>
-                    </td>
-                    <td><span class="text-caption text-muted">${escapeHTML(getLanguage().startsWith('ar') && tx.category?.name_ar ? tx.category.name_ar : (tx.category?.name || '—'))}</span></td>
-                    <td><span class="text-caption text-muted">${formatRelativeDate(tx.date)}</span></td>
-                    <td style="text-align:right;">
-                      <span class="sensitive-value ${tx.type === 'income' ? 'amount-income' : tx.type === 'expense' ? 'amount-expense' : 'amount-neutral'}">
-                        ${tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}${formatCurrency(tx.amount, tx.account?.currency || userCurrency)}
-                      </span>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        ` : `
-          <div class="empty-state" style="padding:var(--sp-2xl) var(--sp-lg);">
-            <div class="empty-state-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-body-mid)" stroke-width="1.5" stroke-linecap="round"><path d="M3 3h18v18H3z" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-            </div>
-            <p class="empty-state-title">${t('no_transactions')}</p>
-            <p class="empty-state-desc">${t('no_transactions_sub')}</p>
-          </div>
-        `}
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">${t('top_budgets')}</span>
-          <button class="btn btn-ghost btn-sm" id="btn-view-all-budgets">${t('view_all')}</button>
-        </div>
-        ${budgets.length ? budgets.slice(0, 4).map(b => {
-          const pct = formatPercent(b.spent, b.amount);
-          const status = pct >= 100 ? 'error' : pct >= 80 ? 'warning' : 'success';
-          const remaining = Number(b.amount) - Number(b.spent);
-          return `
-            <div style="margin-bottom:var(--sp-lg);">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-xs);">
-                <div style="display:flex;align-items:center;gap:var(--sp-sm);">
-                  <div class="cat-icon" style="width:28px;height:28px;background:${b.category?.color && sanitizeColor(b.category.color).startsWith('#') ? `${sanitizeColor(b.category.color)}22` : 'var(--clr-canvas-raised)'};">
-                    <span style="font-size:12px;">${renderIcon(b.category?.icon || 'package', 12)}</span>
-                  </div>
-                  <span class="text-caption font-semibold">${escapeHTML(b.name)}</span>
-                </div>
-                <span class="text-caption text-muted">${pct}%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill ${status}" style="width:${Math.min(pct, 100)}%;"></div>
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-top:var(--sp-xs);">
-                <span class="text-fine text-muted sensitive-value">${formatCurrency(b.spent, userCurrency)} ${t('budget_of')} ${formatCurrency(b.amount, userCurrency)}</span>
-                <span class="text-fine sensitive-value ${status === 'error' ? 'text-error' : 'text-muted'}">
-                  ${remaining >= 0 ? t('budget_remaining', { amount: formatCurrency(remaining, userCurrency) }) : t('overspent', { amount: formatCurrency(Math.abs(remaining), userCurrency) })}
-                </span>
-              </div>
-            </div>
-          `;
-        }).join('') : `
-          <div class="empty-state" style="padding:var(--sp-xl);">
-            <p class="empty-state-title">${t('no_budgets')}</p>
-            <p class="empty-state-desc">${t('no_budgets_sub')}</p>
-          </div>
-        `}
-      </div>
+      </section>
     </div>
   `;
 
