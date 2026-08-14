@@ -68,15 +68,13 @@ function render() {
   const topCategory = categoryData[0] || null;
   const totalCategorySpend = categoryData.reduce((sum, item) => sum + Number(item.total || 0), 0);
   const topCategoryShare = topCategory && totalCategorySpend > 0 ? Math.round((Number(topCategory.total || 0) / totalCategorySpend) * 100) : 0;
-  const profileName = String(profileData.full_name || profileData.display_name || profileData.name || '').trim();
-  const greeting = profileName ? t('dashboard_greeting_named', { name: profileName }) : t('dashboard_greeting_default');
   const netClass = net >= 0 ? 'is-positive' : 'is-negative';
   const budgetState = budgetPercentage >= 100 ? 'is-over' : budgetPercentage >= 80 ? 'is-near' : 'is-safe';
   const insight = getInsight(mainBudget, budgetRemaining, topCategory, topCategoryShare, isArabic);
 
   el.innerHTML = `
     <header class="page-header finance-page-header finance-page-header-recomposed">
-      <div><p class="finance-eyebrow">${escapeHTML(greeting)}</p><h1 class="page-title">${t('dashboard_title')}</h1><p class="page-subtitle">${t('dashboard_overview_copy')}</p></div>
+      <div><h1 class="page-title">${t('dashboard_title')}</h1><p class="page-subtitle">${t('dashboard_overview_copy')}</p></div>
       <button class="btn btn-primary finance-header-action" id="btn-add-tx" type="button">${renderIcon('plus', 17)}<span>${t('add_transaction')}</span></button>
     </header>
 
@@ -87,20 +85,19 @@ function render() {
       <div class="finance-overview-metric is-net"><span>${t('net_savings')}</span><strong class="sensitive-value" dir="ltr">${net >= 0 ? '+' : '−'}${formatCurrency(Math.abs(net), userCurrency)}</strong></div>
     </section>
 
-    <section class="finance-trend-panel" aria-label="${t('dashboard_cash_flow')}">
-      <div class="finance-trend-heading"><div><p class="finance-section-kicker">${t('dashboard_financial_health')}</p><h2>${t('dashboard_cash_flow')}</h2><p>${t('dashboard_cash_flow_sub')}</p></div><div class="finance-trend-value"><span>${t('total_balance')}</span><strong class="sensitive-value" dir="ltr">${formatCurrency(totalBalance, userCurrency)}</strong></div></div>
-      <div class="finance-trend-chart ${cashflow.length > 1 ? '' : 'is-empty'}">${cashflow.length > 1 ? '<canvas id="cashflow-line-chart" aria-label="Cash flow" role="img"></canvas>' : `<div class="finance-empty-chart finance-empty-chart-compact"><span aria-hidden="true">${renderIcon('chart-line', 22)}</span><div><strong>${t('dashboard_no_trend')}</strong><p>${t('dashboard_cashflow_empty')}</p></div><button class="btn btn-outline btn-sm" id="btn-empty-add-tx" type="button">${t('add_transaction')}</button></div>`}</div>
-      <div class="finance-trend-footer"><span>${t('dashboard_balance_start')} <strong class="sensitive-value" dir="ltr">${formatCurrency(openingBalance, userCurrency)}</strong></span><span>${t('dashboard_income_events')} <strong class="sensitive-value is-income" dir="ltr">${formatCurrency(income, userCurrency)}</strong></span><span>${t('dashboard_expense_events')} <strong class="sensitive-value is-expense" dir="ltr">${formatCurrency(expenses, userCurrency)}</strong></span></div>
-    </section>
-
     <section class="finance-analysis-grid">
       <article class="finance-analysis-panel finance-spending-panel"><div class="finance-panel-heading"><div><p class="finance-section-kicker">${t('dashboard_spending_analysis')}</p><h2>${t('dashboard_top_spending')}</h2><p>${t('dashboard_top_spending_sub')}</p></div></div>${categoryData.length ? `<div class="finance-spending-layout" dir="${isArabic ? 'rtl' : 'ltr'}"><div class="finance-donut-wrap"><canvas id="spending-donut-chart" aria-label="${t('dashboard_top_spending')}" role="img"></canvas><div class="finance-donut-fallback"><strong class="sensitive-value" dir="ltr">${formatCurrency(totalCategorySpend, userCurrency)}</strong><span>${t('dashboard_total_spent')}</span></div></div><div class="finance-category-list" role="list">${categoryData.slice(0, 5).map(categoryRow).join('')}</div></div>` : compactEmpty('pie-chart', t('dashboard_no_spending'), t('add_transaction'), 'btn-spending-add')}</article>
       <article class="finance-analysis-panel finance-budget-panel"><div class="finance-panel-heading"><div><p class="finance-section-kicker">${t('dashboard_budget_status')}</p><h2>${t('top_budgets')}</h2><p>${t('dashboard_budget_used')}</p></div><button class="dashboard-text-action" id="btn-view-all-budgets" type="button">${t('view_all')}</button></div>${mainBudget ? `<div class="finance-budget-summary"><div><span>${t('dashboard_budget_total')}</span><strong class="sensitive-value" dir="ltr">${formatCurrency(mainBudget.amount, userCurrency)}</strong></div><div><span>${t('budget_spent')}</span><strong class="sensitive-value is-expense" dir="ltr">${formatCurrency(mainBudget.spent, userCurrency)}</strong></div><div><span>${t('budget_remaining_label')}</span><strong class="sensitive-value ${budgetRemaining < 0 ? 'is-expense' : ''}" dir="ltr">${budgetRemaining < 0 ? '−' : ''}${formatCurrency(Math.abs(budgetRemaining), userCurrency)}</strong></div></div><div class="finance-budget-progress-wrap"><div class="finance-budget-progress-meta"><span>${budgetPercentage}% ${t('dashboard_budget_used')}</span><span class="${budgetState}">${budgetPercentage >= 100 ? t('overspent_label') : budgetPercentage >= 80 ? t('at_risk') : t('on_track')}</span></div><div class="finance-progress-track"><span class="${budgetState}" style="width:${Math.min(budgetPercentage,100)}%"></span></div></div><p class="finance-budget-insight ${budgetState}">${escapeHTML(insight)}</p>` : compactEmpty('wallet', t('dashboard_no_budgets'), t('dashboard_add_budget'), 'btn-create-budget')}</article>
     </section>
 
+    <section class="finance-trend-panel" aria-label="${t('dashboard_cash_flow')}">
+      <div class="finance-trend-heading"><div><p class="finance-section-kicker">${t('dashboard_financial_health')}</p><h2>${t('dashboard_cash_flow')}</h2><p>${t('dashboard_cash_flow_sub')}</p></div></div>
+      <div class="finance-trend-chart ${cashflow.length > 1 ? '' : 'is-empty'}">${cashflow.length > 1 ? '<canvas id="cashflow-line-chart" aria-label="Cash flow" role="img"></canvas>' : `<div class="finance-empty-chart finance-empty-chart-compact"><span aria-hidden="true">${renderIcon('chart-line', 22)}</span><div><strong>${t('dashboard_no_trend')}</strong><p>${t('dashboard_cashflow_empty')}</p></div><button class="btn btn-outline btn-sm" id="btn-empty-add-tx" type="button">${t('add_transaction')}</button></div>`}</div>
+      <div class="finance-trend-footer"><span>${t('dashboard_balance_start')} <strong class="sensitive-value" dir="ltr">${formatCurrency(openingBalance, userCurrency)}</strong></span></div>
+    </section>
+
     <section class="finance-activity-card finance-activity-card-recomposed" aria-label="${t('dashboard_activity')}"><div class="finance-panel-heading"><div><p class="finance-section-kicker">${t('dashboard_activity')}</p><h2>${t('recent_transactions')}</h2><p>${t('this_month')}</p></div><button class="dashboard-text-action" id="btn-view-all-tx" type="button">${t('view_all')}</button></div>${recentTx.length ? `<div class="finance-activity-list">${recentTx.map(transaction => transactionRow(transaction, isArabic)).join('')}</div>` : compactEmpty('receipt', t('dashboard_no_activity'), t('add_transaction'), 'btn-activity-add')}</section>
 
-    <section class="finance-intelligence-bar"><span class="finance-intelligence-icon">${renderIcon('sparkle', 16)}</span><div><strong>${t('dashboard_insight_title')}</strong><p>${escapeHTML(insight)}</p></div></section>
   `;
   document.getElementById('btn-add-tx')?.addEventListener('click', openQuickAddModal);
   document.getElementById('btn-empty-add-tx')?.addEventListener('click', openQuickAddModal);
@@ -118,6 +115,8 @@ function categoryRow(category) { const total = categoryData.reduce((sum, item) =
 function getInsight(mainBudget, budgetRemaining, topCategory, topCategoryShare, isArabic) { if (mainBudget && budgetRemaining < 0) return t('dashboard_insight_over_budget', { amount: formatCurrency(Math.abs(budgetRemaining), userCurrency) }); if (mainBudget && formatPercent(mainBudget.spent, mainBudget.amount) >= 80) return t('dashboard_insight_budget_close', { amount: formatCurrency(Math.max(0, budgetRemaining), userCurrency) }); if (topCategory) { const name = isArabic && topCategory.name_ar ? topCategory.name_ar : topCategory.name; return t('dashboard_insight_top_category', { category: name, percent: topCategoryShare }); } return t('dashboard_insight_no_budget'); }
 function transactionRow(transaction, isArabic) { const color = sanitizeColor(transaction.category?.color, '#176b73'); const categoryName = isArabic && transaction.category?.name_ar ? transaction.category.name_ar : (transaction.category?.name || '—'); const prefix = transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '−' : ''; return `<article class="finance-activity-row"><span class="finance-activity-icon" style="--category-color:${color}">${renderIcon(transaction.category?.icon || 'receipt', 16)}</span><div class="finance-activity-copy"><strong>${escapeHTML(transaction.description || t('transaction_untitled'))}</strong><span>${escapeHTML(categoryName)}<i aria-hidden="true">·</i>${formatRelativeDate(transaction.date)}</span></div><strong class="finance-activity-amount sensitive-value ${transaction.type === 'income' ? 'is-income' : transaction.type === 'expense' ? 'is-expense' : ''}" dir="ltr">${prefix}${formatCurrency(transaction.amount, transaction.account?.currency || userCurrency)}</strong></article>`; }
 function cashflowSeries(openingBalance) {
+  if (!monthTx.length) return [];
+  const { year, month } = getCurrentMonth();
   const byDay = new Map();
   monthTx.forEach(transaction => {
     const date = String(transaction.date || '').slice(0, 10);
@@ -125,15 +124,16 @@ function cashflowSeries(openingBalance) {
     const move = transaction.type === 'income' ? Number(transaction.amount || 0) : transaction.type === 'expense' ? -Number(transaction.amount || 0) : 0;
     byDay.set(date, (byDay.get(date) || 0) + move);
   });
-  const days = [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b));
-  if (!days.length) return [];
+  const [todayYear, todayMonth, todayDay] = todayISO().split('-').map(Number);
+  const lastDay = new Date(year, month, 0).getDate();
+  const visibleDay = todayYear === year && todayMonth === month ? Math.min(todayDay, lastDay) : lastDay;
   let running = Number(openingBalance || 0);
-  // Anchor the line at the beginning of the month so a single active day still has a meaningful trend.
-  const points = [{ label: '1', value: running }];
-  days.forEach(([date, move]) => {
-    running += move;
-    points.push({ label: String(Number(date.slice(8))), value: running });
-  });
+  const points = [];
+  for (let day = 1; day <= Math.max(1, visibleDay); day += 1) {
+    const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    running += Number(byDay.get(date) || 0);
+    points.push({ label: String(day), value: running });
+  }
   return points;
 }
 
