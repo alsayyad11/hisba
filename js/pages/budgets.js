@@ -1,21 +1,24 @@
 /* ============================================================
    HISBA — BUDGETS PAGE
    ============================================================ */
-import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
+import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.1';
 import { getBudgets, createBudget, updateBudget, deleteBudget, getCategories, getBudgetSpending, getTransactions, getMonthClosures, saveMonthClosure } from '../services/data.js';
 import { getDailyBudgetIndicator, getBudgetAlerts, buildMonthClosure, currentMonthKey, hasClosure } from '../services/budget-insights.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.0';
-import { toast } from '../toast.js?v=release-2.0.0';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.1';
+import { toast } from '../toast.js?v=release-2.0.1';
 
 let userId, userCurrency = 'USD';
 let budgets = [], categories = [], spending = {}, transactions = [], closures = [];
 let editingBudget = null;
+let onboardingActive = false;
 
-export async function initBudgets(uid, profile) {
+export async function initBudgets(uid, profile, opts = {}) {
   userId = uid;
   userCurrency = profile?.currency || 'USD';
+  onboardingActive = opts.action === 'onboarding-budget';
   await loadData();
   renderPage();
+  if (onboardingActive && !budgets.length) setTimeout(openAddModal, 100);
 }
 
 async function loadData() {
@@ -128,6 +131,14 @@ function renderPage() {
   });
 }
 
+function onboardingProgress(current) {
+  return `
+    <div class="onboarding-form-progress">
+      <span>${t('onboarding_progress', { current, total: 3 })}</span>
+      <span class="onboarding-progress-dots" aria-hidden="true">${[1, 2, 3].map(step => `<i class="${step <= current ? 'is-active' : ''}"></i>`).join('')}</span>
+    </div>`;
+}
+
 function budgetCard(b) {
   const pct = formatPercent(b.spent, b.amount);
   const remaining = Number(b.amount) - Number(b.spent);
@@ -191,6 +202,7 @@ function buildModal(b) {
     id: 'budget-modal',
     title: isEdit ? t('edit_budget') : t('add_budget'),
     content: `
+      ${!isEdit && onboardingActive ? onboardingProgress(3) : ''}
       <div class="form-group">
         <label class="form-label">${t('budget_name')}</label>
         <input type="text" class="form-input" id="b-name" placeholder="${t('budget_name')}" maxlength="100" value="${escapeHTML(b?.name || '')}">
@@ -248,6 +260,7 @@ function buildModal(b) {
     const month_key = period === 'monthly' ? document.getElementById('b-month').value : null;
     const week_key = period === 'weekly' ? document.getElementById('b-week').value : null;
     const category_id = document.getElementById('b-category').value || null;
+    const shouldCompleteOnboarding = onboardingActive && !isEdit && budgets.length === 0;
 
     let valid = true;
     if (!validateRequired(name) || name.length > 100) { showErr('b-name-err', t('required')); valid = false; } else hideErr('b-name-err');
@@ -263,9 +276,10 @@ function buildModal(b) {
     try {
       const payload = { name, amount: parseFloat(amount), period, month_key, week_key, category_id };
       if (isEdit) { await updateBudget(b.id, userId, payload); toast.success(t('success'), t('updated')); }
-      else        { await createBudget(userId, payload); toast.success(t('success'), t('added')); }
+      else        { await createBudget(userId, payload); toast.success(shouldCompleteOnboarding ? t('onboarding_complete') : t('success'), shouldCompleteOnboarding ? t('onboarding_complete_sub') : t('added')); }
       closeModal('budget-modal');
       await loadData();
+      onboardingActive = false;
       renderPage();
     } catch (err) {
       toast.error(t('error'), err.message);

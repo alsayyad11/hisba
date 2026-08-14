@@ -1,16 +1,17 @@
 /* ============================================================
    HISBA — ACCOUNTS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
+import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.1';
 import { getAccounts, createAccount, updateAccount, deleteAccount, setDefaultAccount } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.0';
-import { toast } from '../toast.js?v=release-2.0.0';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.1';
+import { toast } from '../toast.js?v=release-2.0.1';
 
 let userId, userCurrency = 'USD';
 let accounts = [];
 let editingAcc = null;
 let returnTo = null;
 let returnAction = null;
+let onboardingActive = false;
 
 const ACCOUNT_TYPES = ['checking', 'savings', 'cash', 'credit', 'investment'];
 const TYPE_ICONS = { checking: 'wallet', savings: 'wallet', cash: 'wallet', credit: 'wallet', investment: 'chart' };
@@ -20,8 +21,10 @@ export async function initAccounts(uid, profile, opts = {}) {
   userCurrency = profile?.currency || 'USD';
   returnTo = opts.returnTo || null;
   returnAction = opts.returnAction || null;
+  onboardingActive = returnAction === 'onboarding-transaction' && !opts.action;
   accounts = await getAccounts(userId).catch(() => []);
   renderPage();
+  if (onboardingActive && !accounts.length) setTimeout(openAddModal, 100);
 }
 
 function renderPage() {
@@ -80,6 +83,14 @@ function renderPage() {
   });
 }
 
+function onboardingProgress(current) {
+  return `
+    <div class="onboarding-form-progress">
+      <span>${t('onboarding_progress', { current, total: 3 })}</span>
+      <span class="onboarding-progress-dots" aria-hidden="true">${[1, 2, 3].map(step => `<i class="${step <= current ? 'is-active' : ''}"></i>`).join('')}</span>
+    </div>`;
+}
+
 function accCard(acc) {
   const typeIcon = TYPE_ICONS[acc.type] || 'wallet';
   return `
@@ -131,6 +142,7 @@ function buildModal(acc) {
     id: 'acc-modal',
     title: isEdit ? t('edit_account') : t('add_account'),
     content: `
+      ${!isEdit && onboardingActive ? onboardingProgress(1) : ''}
       <div class="form-group">
         <label class="form-label">${t('account_name')}</label>
         <input type="text" class="form-input" id="acc-name" placeholder="${t('account_name')}" maxlength="80" value="${escapeHTML(acc?.name || '')}">
@@ -207,6 +219,7 @@ function buildModal(acc) {
         const nextAction = returnAction || 'add';
         returnTo = null;
         returnAction = null;
+        onboardingActive = false;
         window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'transactions', action: nextAction } }));
       }
     } catch (err) {

@@ -1,23 +1,25 @@
 /* ============================================================
    HISBA — TRANSACTIONS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
+import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.1';
 import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getAccounts, getCategories, getTags, createTag, setTransactionTags } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.0';
-import { toast } from '../toast.js?v=release-2.0.0';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.1';
+import { toast } from '../toast.js?v=release-2.0.1';
 
 let userId, userCurrency = 'USD';
 let transactions = [], accounts = [], categories = [], tags = [];
 let filters = { type: 'all', period: 'this_month', search: '', category_id: '', account_id: '', status: '', sort: 'date_desc' };
 let editingTx = null;
+let onboardingActive = false;
 
 export async function initTransactions(uid, profile, opts = {}) {
   userId = uid;
   userCurrency = profile?.currency || 'USD';
+  onboardingActive = opts.action === 'onboarding-transaction';
   await loadMeta();
   await loadTransactions();
   renderPage();
-  if (opts.action === 'add') setTimeout(() => openAddModal(), 100);
+  if (opts.action === 'add' || opts.action === 'onboarding-transaction') setTimeout(() => openAddModal(), 100);
 }
 
 async function loadMeta() {
@@ -252,6 +254,14 @@ function txRow(tx) {
     </tr>`;
 }
 
+function onboardingProgress(current) {
+  return `
+    <div class="onboarding-form-progress">
+      <span>${t('onboarding_progress', { current, total: 3 })}</span>
+      <span class="onboarding-progress-dots" aria-hidden="true">${[1, 2, 3].map(step => `<i class="${step <= current ? 'is-active' : ''}"></i>`).join('')}</span>
+    </div>`;
+}
+
 function openAddModal() {
   if (!accounts.length) {
     openTransactionSetupPrompt();
@@ -263,28 +273,35 @@ function openAddModal() {
 }
 
 function openTransactionSetupPrompt() {
-  const missingAccounts = !accounts.length;
   createModal({
     id: 'transaction-setup-modal',
-    title: t('setup_before_transaction_title'),
+    title: t('onboarding_title'),
+    size: 'modal-sm',
     content: `
-      <p class="modal-copy">${t('setup_before_transaction_desc')}</p>
-      <div class="setup-checklist">
-        <div class="setup-check ${missingAccounts ? 'is-missing' : 'is-ready'}">
-          <span class="setup-check-icon">${missingAccounts ? '1' : renderIcon('check', 14)}</span>
-          <div><strong>${t('account')}</strong><small>${missingAccounts ? t('setup_account_missing') : t('setup_account_ready')}</small></div>
-          ${missingAccounts ? '<button class="btn btn-outline btn-sm" id="setup-add-account">' + t('add_account') + '</button>' : ''}
+      <section class="onboarding-dialog" aria-describedby="transaction-setup-copy">
+        <div class="onboarding-dialog-progress">
+          <span class="onboarding-dialog-kicker">${t('onboarding_progress', { current: 1, total: 3 })}</span>
+          <span class="onboarding-progress-dots" aria-hidden="true"><i class="is-active"></i><i></i><i></i></span>
         </div>
-      </div>
-      <p class="text-caption text-muted" style="margin-top:var(--sp-lg);">${t('setup_before_transaction_note')}</p>
+        <div class="onboarding-dialog-icon" aria-hidden="true">${renderIcon('wallet', 28)}</div>
+        <div>
+          <h3 class="onboarding-dialog-title">${t('onboarding_step_account')}</h3>
+          <p class="onboarding-dialog-copy" id="transaction-setup-copy">${t('onboarding_step_account_sub')}</p>
+        </div>
+      </section>
     `,
-    footerButtons: [`<button class="btn btn-secondary" id="setup-close">${t('cancel')}</button>`]
+    footerButtons: [
+      `<button class="btn btn-outline" id="setup-close">${t('onboarding_not_now')}</button>`,
+      `<button class="btn btn-primary" id="setup-add-account">${t('onboarding_start')}</button>`,
+    ],
   });
   openModal('transaction-setup-modal');
   document.getElementById('setup-close')?.addEventListener('click', () => closeModal('transaction-setup-modal'));
   document.getElementById('setup-add-account')?.addEventListener('click', () => {
     closeModal('transaction-setup-modal');
-    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'accounts', returnTo: 'transactions', returnAction: 'add' } }));
+    window.dispatchEvent(new CustomEvent('navigate', {
+      detail: { page: 'accounts', returnTo: 'transactions', returnAction: 'onboarding-transaction' },
+    }));
   });
 }
 
@@ -305,6 +322,7 @@ function buildTxModal(tx) {
     id: 'tx-modal',
     title: isEdit ? t('edit_transaction') : t('add_transaction'),
     content: `
+      ${!isEdit && onboardingActive ? onboardingProgress(2) : ''}
       <div class="form-group">
         <label class="form-label">${t('transaction_type')}</label>
         <div style="display:flex;gap:var(--sp-sm);">
@@ -452,6 +470,7 @@ async function saveTx(isEdit) {
     .split(/[,،]/)
     .map(name => name.trim().replace(/\s+/g, ' '))
     .filter(name => name.length > 0))].slice(0, 8);
+  const shouldContinueOnboarding = onboardingActive && !isEdit && transactions.length === 0;
 
   let valid = true;
   if (!validateAmount(amount)) { showErr('tx-amount-err', t('invalid_amount')); valid = false; } else hideErr('tx-amount-err');
@@ -506,6 +525,10 @@ async function saveTx(isEdit) {
     closeModal('tx-modal');
     await loadTransactions();
     renderPage();
+    if (shouldContinueOnboarding) {
+      onboardingActive = false;
+      window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'budgets', action: 'onboarding-budget' } }));
+    }
   } catch (err) {
     toast.error(t('error'), err.message);
     btn.disabled = false; btn.textContent = isEdit ? t('save') : t('add');

@@ -1,11 +1,11 @@
 /* ============================================================
    HISBA — DASHBOARD PAGE
    ============================================================ */
-import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
+import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.1';
 import { getDashboardSummary, getMonthlyTrend, getCategorySpending, getTransactions, getBudgets, getBudgetSpending, getAccounts, getCategories, createTransaction } from '../services/data.js';
-import { createModal, openModal, closeModal } from '../components/modal.js?v=release-2.0.0';
-import { toast } from '../toast.js?v=release-2.0.0';
-import { drawBarChart, drawDonutChart } from '../components/charts.js?v=release-2.0.0';
+import { createModal, openModal, closeModal } from '../components/modal.js?v=release-2.0.1';
+import { toast } from '../toast.js?v=release-2.0.1';
+import { drawBarChart, drawDonutChart } from '../components/charts.js?v=release-2.0.1';
 
 let userId, userCurrency = 'USD';
 let summaryData = {}, trendData = [], categoryData = [], recentTx = [], budgets = [], quickAccounts = [], quickCategories = [];
@@ -89,32 +89,6 @@ function render() {
       </div>
     </div>
 
-    ${isFirstRun ? `
-      <section class="card onboarding-card" aria-labelledby="onboarding-title" style="margin-bottom:var(--sp-xl);">
-        <div class="card-header" style="align-items:flex-start;">
-          <div>
-            <h2 class="card-title" id="onboarding-title">${t('onboarding_title')}</h2>
-            <p class="text-caption text-muted" style="margin-top:var(--sp-xs);max-width:620px;">${t('onboarding_subtitle')}</p>
-          </div>
-          <span class="badge badge-primary">1 / 3</span>
-        </div>
-        <div class="onboarding-steps">
-          <button class="onboarding-step" id="onboarding-add-account" type="button">
-            <span class="onboarding-step-number">1</span>
-            <span class="onboarding-step-copy"><strong>${t('onboarding_step_account')}</strong><small>${t('onboarding_step_account_sub')}</small></span>
-            <span class="onboarding-step-cta">${t('onboarding_start')}</span>
-          </button>
-          <button class="onboarding-step" id="onboarding-add-transaction" type="button">
-            <span class="onboarding-step-number">2</span>
-            <span class="onboarding-step-copy"><strong>${t('onboarding_step_transaction')}</strong><small>${t('onboarding_step_transaction_sub')}</small></span>
-          </button>
-          <button class="onboarding-step" id="onboarding-add-budget" type="button">
-            <span class="onboarding-step-number">3</span>
-            <span class="onboarding-step-copy"><strong>${t('onboarding_step_budget')}</strong><small>${t('onboarding_step_budget_sub')}</small></span>
-          </button>
-        </div>
-      </section>
-    ` : ''}
 
     <!-- Stats grid -->
     <div class="stats-grid">
@@ -255,13 +229,6 @@ function render() {
 
   // Wire up navigation buttons
   document.getElementById('btn-add-tx')?.addEventListener('click', openQuickAddModal);
-  document.getElementById('onboarding-add-account')?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'accounts', returnTo: 'transactions', returnAction: 'add' } }));
-  });
-  document.getElementById('onboarding-add-transaction')?.addEventListener('click', openQuickAddModal);
-  document.getElementById('onboarding-add-budget')?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'budgets' } }));
-  });
   document.getElementById('btn-view-all-tx')?.addEventListener('click', () => {
     window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'transactions' } }));
   });
@@ -271,6 +238,44 @@ function render() {
 
   // Draw charts after DOM is rendered
   requestAnimationFrame(() => redrawCharts());
+  if (isFirstRun && sessionStorage.getItem('hisba_onboarding_prompt_seen') !== '1') {
+    requestAnimationFrame(openOnboardingModal);
+  }
+}
+
+function openOnboardingModal() {
+  if (document.getElementById('onboarding-modal')) return;
+  sessionStorage.setItem('hisba_onboarding_prompt_seen', '1');
+  createModal({
+    id: 'onboarding-modal',
+    title: t('onboarding_title'),
+    size: 'modal-sm',
+    content: `
+      <section class="onboarding-dialog" aria-describedby="onboarding-dialog-copy">
+        <div class="onboarding-dialog-progress">
+          <span class="onboarding-dialog-kicker">${t('onboarding_progress', { current: 1, total: 3 })}</span>
+          <span class="onboarding-progress-dots" aria-hidden="true"><i class="is-active"></i><i></i><i></i></span>
+        </div>
+        <div class="onboarding-dialog-icon" aria-hidden="true">${renderIcon('wallet', 28)}</div>
+        <div>
+          <h3 class="onboarding-dialog-title">${t('onboarding_step_account')}</h3>
+          <p class="onboarding-dialog-copy" id="onboarding-dialog-copy">${t('onboarding_step_account_sub')}</p>
+        </div>
+      </section>
+    `,
+    footerButtons: [
+      `<button class="btn btn-outline" id="onboarding-later">${t('onboarding_not_now')}</button>`,
+      `<button class="btn btn-primary" id="onboarding-start">${t('onboarding_start')}</button>`,
+    ],
+  });
+  openModal('onboarding-modal');
+  document.getElementById('onboarding-later')?.addEventListener('click', () => closeModal('onboarding-modal'));
+  document.getElementById('onboarding-start')?.addEventListener('click', () => {
+    closeModal('onboarding-modal');
+    window.dispatchEvent(new CustomEvent('navigate', {
+      detail: { page: 'accounts', returnTo: 'transactions', returnAction: 'onboarding-transaction' },
+    }));
+  });
 }
 
 function openQuickAddModal() {
