@@ -1,5 +1,5 @@
 import { getSession } from './services/auth.js';
-import { initAuthPage } from './pages/auth.js?v=release-2.0.1';
+import { initAuthPage } from './pages/auth.js?v=release-2.3.0';
 
 getSession().then(session => {
   if (session) {

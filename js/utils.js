@@ -4,10 +4,10 @@
    ============================================================ */
 
 // ── i18n ───────────────────────────────────────────────────
-import { en } from '../locales/en.js?v=release-2.0.1';
-import { ar } from '../locales/ar.js?v=release-2.0.1';
-import { arEg } from '../locales/ar-eg.js?v=release-2.0.1';
-import { arFusha } from '../locales/ar-fusha.js?v=release-2.0.1';
+import { en } from '../locales/en.js?v=release-2.3.0';
+import { ar } from '../locales/ar.js?v=release-2.3.0';
+import { arEg } from '../locales/ar-eg.js?v=release-2.3.0';
+import { arFusha } from '../locales/ar-fusha.js?v=release-2.3.0';
 
 const locales = { en, ar: arEg, 'ar-eg': arEg, 'ar-fusha': arFusha };
 const LANGUAGE_STORAGE_KEY = 'hisba_lang';
@@ -310,6 +310,15 @@ const ICON_PATHS = {
   'alert-triangle': '<path d="m12 3 9 17H3Z"/><path d="M12 9v4M12 17h.01"/>',
   moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  'trend-up': '<path d="m4 16 6-6 4 4 6-7"/><path d="M15 7h5v5"/>',
+  'trend-down': '<path d="m4 8 6 6 4-4 6 7"/><path d="M15 17h5v-5"/>',
+  'arrow-up-right': '<path d="M7 17 17 7"/><path d="M8 7h9v9"/>',
+  'arrow-down-right': '<path d="m7 7 10 10"/><path d="M17 8v9H8"/>',
+  receipt: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/>',
+  'pie-chart': '<path d="M12 3v9h9"/><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.7"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"/>',
 };
 const ICON_ALIASES = {'🏠':'home','🚗':'car','✈️':'plane','🎓':'school','💍':'star','📱':'phone','💻':'laptop','🏖️':'plane','🛒':'cart','💊':'health','🎉':'star','💰':'wallet','🍔':'food','🚌':'car','🛍️':'shop','🎬':'entertainment','⚡':'bolt','📚':'book','👔':'shop','💅':'star','🐾':'goal','🎁':'gift','🛡️':'goal','🌐':'chart','☕':'coffee','⚽':'goal','🍽️':'food','📈':'chart','🏢':'home','💵':'wallet','📦':'package','🎯':'target','🎪':'star','🎭':'entertainment','🎮':'entertainment','🎨':'star','🏋️':'goal','🧘':'goal','🎵':'entertainment','📷':'phone','🛻':'car','⛽':'bolt','🔧':'bolt','🏥':'health','🎈':'star'};
 export function icon(name = 'package', size = 20, className = 'hisba-icon') {

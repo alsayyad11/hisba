@@ -2,22 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.2.1';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.3.0';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
-import { toast } from './toast.js?v=release-2.2.1';
+import { toast } from './toast.js?v=release-2.3.0';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=release-2.2.1'),
-  transactions: () => import('./pages/transactions.js?v=release-2.2.1'),
-  accounts:     () => import('./pages/accounts.js?v=release-2.2.1'),
-  budgets:      () => import('./pages/budgets.js?v=release-2.2.1'),
-  goals:        () => import('./pages/goals.js?v=release-2.2.1'),
-  reports:      () => import('./pages/reports.js?v=release-2.2.1'),
-  categories:   () => import('./pages/categories.js?v=release-2.2.1'),
-  bills:        () => import('./pages/bills.js?v=release-2.2.1'),
-  settings:     () => import('./pages/settings.js?v=release-2.2.1'),
-  help:         () => import('./pages/help.js?v=release-2.2.1'),
+  dashboard:    () => import('./pages/dashboard.js?v=release-2.3.0'),
+  transactions: () => import('./pages/transactions.js?v=release-2.3.0'),
+  accounts:     () => import('./pages/accounts.js?v=release-2.3.0'),
+  budgets:      () => import('./pages/budgets.js?v=release-2.3.0'),
+  goals:        () => import('./pages/goals.js?v=release-2.3.0'),
+  reports:      () => import('./pages/reports.js?v=release-2.3.0'),
+  categories:   () => import('./pages/categories.js?v=release-2.3.0'),
+  bills:        () => import('./pages/bills.js?v=release-2.3.0'),
+  settings:     () => import('./pages/settings.js?v=release-2.3.0'),
+  help:         () => import('./pages/help.js?v=release-2.3.0'),
 };
 
 let currentUser = null;
@@ -131,6 +131,8 @@ function renderShell() {
 
           <span class="sidebar-section-label">${t('nav_account_section')}</span>
           ${navItem('settings', t('nav_settings'), settingsIcon())}
+
+          <span class="sidebar-section-label">${t('nav_support')}</span>
           ${navItem('help', t('nav_help'), helpIcon())}
         </nav>
 
