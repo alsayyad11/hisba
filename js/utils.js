@@ -4,10 +4,10 @@
    ============================================================ */
 
 // ── i18n ───────────────────────────────────────────────────
-import { en } from '../locales/en.js?v=finance-workspace-v1';
-import { ar } from '../locales/ar.js?v=finance-workspace-v1';
-import { arEg } from '../locales/ar-eg.js?v=finance-workspace-v1';
-import { arFusha } from '../locales/ar-fusha.js?v=finance-workspace-v1';
+import { en } from '../locales/en.js?v=release-2.0.1';
+import { ar } from '../locales/ar.js?v=release-2.0.1';
+import { arEg } from '../locales/ar-eg.js?v=release-2.0.1';
+import { arFusha } from '../locales/ar-fusha.js?v=release-2.0.1';
 
 const locales = { en, ar: arEg, 'ar-eg': arEg, 'ar-fusha': arFusha };
 const LANGUAGE_STORAGE_KEY = 'hisba_lang';

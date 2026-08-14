@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — TOAST NOTIFICATIONS
    ============================================================ */
-import { t } from './utils.js?v=locale-singleton-v1';
+import { t } from './utils.js?v=release-2.0.1';
 
 let container = null;
 

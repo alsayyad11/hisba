@@ -2,22 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.0.0';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.0.1';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
-import { toast } from './toast.js?v=release-2.0.0';
+import { toast } from './toast.js?v=release-2.0.1';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=release-2.0.0'),
-  transactions: () => import('./pages/transactions.js?v=release-2.0.0'),
-  accounts:     () => import('./pages/accounts.js?v=release-2.0.0'),
-  budgets:      () => import('./pages/budgets.js?v=release-2.0.0'),
-  goals:        () => import('./pages/goals.js?v=release-2.0.0'),
-  reports:      () => import('./pages/reports.js?v=release-2.0.0'),
-  categories:   () => import('./pages/categories.js?v=release-2.0.0'),
-  bills:        () => import('./pages/bills.js?v=release-2.0.0'),
-  settings:     () => import('./pages/settings.js?v=release-2.0.0'),
-  help:         () => import('./pages/help.js?v=release-2.0.0'),
+  dashboard:    () => import('./pages/dashboard.js?v=release-2.0.1'),
+  transactions: () => import('./pages/transactions.js?v=release-2.0.1'),
+  accounts:     () => import('./pages/accounts.js?v=release-2.0.1'),
+  budgets:      () => import('./pages/budgets.js?v=release-2.0.1'),
+  goals:        () => import('./pages/goals.js?v=release-2.0.1'),
+  reports:      () => import('./pages/reports.js?v=release-2.0.1'),
+  categories:   () => import('./pages/categories.js?v=release-2.0.1'),
+  bills:        () => import('./pages/bills.js?v=release-2.0.1'),
+  settings:     () => import('./pages/settings.js?v=release-2.0.1'),
+  help:         () => import('./pages/help.js?v=release-2.0.1'),
 };
 
 let currentUser = null;
