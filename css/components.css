@@ -2697,3 +2697,21 @@ html[data-theme="dark"] .transactions-page .filter-chip.active {
 @media (max-width:980px){.dashboard-insight-grid,.dashboard-content-grid{grid-template-columns:1fr}.dashboard-chart-shell{height:230px}}
 @media (max-width:640px){.dashboard-hero{border-radius:var(--radius-lg);padding:20px}.dashboard-hero-main{align-items:center}.dashboard-hero-balance{font-size:2rem}.dashboard-hero-add{flex:0 0 auto;width:42px;padding:0}.dashboard-hero-add>span:last-child{display:none}.dashboard-hero-metrics{margin-top:24px}.dashboard-hero-metric{padding-inline:10px}.dashboard-hero-metric>strong{font-size:var(--text-sm)}.dashboard-panel{padding:18px}.dashboard-panel-title{font-size:var(--text-md)}.dashboard-insight-grid,.dashboard-content-grid{gap:var(--sp-md);margin-top:var(--sp-md)}.dashboard-chart-shell{height:200px}.dashboard-categories-panel .category-breakdown-layout{min-height:0}}
 @media (max-width:380px){.dashboard-hero-metrics{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-md)}.dashboard-hero-metric{padding:0;border:0}.dashboard-hero-metric:last-child{grid-column:1/-1}}
+
+
+/* ── Bills: keep formatted currency readable in RTL ────────────── */
+.bill-summary-value,
+.bill-amount {
+  display: inline-block;
+  max-inline-size: 100%;
+  direction: ltr;
+  unicode-bidi: isolate;
+  white-space: nowrap;
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
+html[dir="rtl"] .bill-summary-value,
+html[dir="rtl"] .bill-amount {
+  text-align: start;
+}
