@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — CHARTS (Pure Canvas, no deps)
    ============================================================ */
-import { formatCurrency, getLanguage, t } from '../utils.js?v=security-audit-v1';
+import { formatCurrency, getLanguage, t } from '../utils.js?v=release-2.3.0';
 
 function getStyle(varName) {
   return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
@@ -178,90 +178,97 @@ export function drawDonutChart(canvasId, data, centerLabel = '') {
 }
 
 // ── Line Chart ─────────────────────────────────────────────
-export function drawLineChart(canvasId, data, color = '#ff4f00') {
+export function drawLineChart(canvasId, data, color = '#176b73') {
   const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
+  if (!canvas || !Array.isArray(data) || data.length < 2) return;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
+  if (!rect.width || !rect.height) return;
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const W = rect.width;
   const H = rect.height;
-  const pad = { top: 16, right: 16, bottom: 32, left: 52 };
-  const chartW = W - pad.left - pad.right;
-  const chartH = H - pad.top - pad.bottom;
-
-  ctx.clearRect(0, 0, W, H);
-
-  const values = data.map(d => d.value);
-  const maxVal = Math.max(...values, 1);
+  const pad = { top: 16, right: 16, bottom: 32, left: 56 };
+  const chartW = Math.max(1, W - pad.left - pad.right);
+  const chartH = Math.max(1, H - pad.top - pad.bottom);
+  const values = data.map(item => Number(item.value || 0));
+  const rawMin = Math.min(...values, 0);
+  const rawMax = Math.max(...values, 0);
+  const span = Math.max(rawMax - rawMin, Math.max(Math.abs(rawMax), Math.abs(rawMin), 1) * .25, 1);
+  const minVal = rawMin - span * .08;
+  const maxVal = rawMax + span * .08;
+  const range = Math.max(maxVal - minVal, 1);
   const borderClr = getStyle('--clr-border') || '#e5e5e5';
   const bodyClr = getStyle('--clr-body-mid') || '#6a6a6a';
+  const canvasClr = getStyle('--clr-surface') || getStyle('--clr-canvas') || '#fff';
+  const yFor = value => pad.top + ((maxVal - value) / range) * chartH;
 
-  // Grid
+  ctx.clearRect(0, 0, W, H);
   ctx.strokeStyle = borderClr;
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y = pad.top + (i / 4) * chartH;
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + chartW, y);
-    ctx.stroke();
+    const value = maxVal - (i / 4) * range;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + chartW, y); ctx.stroke();
     ctx.fillStyle = bodyClr;
-    ctx.font = '10px Arial';
+    ctx.font = '500 10px IBM Plex Sans Arabic, Arial, sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(abbreviate(((4 - i) / 4) * maxVal), pad.left - 4, y + 3);
+    ctx.fillText(abbreviate(value), pad.left - 6, y + 3);
   }
 
-  if (data.length < 2) return;
+  const zeroY = yFor(0);
+  if (zeroY >= pad.top && zeroY <= pad.top + chartH) {
+    ctx.strokeStyle = color + '66';
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(pad.left + chartW, zeroY); ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
-  const points = data.map((d, i) => ({
-    x: pad.left + (i / (data.length - 1)) * chartW,
-    y: pad.top + (1 - d.value / maxVal) * chartH,
+  const points = values.map((value, index) => ({
+    x: pad.left + (index / Math.max(values.length - 1, 1)) * chartW,
+    y: yFor(value),
   }));
-
-  // Fill gradient
+  const baselineY = Math.max(pad.top, Math.min(pad.top + chartH, zeroY));
   const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
-  grad.addColorStop(0, color + '30');
-  grad.addColorStop(1, color + '00');
+  grad.addColorStop(0, color + '2b');
+  grad.addColorStop(1, color + '03');
   ctx.beginPath();
-  ctx.moveTo(points[0].x, pad.top + chartH);
-  points.forEach(p => ctx.lineTo(p.x, p.y));
-  ctx.lineTo(points[points.length - 1].x, pad.top + chartH);
+  ctx.moveTo(points[0].x, baselineY);
+  points.forEach(point => ctx.lineTo(point.x, point.y));
+  ctx.lineTo(points[points.length - 1].x, baselineY);
   ctx.closePath();
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Line
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    const cp1x = (points[i - 1].x + points[i].x) / 2;
-    ctx.bezierCurveTo(cp1x, points[i - 1].y, cp1x, points[i].y, points[i].x, points[i].y);
+  for (let index = 1; index < points.length; index++) {
+    const previous = points[index - 1];
+    const current = points[index];
+    const midpoint = (previous.x + current.x) / 2;
+    ctx.bezierCurveTo(midpoint, previous.y, midpoint, current.y, current.x, current.y);
   }
   ctx.strokeStyle = color;
   ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   ctx.stroke();
 
-  // Dots
-  points.forEach(p => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-    ctx.fillStyle = getStyle('--clr-canvas') || '#fff';
-    ctx.fill();
+  points.forEach(point => {
+    ctx.beginPath(); ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+    ctx.beginPath(); ctx.arc(point.x, point.y, 1.6, 0, Math.PI * 2); ctx.fillStyle = canvasClr; ctx.fill();
   });
 
-  // Labels
-  data.forEach((d, i) => {
+  const labelStride = values.length > 7 ? Math.ceil(values.length / 6) : 1;
+  data.forEach((item, index) => {
+    if (index % labelStride !== 0 && index !== data.length - 1) return;
     ctx.fillStyle = bodyClr;
-    ctx.font = '10px Arial';
+    ctx.font = '500 10px IBM Plex Sans Arabic, Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(d.label || '', points[i].x, H - 6);
+    ctx.fillText(String(item.label || ''), points[index].x, H - 6);
   });
 }
 

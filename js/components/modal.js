@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — MODAL COMPONENT
    ============================================================ */
-import { t } from '../utils.js?v=security-audit-v1';
+import { t } from '../utils.js?v=release-2.3.0';
 
 export function createModal({ id, title, size = '', content = '', footerButtons = [] }) {
   let backdrop = document.getElementById(id);
