@@ -42,8 +42,8 @@
   /* Status roles */
   --clr-success: #16805a;
   --clr-success-bg: #e1f3eb;
-  --clr-warning: #586b73;
-  --clr-warning-bg: #e8eef0;
+  --clr-warning: #b66a20;
+  --clr-warning-bg: #fff1df;
   --clr-error: #b63848;
   --clr-error-bg: #fde8eb;
   --clr-info: #666666;
@@ -55,14 +55,14 @@
   --clr-border-ink: #9da5af;
   --clr-focus: #176b73;
 
-  /* Supporting palette */
-  --clr-pink: #777777;
-  --clr-teal: #777777;
-  --clr-lavender: #777777;
-  --clr-peach: #d98261;
-  --clr-ochre: #586b73;
-  --clr-mint: #888888;
-  --clr-coral: #777777;
+  /* Muted categorical palette — only for category distinction, never status. */
+  --clr-pink: #b05c80;
+  --clr-teal: #2f8c94;
+  --clr-lavender: #7b72bc;
+  --clr-peach: #c97659;
+  --clr-ochre: #a67b39;
+  --clr-mint: #4f9d83;
+  --clr-coral: #bd6760;
 
   /* Typography — one family for UI, one opt-in family for financial values */
   --font-display: 'Cairo', system-ui, sans-serif;
@@ -124,9 +124,11 @@
   --topbar-height: 72px;
   --content-max-width: 1240px;
   --bar-height: 72px;
-  --transition-fast: 150ms ease-out;
-  --transition-base: 220ms ease-out;
-  --transition-slow: 320ms ease-out;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --transition-fast: 150ms var(--ease-out);
+  --transition-base: 220ms var(--ease-out);
+  --transition-slow: 320ms var(--ease-out);
   --z-base: 1;
   --z-dropdown: 100;
   --z-sticky: 200;
@@ -170,8 +172,8 @@
 
   --clr-success: #5ed1a3;
   --clr-success-bg: #173a31;
-  --clr-warning: #9db6bd;
-  --clr-warning-bg: #26363a;
+  --clr-warning: #f2b46e;
+  --clr-warning-bg: #49331f;
   --clr-error: #ff98a1;
   --clr-error-bg: #48232b;
   --clr-info: #BDBDBD;

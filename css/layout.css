@@ -1162,3 +1162,31 @@ html[data-theme="dark"] .sidebar-collapse-toggle:hover {
 @media (max-width: 768px) {
   .sidebar-collapse-toggle { display: none; }
 }
+
+/* HISBA v2.2 — navigation and chrome refinements */
+.sidebar { background: var(--clr-canvas-soft); }
+.sidebar-header { padding: 18px 18px 14px; }
+.sidebar-brand-logo { width: 31px; height: 31px; object-fit: contain; }
+.sidebar-nav { padding: 12px 10px 18px; gap: 3px; }
+.sidebar-section-label { padding: 16px 10px 5px; margin: 0; font-size: 10px; letter-spacing: .08em; }
+.nav-item { padding: 9px 10px; border-radius: 10px; color: var(--clr-ink-mid); }
+.nav-item:hover { background: var(--clr-surface-container-low); }
+.nav-item.active { background: var(--clr-primary-subtle); color: var(--clr-primary); }
+.nav-item.active::before { width: 3px; top: 22%; bottom: 22%; }
+.sidebar-footer { padding: 10px; background: var(--clr-canvas-soft); }
+.sidebar-user { padding: 10px; }
+.sidebar-user:hover { background: var(--clr-surface-container-low); }
+.sidebar-user-role { color: var(--clr-body-mid); font-size: var(--text-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar { padding: 0 clamp(16px, 3vw, 28px); background: var(--clr-canvas-soft); }
+.topbar-title { font-size: var(--text-md); }
+.topbar-tagline { font-size: var(--text-xs); font-weight: var(--fw-medium); }
+.content-area { padding: clamp(20px, 3vw, 36px); }
+
+@media (max-width: 768px) {
+  .sidebar { background: var(--clr-canvas-raised); }
+  .topbar { height: 64px; }
+  .topbar-title { display: none; }
+  .topbar-tagline { text-align: start; padding-inline: 0; }
+  .content-area { padding: 18px 14px calc(88px + env(safe-area-inset-bottom)); }
+  .sidebar-footer { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+}
