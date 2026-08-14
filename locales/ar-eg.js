@@ -21,6 +21,11 @@ export const arEg = {
   theme_label: 'اختار المظهر',
   currency_label: 'العملة الأساسية',
   delete_account_warning: 'ده هيحذف حسابك وكل بياناتك نهائياً',
+  onboarding_start: 'ابدأ دلوقتي',
+  onboarding_progress: 'الخطوة {current} من {total}',
+  onboarding_not_now: 'مش دلوقتي',
+  onboarding_complete: 'تمام كده',
+  onboarding_complete_sub: 'ميزانيتك الأولى جاهزة، وتقدر تعدّلها في أي وقت.',
 
   budget_daily_allowance: 'دليل صرفك اليومي',
   budget_days_remaining: 'فاضل {days} يوم على نهاية الشهر',

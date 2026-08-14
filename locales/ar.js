@@ -81,8 +81,12 @@ export const ar = {
   onboarding_step_transaction_sub: 'أضف دخلاً أو مصروفاً ما دمت تتذكره.',
   onboarding_step_budget: 'حدّد ميزانية شهرية',
   onboarding_step_budget_sub: 'ضع حداً واضحاً لإنفاقك وتابعه مع الوقت.',
-  onboarding_start: 'ابدأ من هنا',
+  onboarding_start: 'ابدأ الإعداد',
   onboarding_continue_transaction: 'تابع إلى تسجيل أول معاملة',
+  onboarding_progress: 'الخطوة {current} من {total}',
+  onboarding_not_now: 'ليس الآن',
+  onboarding_complete: 'أصبحت جاهزًا',
+  onboarding_complete_sub: 'تم إعداد ميزانيتك الأولى، ويمكنك تعديلها في أي وقت.',
 
   // Transactions
   transactions_title: 'المعاملات',

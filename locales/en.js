@@ -83,8 +83,12 @@ export const en = {
   onboarding_step_transaction_sub: 'Add an income or expense while you still remember it.',
   onboarding_step_budget: 'Set a monthly budget',
   onboarding_step_budget_sub: 'Give your spending a clear limit and follow it over time.',
-  onboarding_start: 'Start here',
+  onboarding_start: 'Start setup',
   onboarding_continue_transaction: 'Continue to first transaction',
+  onboarding_progress: 'Step {current} of {total}',
+  onboarding_not_now: 'Not now',
+  onboarding_complete: 'You are all set',
+  onboarding_complete_sub: 'Your first budget is ready. You can adjust it whenever you need.',
 
   // Transactions
   transactions_title: 'Transactions',
