@@ -90,6 +90,8 @@ export const ar = {
   onboarding_not_now: 'ليس الآن',
   onboarding_complete: 'أصبحت جاهزًا',
   onboarding_complete_sub: 'تم إعداد ميزانيتك الأولى، ويمكنك تعديلها في أي وقت.',
+  dashboard_trend_empty: 'أضف معاملات على مدار الوقت لإظهار اتجاه رصيدك.',
+  transaction_untitled: 'معاملة بلا وصف',
 
   // Transactions
   transactions_title: 'المعاملات',

@@ -90,6 +90,8 @@ export const en = {
   onboarding_not_now: 'Not now',
   onboarding_complete: 'You are all set',
   onboarding_complete_sub: 'Your first budget is ready. You can adjust it whenever you need.',
+  dashboard_trend_empty: 'Add transactions over time to reveal your balance trend.',
+  transaction_untitled: 'Untitled transaction',
 
   // Transactions
   transactions_title: 'Transactions',

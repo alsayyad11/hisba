@@ -26,6 +26,8 @@ export const arEg = {
   onboarding_not_now: 'مش دلوقتي',
   onboarding_complete: 'تمام كده',
   onboarding_complete_sub: 'ميزانيتك الأولى جاهزة، وتقدر تعدّلها في أي وقت.',
+  dashboard_trend_empty: 'سجّل معاملات على مدار الوقت عشان اتجاه رصيدك يبان هنا.',
+  transaction_untitled: 'معاملة من غير وصف',
 
   budget_daily_allowance: 'دليل صرفك اليومي',
   budget_days_remaining: 'فاضل {days} يوم على نهاية الشهر',
