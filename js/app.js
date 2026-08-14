@@ -2,22 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=security-audit-v1';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.0.0';
 import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
-import { toast } from './toast.js?v=security-audit-v1';
+import { toast } from './toast.js?v=release-2.0.0';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=locale-shell-v2'),
-  transactions: () => import('./pages/transactions.js?v=finance-workspace-v1'),
-  accounts:     () => import('./pages/accounts.js?v=locale-shell-v2'),
-  budgets:      () => import('./pages/budgets.js?v=locale-shell-v2'),
-  goals:        () => import('./pages/goals.js?v=locale-shell-v2'),
-  reports:      () => import('./pages/reports.js?v=finance-workspace-v1'),
-  categories:   () => import('./pages/categories.js?v=locale-shell-v2'),
-  bills:        () => import('./pages/bills.js?v=locale-shell-v2'),
-  settings:     () => import('./pages/settings.js?v=locale-shell-v2'),
-  help:         () => import('./pages/help.js?v=locale-shell-v2'),
+  dashboard:    () => import('./pages/dashboard.js?v=release-2.0.0'),
+  transactions: () => import('./pages/transactions.js?v=release-2.0.0'),
+  accounts:     () => import('./pages/accounts.js?v=release-2.0.0'),
+  budgets:      () => import('./pages/budgets.js?v=release-2.0.0'),
+  goals:        () => import('./pages/goals.js?v=release-2.0.0'),
+  reports:      () => import('./pages/reports.js?v=release-2.0.0'),
+  categories:   () => import('./pages/categories.js?v=release-2.0.0'),
+  bills:        () => import('./pages/bills.js?v=release-2.0.0'),
+  settings:     () => import('./pages/settings.js?v=release-2.0.0'),
+  help:         () => import('./pages/help.js?v=release-2.0.0'),
 };
 
 let currentUser = null;
@@ -28,6 +28,7 @@ let pageCache = {};
 async function boot() {
   initI18n();
   initTheme();
+  applyPrivacyState(localStorage.getItem('hisba_privacy') === '1');
 
   showLoadingOverlay();
 
@@ -85,6 +86,8 @@ function renderShell() {
   const safeName = escapeHTML(name);
   const safeEmail = escapeHTML(currentUser?.email || '');
   const sidebarCollapsed = localStorage.getItem('hisba-sidebar-collapsed') === 'true';
+  const privacyEnabled = localStorage.getItem('hisba_privacy') === '1';
+  const privacyLabel = t('privacy_mode');
   const collapseLabel = isArabic ? 'طي الشريط الجانبي' : 'Collapse sidebar';
   const expandLabel = isArabic ? 'فتح الشريط الجانبي' : 'Expand sidebar';
   const avatarMarkup = currentProfile?.avatar_url
@@ -160,6 +163,9 @@ function renderShell() {
           <div class="topbar-title" id="topbar-title">${t('nav_dashboard')}</div>
           <div class="topbar-tagline" id="topbar-tagline" aria-label="${t('brand_tagline')}">${t('brand_tagline')}</div>
           <div class="topbar-actions">
+            <button class="topbar-action-btn" id="privacy-toggle" type="button" aria-label="${privacyLabel}" title="${privacyLabel}" aria-pressed="${privacyEnabled}">
+              ${privacyEnabled ? privacyOffIcon() : privacyOnIcon()}
+            </button>
             <div class="dropdown" id="user-dropdown">
               <button class="topbar-action-btn" id="user-menu-btn" aria-haspopup="true">
                 <div class="avatar avatar-sm">${avatarMarkup}</div>
@@ -192,6 +198,10 @@ function renderShell() {
         </main>
       </div>
     </div>
+
+    <button class="mobile-quick-entry" id="mobile-quick-entry" type="button" aria-label="${t('quick_add')}" title="${t('quick_add')}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
   `;
 
   // Sidebar nav clicks
@@ -223,6 +233,11 @@ function renderShell() {
   document.getElementById('menu-toggle')?.addEventListener('click', toggleSidebar);
   document.getElementById('sidebar-overlay')?.addEventListener('click', closeSidebar);
   syncSidebarControls();
+
+  document.getElementById('privacy-toggle')?.addEventListener('click', togglePrivacyMode);
+  document.getElementById('mobile-quick-entry')?.addEventListener('click', () => {
+    navigateTo('transactions', { action: 'add' });
+  });
 
   // Connectivity, theme, and language are managed from Settings only.
 
@@ -347,6 +362,23 @@ function closeSidebar() {
   document.getElementById('sidebar-overlay')?.classList.remove('visible');
 }
 
+function applyPrivacyState(enabled) {
+  document.body.classList.toggle('privacy-mask', Boolean(enabled));
+}
+
+function togglePrivacyMode() {
+  const enabled = !document.body.classList.contains('privacy-mask');
+  applyPrivacyState(enabled);
+  localStorage.setItem('hisba_privacy', enabled ? '1' : '0');
+
+  const button = document.getElementById('privacy-toggle');
+  if (button) {
+    button.setAttribute('aria-pressed', String(enabled));
+    button.innerHTML = enabled ? privacyOffIcon() : privacyOnIcon();
+  }
+  toast(enabled ? t('privacy_hidden') : t('privacy_visible'), 'info');
+}
+
 function showLoadingOverlay() {
   const body = document.body;
   const brandName = getLanguage().startsWith('ar') ? 'حِسبة' : 'Hisba';
@@ -388,3 +420,5 @@ boot().catch(err => {
 
 function catIcon()   { return `<tag><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></tag>`.replace(/tag/g,''); }
 function billsIcon() { return `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>`; }
+function privacyOnIcon() { return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`; }
+function privacyOffIcon() { return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c6.5 0 10 8 10 8a18.4 18.4 0 0 1-3.1 4.1"/><path d="M6.6 6.6C3.7 8.6 2 12 2 12s3.5 8 10 8c1.3 0 2.5-.3 3.6-.8"/></svg>`; }
