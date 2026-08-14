@@ -1,11 +1,11 @@
 /* ============================================================
    HISBA — DASHBOARD PAGE
    ============================================================ */
-import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.2';
+import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.1.0';
 import { getDashboardSummary, getMonthlyTrend, getCategorySpending, getTransactions, getBudgets, getBudgetSpending, getAccounts, getCategories, createTransaction } from '../services/data.js';
-import { createModal, openModal, closeModal } from '../components/modal.js?v=release-2.0.2';
-import { toast } from '../toast.js?v=release-2.0.2';
-import { drawBarChart, drawDonutChart } from '../components/charts.js?v=release-2.0.2';
+import { createModal, openModal, closeModal } from '../components/modal.js?v=release-2.1.0';
+import { toast } from '../toast.js?v=release-2.1.0';
+import { drawLineChart, drawDonutChart } from '../components/charts.js?v=release-2.1.0';
 
 let userId, userCurrency = 'USD';
 let summaryData = {}, trendData = [], categoryData = [], recentTx = [], budgets = [], quickAccounts = [], quickCategories = [];
@@ -74,114 +74,73 @@ function render() {
 
   const { totalBalance = 0, income = 0, expenses = 0, net = 0 } = summaryData;
   const isFirstRun = !quickAccounts.length && !recentTx.length && !budgets.length;
+  const isArabic = getLanguage().startsWith('ar');
+  const accountRows = quickAccounts.slice(0, 4);
 
   el.innerHTML = `
-    <div class="page-header">
+    <div class="page-header dashboard-reference-header">
       <div>
         <h1 class="page-title">${t('dashboard_title')}</h1>
         <p class="page-subtitle">${t('dashboard_subtitle')}</p>
       </div>
-
     </div>
 
-
-    <section class="dashboard-hero" aria-label="${t('total_balance')}">
-      <div class="dashboard-hero-main">
-        <div>
-          <p class="dashboard-hero-kicker">${t('total_balance')}</p>
-          <p class="dashboard-hero-balance sensitive-value" dir="ltr">${formatCurrency(totalBalance, userCurrency)}</p>
-          <p class="dashboard-hero-caption">${t('this_month')}</p>
-        </div>
-        <button class="dashboard-hero-add" id="btn-add-tx" type="button">
-          <span aria-hidden="true">+</span>
-          <span>${t('quick_add')}</span>
-        </button>
-      </div>
-      <div class="dashboard-hero-metrics">
-        <div class="dashboard-hero-metric is-income">
-          <span>${t('monthly_income')}</span>
-          <strong class="sensitive-value" dir="ltr">${formatCurrency(income, userCurrency)}</strong>
-        </div>
-        <div class="dashboard-hero-metric is-expense">
-          <span>${t('monthly_expenses')}</span>
-          <strong class="sensitive-value" dir="ltr">${formatCurrency(expenses, userCurrency)}</strong>
-        </div>
-        <div class="dashboard-hero-metric">
-          <span>${t('net_savings')}</span>
-          <strong class="sensitive-value" dir="ltr">${formatCurrency(net, userCurrency)}</strong>
-        </div>
-      </div>
-    </section>
-
-    <div class="dashboard-insight-grid">
-      <section class="dashboard-panel dashboard-trend-panel">
+    <div class="dashboard-reference-top">
+      <section class="dashboard-panel dashboard-accounts-snapshot" aria-label="${t('nav_accounts')}">
         <div class="dashboard-panel-header">
           <div>
-            <h2 class="dashboard-panel-title">${t('income_vs_expense')}</h2>
-            <p class="dashboard-panel-caption">${t('this_month')}</p>
+            <h2 class="dashboard-panel-title">${t('nav_accounts')}</h2>
+            <p class="dashboard-panel-caption">${t('total_balance')}</p>
           </div>
+          <button class="dashboard-icon-action" id="btn-view-all-accounts" type="button" aria-label="${t('nav_accounts')}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
         </div>
-        <div class="dashboard-chart-shell">
-          <canvas id="bar-chart" aria-label="${t('income_vs_expense')}" role="img"></canvas>
-        </div>
-      </section>
-      <section class="dashboard-panel dashboard-budget-panel">
-        <div class="dashboard-panel-header">
-          <div>
-            <h2 class="dashboard-panel-title">${t('top_budgets')}</h2>
-            <p class="dashboard-panel-caption">${t('this_month')}</p>
-          </div>
-          <button class="dashboard-text-action" id="btn-view-all-budgets" type="button">${t('view_all')}</button>
-        </div>
-        <div class="dashboard-budget-list">
-          ${budgets.length ? budgets.slice(0, 3).map(b => {
-            const pct = formatPercent(b.spent, b.amount);
-            const status = pct >= 100 ? 'error' : pct >= 80 ? 'warning' : 'success';
-            return `
-              <div class="dashboard-budget-row">
-                <div class="dashboard-budget-row-head">
-                  <div class="dashboard-budget-name">
-                    <span class="dashboard-category-icon" style="--category-color:${b.category?.color && sanitizeColor(b.category.color).startsWith('#') ? sanitizeColor(b.category.color) : 'var(--clr-primary)'};">${renderIcon(b.category?.icon || 'package', 15)}</span>
-                    <span>${escapeHTML(b.name)}</span>
-                  </div>
-                  <span class="dashboard-budget-percent">${pct}%</span>
-                </div>
-                <div class="dashboard-budget-track"><span class="is-${status}" style="width:${Math.min(pct, 100)}%;"></span></div>
-                <p class="dashboard-budget-amount sensitive-value" dir="ltr">${formatCurrency(b.spent, userCurrency)} / ${formatCurrency(b.amount, userCurrency)}</p>
-              </div>
-            `;
-          }).join('') : `<div class="dashboard-compact-empty">${t('no_budgets_sub')}</div>`}
-        </div>
-      </section>
-    </div>
-
-    <div class="dashboard-content-grid">
-      <section class="dashboard-panel dashboard-transactions-panel">
-        <div class="dashboard-panel-header">
-          <div>
-            <h2 class="dashboard-panel-title">${t('recent_transactions')}</h2>
-            <p class="dashboard-panel-caption">${t('this_month')}</p>
-          </div>
-          <button class="dashboard-text-action" id="btn-view-all-tx" type="button">${t('view_all')}</button>
-        </div>
-        ${recentTx.length ? `
-          <div class="dashboard-transaction-list">
-            ${recentTx.slice(0, 6).map(tx => `
-              <article class="dashboard-transaction-row">
-                <span class="dashboard-category-icon" style="--category-color:${tx.category?.color && sanitizeColor(tx.category.color).startsWith('#') ? sanitizeColor(tx.category.color) : 'var(--clr-primary)'};">${renderIcon(tx.category?.icon || 'package', 16)}</span>
-                <div class="dashboard-transaction-copy">
-                  <strong>${escapeHTML(tx.description || '—')}</strong>
-                  <span>${escapeHTML(getLanguage().startsWith('ar') && tx.category?.name_ar ? tx.category.name_ar : (tx.category?.name || '—'))} <i aria-hidden="true">·</i> ${formatRelativeDate(tx.date)}</span>
-                </div>
-                <strong class="dashboard-transaction-amount sensitive-value ${tx.type === 'income' ? 'is-income' : tx.type === 'expense' ? 'is-expense' : ''}" dir="ltr">${tx.type === 'income' ? '+' : tx.type === 'expense' ? '−' : ''}${formatCurrency(tx.amount, tx.account?.currency || userCurrency)}</strong>
+        ${accountRows.length ? `
+          <div class="dashboard-account-list">
+            ${accountRows.map((account, index) => `
+              <article class="dashboard-account-row">
+                <span class="dashboard-account-icon accent-${index % 4}">${renderIcon(account.icon || (account.type === 'cash' ? 'wallet' : 'credit-card'), 16)}</span>
+                <div class="dashboard-account-copy"><strong>${escapeHTML(account.name || '—')}</strong><span>${escapeHTML(account.type || '')}</span></div>
+                <strong class="dashboard-account-balance sensitive-value" dir="ltr">${formatCurrency(account.balance || 0, account.currency || userCurrency)}</strong>
               </article>
             `).join('')}
           </div>
         ` : `
-          <div class="dashboard-compact-empty">${t('no_transactions_sub')}</div>
+          <button class="dashboard-empty-account" id="btn-add-account" type="button">
+            <span class="dashboard-account-icon accent-0">${renderIcon('wallet', 16)}</span>
+            <span>${t('onboarding_step_account')}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
         `}
       </section>
 
+      <section class="dashboard-overview-card" aria-label="${t('total_balance')}">
+        <div class="dashboard-overview-header">
+          <div>
+            <p class="dashboard-overview-kicker">${t('total_balance')}</p>
+            <p class="dashboard-overview-balance sensitive-value" dir="ltr">${formatCurrency(totalBalance, userCurrency)}</p>
+          </div>
+          <button class="dashboard-overview-add" id="btn-add-tx" type="button" aria-label="${t('quick_add')}" title="${t('quick_add')}">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+        <div class="dashboard-overview-period">
+          <span>${t('this_month')}</span>
+          <span class="dashboard-overview-change sensitive-value ${net < 0 ? 'is-negative' : ''}" dir="ltr">${net >= 0 ? '+' : ''}${formatCurrency(net, userCurrency)}</span>
+        </div>
+        <div class="dashboard-overview-chart-shell">
+          <canvas id="balance-line-chart" aria-label="${t('total_balance')}" role="img"></canvas>
+        </div>
+        <div class="dashboard-overview-metrics">
+          <div><span>${t('monthly_income')}</span><strong class="sensitive-value" dir="ltr">${formatCurrency(income, userCurrency)}</strong></div>
+          <div><span>${t('monthly_expenses')}</span><strong class="sensitive-value is-expense" dir="ltr">${formatCurrency(expenses, userCurrency)}</strong></div>
+          <div><span>${t('net_savings')}</span><strong class="sensitive-value" dir="ltr">${formatCurrency(net, userCurrency)}</strong></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="dashboard-reference-grid">
       <section class="dashboard-panel dashboard-categories-panel">
         <div class="dashboard-panel-header">
           <div>
@@ -189,44 +148,55 @@ function render() {
             <p class="dashboard-panel-caption">${t('monthly_expenses')}</p>
           </div>
         </div>
-        <div class="category-breakdown-layout" dir="${getLanguage().startsWith('ar') ? 'rtl' : 'ltr'}">
+        <div class="category-breakdown-layout" dir="${isArabic ? 'rtl' : 'ltr'}">
           <div class="category-chart-panel">
-            <div class="category-chart-wrap">
-              <canvas id="donut-chart" aria-label="${t('category_breakdown')}" role="img"></canvas>
-            </div>
+            <div class="category-chart-wrap"><canvas id="donut-chart" aria-label="${t('category_breakdown')}" role="img"></canvas></div>
             <div class="category-total-label">${t('monthly_expenses')}</div>
-            <div class="category-total-value sensitive-value">${categoryData.length ? formatCurrency(categoryData.reduce((s, c) => s + c.total, 0), userCurrency) : formatCurrency(0, userCurrency)}</div>
+            <div class="category-total-value sensitive-value" dir="ltr">${categoryData.length ? formatCurrency(categoryData.reduce((sum, category) => sum + category.total, 0), userCurrency) : formatCurrency(0, userCurrency)}</div>
           </div>
           <div class="category-legend" aria-label="${t('category_breakdown')}" role="list">
-            ${categoryData.slice(0, 5).map(cat => `
+            ${categoryData.slice(0, 5).map(category => `
               <div class="category-legend-row" role="listitem">
-                <div class="category-legend-main">
-                  <span class="category-color-dot" style="background:${sanitizeColor(cat.color)};"></span>
-                  <span class="category-legend-name">${escapeHTML(getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name)}</span>
-                </div>
-                <span class="category-legend-amount sensitive-value" dir="ltr">${formatCurrency(cat.total, userCurrency)}</span>
+                <div class="category-legend-main"><span class="category-color-dot" style="background:${sanitizeColor(category.color)};"></span><span class="category-legend-name">${escapeHTML(isArabic && category.name_ar ? category.name_ar : category.name)}</span></div>
+                <span class="category-legend-amount sensitive-value" dir="ltr">${formatCurrency(category.total, userCurrency)}</span>
               </div>
             `).join('') || `<p class="category-empty text-caption text-muted">${t('no_data')}</p>`}
           </div>
         </div>
       </section>
+
+      <section class="dashboard-panel dashboard-budget-panel">
+        <div class="dashboard-panel-header">
+          <div><h2 class="dashboard-panel-title">${t('top_budgets')}</h2><p class="dashboard-panel-caption">${t('this_month')}</p></div>
+          <button class="dashboard-text-action" id="btn-view-all-budgets" type="button">${t('view_all')}</button>
+        </div>
+        <div class="dashboard-budget-list">
+          ${budgets.length ? budgets.slice(0, 3).map(budget => {
+            const percentage = formatPercent(budget.spent, budget.amount);
+            const status = percentage >= 100 ? 'error' : percentage >= 80 ? 'warning' : 'success';
+            return `<div class="dashboard-budget-row"><div class="dashboard-budget-row-head"><div class="dashboard-budget-name"><span class="dashboard-category-icon" style="--category-color:${budget.category?.color && sanitizeColor(budget.category.color).startsWith('#') ? sanitizeColor(budget.category.color) : 'var(--clr-primary)'};">${renderIcon(budget.category?.icon || 'package', 15)}</span><span>${escapeHTML(budget.name)}</span></div><span class="dashboard-budget-percent">${percentage}%</span></div><div class="dashboard-budget-track"><span class="is-${status}" style="width:${Math.min(percentage, 100)}%;"></span></div><p class="dashboard-budget-amount sensitive-value" dir="ltr">${formatCurrency(budget.spent, userCurrency)} / ${formatCurrency(budget.amount, userCurrency)}</p></div>`;
+          }).join('') : `<div class="dashboard-compact-empty">${t('no_budgets_sub')}</div>`}
+        </div>
+      </section>
     </div>
+
+    <section class="dashboard-panel dashboard-transactions-panel dashboard-reference-transactions">
+      <div class="dashboard-panel-header">
+        <div><h2 class="dashboard-panel-title">${t('recent_transactions')}</h2><p class="dashboard-panel-caption">${t('this_month')}</p></div>
+        <button class="dashboard-text-action" id="btn-view-all-tx" type="button">${t('view_all')}</button>
+      </div>
+      ${recentTx.length ? `<div class="dashboard-transaction-list">${recentTx.slice(0, 6).map(transaction => `<article class="dashboard-transaction-row"><span class="dashboard-category-icon" style="--category-color:${transaction.category?.color && sanitizeColor(transaction.category.color).startsWith('#') ? sanitizeColor(transaction.category.color) : 'var(--clr-primary)'};">${renderIcon(transaction.category?.icon || 'package', 16)}</span><div class="dashboard-transaction-copy"><strong>${escapeHTML(transaction.description || '—')}</strong><span>${escapeHTML(isArabic && transaction.category?.name_ar ? transaction.category.name_ar : (transaction.category?.name || '—'))} <i aria-hidden="true">·</i> ${formatRelativeDate(transaction.date)}</span></div><strong class="dashboard-transaction-amount sensitive-value ${transaction.type === 'income' ? 'is-income' : transaction.type === 'expense' ? 'is-expense' : ''}" dir="ltr">${transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '−' : ''}${formatCurrency(transaction.amount, transaction.account?.currency || userCurrency)}</strong></article>`).join('')}</div>` : `<div class="dashboard-compact-empty">${t('no_transactions_sub')}</div>`}
+    </section>
   `;
 
-  // Wire up navigation buttons
   document.getElementById('btn-add-tx')?.addEventListener('click', openQuickAddModal);
-  document.getElementById('btn-view-all-tx')?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'transactions' } }));
-  });
-  document.getElementById('btn-view-all-budgets')?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'budgets' } }));
-  });
+  document.getElementById('btn-add-account')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'accounts', action: 'add' } })));
+  document.getElementById('btn-view-all-accounts')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'accounts' } })));
+  document.getElementById('btn-view-all-tx')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'transactions' } })));
+  document.getElementById('btn-view-all-budgets')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('navigate', { detail: { page: 'budgets' } })));
 
-  // Draw charts after DOM is rendered
   requestAnimationFrame(() => redrawCharts());
-  if (isFirstRun && sessionStorage.getItem('hisba_onboarding_prompt_seen') !== '1') {
-    requestAnimationFrame(openOnboardingModal);
-  }
+  if (isFirstRun && sessionStorage.getItem('hisba_onboarding_prompt_seen') !== '1') requestAnimationFrame(openOnboardingModal);
 }
 
 function openOnboardingModal() {
@@ -307,9 +277,12 @@ function openQuickAddModal() {
 }
 
 function redrawCharts() {
-  drawBarChart('bar-chart', trendData.length ? trendData : [{ month: 'Now', income: summaryData.income || 0, expenses: summaryData.expenses || 0 }]);
-  drawDonutChart('donut-chart', categoryData.slice(0, 6).map(c => ({ color: sanitizeColor(c.color, '#0a0a0a'), value: c.total })),
-    categoryData.length ? formatCurrency(categoryData.reduce((s, c) => s + c.total, 0), userCurrency) : '');
+  const balanceTrend = trendData.length
+    ? trendData.map(item => ({ label: item.month || '', value: Math.max(0, Number(item.balance ?? item.net ?? (Number(item.income || 0) - Number(item.expenses || 0)))) }))
+    : [{ label: t('this_month'), value: Math.max(0, Number(summaryData.totalBalance || 0)) }, { label: '', value: Math.max(0, Number(summaryData.totalBalance || 0)) }];
+  drawLineChart('balance-line-chart', balanceTrend, '#176b73');
+  drawDonutChart('donut-chart', categoryData.slice(0, 6).map(category => ({ color: sanitizeColor(category.color, '#0a0a0a'), value: category.total })),
+    categoryData.length ? formatCurrency(categoryData.reduce((sum, category) => sum + category.total, 0), userCurrency) : '');
 }
 
 function statCard(label, value, type, change, color) {
