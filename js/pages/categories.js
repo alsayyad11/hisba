@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — CATEGORIES PAGE
    ============================================================ */
-import { t, validateRequired, CATEGORY_COLORS, CATEGORY_ICONS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
+import { t, validateRequired, CATEGORY_COLORS, CATEGORY_ICONS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.3.0';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
-import { toast } from '../toast.js?v=security-audit-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.3.0';
+import { toast } from '../toast.js?v=release-2.3.0';
 
 let userId;
 let categories = [];
@@ -44,42 +44,40 @@ function renderPage() {
       </div>
     </div>
 
-    <div class="tabs">
-      <button class="tab-btn ${activeTab === 'expense' ? 'active' : ''}" data-tab="expense">${t('expense')}</button>
-      <button class="tab-btn ${activeTab === 'income'  ? 'active' : ''}" data-tab="income">${t('income')}</button>
-    </div>
-
-    ${custom.length ? `
-      <div style="margin-bottom:var(--sp-2xl);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-lg);">
-          <h3 style="font-size:var(--text-sm);font-weight:700;color:var(--clr-body-mid);text-transform:uppercase;letter-spacing:0.06em;">${t('custom_cat')}</h3>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--sp-md);" id="custom-cats">
-          ${custom.map(cat => catCard(cat, lang, true)).join('')}
-        </div>
+    <div class="categories-workspace">
+      <div class="tabs category-type-tabs" role="tablist" aria-label="${t('categories_title')}">
+        <button class="tab-btn ${activeTab === 'expense' ? 'active' : ''}" data-tab="expense" role="tab" aria-selected="${activeTab === 'expense'}">${t('expense')}</button>
+        <button class="tab-btn ${activeTab === 'income'  ? 'active' : ''}" data-tab="income" role="tab" aria-selected="${activeTab === 'income'}">${t('income')}</button>
       </div>
-    ` : ''}
 
-    ${predefined.length ? `
-      <div>
-        <div style="margin-bottom:var(--sp-lg);">
-          <h3 style="font-size:var(--text-sm);font-weight:700;color:var(--clr-body-mid);text-transform:uppercase;letter-spacing:0.06em;">${t('predefined')}</h3>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--sp-md);">
-          ${predefined.map(cat => catCard(cat, lang, false)).join('')}
-        </div>
-      </div>
-    ` : ''}
+      ${custom.length ? `
+        <section class="category-section">
+          <div class="category-section-head"><div><span class="section-kicker">${t('custom_cat')}</span><h3>${t('custom_cat')}</h3></div></div>
+          <div class="category-grid" id="custom-cats">
+            ${custom.map(cat => catCard(cat, lang, true)).join('')}
+          </div>
+        </section>
+      ` : ''}
 
-    ${!shown.length ? `
-      <div class="card">
+      ${predefined.length ? `
+        <section class="category-section">
+          <div class="category-section-head"><div><span class="section-kicker">${t('predefined')}</span><h3>${t('predefined')}</h3></div></div>
+          <div class="category-grid">
+            ${predefined.map(cat => catCard(cat, lang, false)).join('')}
+          </div>
+        </section>
+      ` : ''}
+
+      ${!shown.length ? `
+        <div class="card">
         <div class="empty-state">
           <div class="empty-state-icon">${renderIcon('package', 28)}</div>
           <p class="empty-state-title">${t('no_categories')}</p>
           <button class="btn btn-primary" id="btn-empty-add">${t('add_category')}</button>
         </div>
-      </div>
-    ` : ''}
+        </div>
+      ` : ''}
+    </div>
   `;
 
   document.getElementById('btn-add-cat')?.addEventListener('click', openAddModal);
@@ -103,7 +101,7 @@ function renderPage() {
 function catCard(cat, lang, editable) {
   const name = lang.startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name;
   return `
-    <div class="card card-hover" style="padding:var(--sp-lg);display:flex;align-items:center;gap:var(--sp-md);">
+    <article class="card card-hover category-card">
       <div class="cat-icon" style="background:${sanitizeColor(cat.color).startsWith('#') ? `${sanitizeColor(cat.color)}22` : 'var(--clr-canvas-raised)'};flex-shrink:0;">
         <span class="category-icon-render">${renderIcon(ICON_LIST.includes(cat.icon) ? cat.icon : 'package', 18)}</span>
       </div>
@@ -121,7 +119,7 @@ function catCard(cat, lang, editable) {
           </button>
         </div>
       ` : ''}
-    </div>`;
+    </article>`;
 }
 
 function openAddModal() { editingCat = null; buildModal(null); openModal('cat-modal'); }

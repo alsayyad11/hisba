@@ -1,11 +1,11 @@
 /* ============================================================
    HISBA — BUDGETS PAGE
    ============================================================ */
-import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.2.0';
+import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.3.0';
 import { getBudgets, createBudget, updateBudget, deleteBudget, getCategories, getBudgetSpending, getTransactions, getMonthClosures, saveMonthClosure } from '../services/data.js';
 import { getDailyBudgetIndicator, getBudgetAlerts, buildMonthClosure, currentMonthKey, hasClosure } from '../services/budget-insights.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.2.0';
-import { toast } from '../toast.js?v=release-2.2.0';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.3.0';
+import { toast } from '../toast.js?v=release-2.3.0';
 
 let userId, userCurrency = 'USD';
 let budgets = [], categories = [], spending = {}, transactions = [], closures = [];
@@ -47,85 +47,46 @@ function renderPage() {
   const el = document.getElementById('page-content');
   if (!el) return;
 
-  const totalBudgeted = budgets.reduce((s, b) => s + Number(b.amount), 0);
-  const totalSpent = budgets.reduce((s, b) => s + Number(b.spent), 0);
-  const overBudgetCount = budgets.filter(b => Number(b.spent) > Number(b.amount)).length;
+  const totalBudgeted = budgets.reduce((sum, budget) => sum + Number(budget.amount || 0), 0);
+  const totalSpent = budgets.reduce((sum, budget) => sum + Number(budget.spent || 0), 0);
+  const totalRemaining = totalBudgeted - totalSpent;
+  const overBudgetCount = budgets.filter(budget => Number(budget.spent || 0) > Number(budget.amount || 0)).length;
+  const totalUsed = formatPercent(totalSpent, totalBudgeted);
   const indicator = getDailyBudgetIndicator({ budgets, transactions });
   const activeMonthKey = currentMonthKey();
   const isClosed = hasClosure(closures, activeMonthKey);
+  const healthClass = totalRemaining < 0 ? 'is-over' : totalUsed >= 80 ? 'is-near' : 'is-safe';
 
   el.innerHTML = `
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">${t('budgets_title')}</h1>
-        <p class="page-subtitle">${t('budgets_subtitle')}</p>
+    <header class="page-header finance-page-header budget-page-header">
+      <div><p class="finance-eyebrow">${t('budget_daily_allowance')}</p><h1 class="page-title">${t('budgets_title')}</h1><p class="page-subtitle">${t('budgets_subtitle')}</p></div>
+      <div class="page-actions budget-page-actions">
+        <button class="btn btn-outline" id="btn-close-month" ${isClosed ? 'disabled' : ''} title="${t('close_month_subtitle')}">${renderIcon('calendar', 16)}<span>${isClosed ? t('month_closed') : t('close_month')}</span></button>
+        <button class="btn btn-primary" id="btn-add-budget">${renderIcon('plus', 17)}<span>${t('add_budget')}</span></button>
       </div>
-      <div class="page-actions">
-        <button class="btn btn-outline" id="btn-close-month" ${isClosed ? 'disabled' : ''} title="${t('close_month_subtitle')}">
-          ${isClosed ? t('month_closed') : t('close_month')}
-        </button>
-        <button class="btn btn-primary" id="btn-add-budget">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          ${t('add_budget')}
-        </button>
-      </div>
-    </div>
+    </header>
 
-    <section class="card" style="margin-bottom:var(--sp-lg);padding:var(--sp-lg);">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-lg);flex-wrap:wrap;">
-        <div>
-          <div class="stat-card-label">${t('budget_daily_allowance')}</div>
-          <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${indicator.hasBudget ? formatCurrency(indicator.dailyAllowance, userCurrency) : '—'}</div>
-        </div>
-        <div class="text-muted" style="font-size:var(--text-sm);max-width:34rem;">
-          ${indicator.hasBudget ? `${t('budget_days_remaining', { days: indicator.daysRemaining })} · <span class="sensitive-value">${t('budget_daily_amount', { amount: formatCurrency(indicator.dailyAllowance, userCurrency) })}</span>` : t('budget_no_monthly_plan')}
-        </div>
-      </div>
+    <section class="budget-health-panel ${healthClass}" aria-label="${t('budgets_title')}">
+      <div class="budget-health-primary"><span>${t('budget_daily_allowance')}</span><strong class="sensitive-value" dir="ltr">${indicator.hasBudget ? formatCurrency(indicator.dailyAllowance, userCurrency) : '—'}</strong><p>${indicator.hasBudget ? t('budget_days_remaining', { days: indicator.daysRemaining }) : t('budget_no_monthly_plan')}</p></div>
+      <div class="budget-health-stat"><span>${t('budget_amount')}</span><strong class="sensitive-value" dir="ltr">${formatCurrency(totalBudgeted, userCurrency)}</strong></div>
+      <div class="budget-health-stat is-spent"><span>${t('budget_spent')}</span><strong class="sensitive-value" dir="ltr">${formatCurrency(totalSpent, userCurrency)}</strong></div>
+      <div class="budget-health-stat ${totalRemaining < 0 ? 'is-over' : ''}"><span>${t('budget_remaining_label')}</span><strong class="sensitive-value" dir="ltr">${totalRemaining < 0 ? '−' : ''}${formatCurrency(Math.abs(totalRemaining), userCurrency)}</strong></div>
+      <div class="budget-health-progress"><div><span>${totalUsed}% ${t('dashboard_budget_used')}</span><b class="${healthClass}">${overBudgetCount ? `${overBudgetCount} ${t('overspent_label')}` : t('on_track')}</b></div><div class="finance-progress-track"><span class="${healthClass}" style="width:${Math.min(totalUsed, 100)}%"></span></div></div>
     </section>
 
-    <!-- Summary -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-lg);margin-bottom:var(--sp-xl);">
-      <div class="card">
-        <div class="stat-card-label">${t('budget_amount')}</div>
-        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${formatCurrency(totalBudgeted, userCurrency)}</div>
-      </div>
-      <div class="card">
-        <div class="stat-card-label">${t('budget_spent')}</div>
-        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-error);">${formatCurrency(totalSpent, userCurrency)}</div>
-      </div>
-      <div class="card">
-        <div class="stat-card-label">${t('overspent_label')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${overBudgetCount > 0 ? 'var(--clr-error)' : 'var(--clr-success)'};">
-          ${overBudgetCount}
-        </div>
-      </div>
-    </div>
-
-    ${budgets.length ? `
-      <div style="display:flex;flex-direction:column;gap:var(--sp-lg);" id="budgets-list">
-        ${budgets.map(budgetCard).join('')}
-      </div>
-    ` : `
-      <div class="card">
-        <div class="empty-state">
-          <div class="empty-state-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-body-mid)" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <p class="empty-state-title">${t('no_budgets')}</p>
-          <p class="empty-state-desc">${t('no_budgets_sub')}</p>
-          <button class="btn btn-primary" id="btn-empty-add">${t('add_budget')}</button>
-        </div>
-      </div>
-    `}
+    <section class="budget-ledger-section">
+      <div class="finance-panel-heading"><div><p class="finance-section-kicker">${t('budget_amount')}</p><h2>${t('budgets_title')}</h2><p>${t('budget_daily_amount', { amount: indicator.hasBudget ? formatCurrency(indicator.dailyAllowance, userCurrency) : '—' })}</p></div><span class="budget-ledger-count">${budgets.length}</span></div>
+      ${budgets.length ? `<div class="budget-ledger-list" id="budgets-list">${budgets.map(budgetCard).join('')}</div>` : `<div class="finance-empty-state budget-empty-state"><span aria-hidden="true">${renderIcon('wallet', 23)}</span><p>${t('no_budgets_sub')}</p><button class="btn btn-primary" id="btn-empty-add" type="button">${renderIcon('plus', 16)}<span>${t('add_budget')}</span></button></div>`}
+    </section>
   `;
 
   notifyBudgetAlerts();
   document.getElementById('btn-add-budget')?.addEventListener('click', openAddModal);
   document.getElementById('btn-close-month')?.addEventListener('click', confirmCloseMonth);
   document.getElementById('btn-empty-add')?.addEventListener('click', openAddModal);
-  document.getElementById('budgets-list')?.addEventListener('click', e => {
-    const editBtn = e.target.closest('[data-edit]');
-    const deleteBtn = e.target.closest('[data-delete]');
+  document.getElementById('budgets-list')?.addEventListener('click', event => {
+    const editBtn = event.target.closest('[data-edit]');
+    const deleteBtn = event.target.closest('[data-delete]');
     if (editBtn) openEditModal(editBtn.dataset.edit);
     if (deleteBtn) confirmDelete(deleteBtn.dataset.delete);
   });
@@ -141,50 +102,21 @@ function onboardingProgress(current) {
 
 function budgetCard(b) {
   const pct = formatPercent(b.spent, b.amount);
-  const remaining = Number(b.amount) - Number(b.spent);
+  const remaining = Number(b.amount || 0) - Number(b.spent || 0);
   const isOver = pct >= 100;
   const isAtRisk = pct >= 80 && !isOver;
   const statusLabel = isOver ? t('overspent_label') : isAtRisk ? t('at_risk') : t('on_track');
-  const statusClass = isOver ? 'badge-error' : isAtRisk ? 'badge-warning' : 'badge-success';
-  const fillClass = isOver ? 'error' : isAtRisk ? 'warning' : 'success';
+  const statusClass = isOver ? 'is-over' : isAtRisk ? 'is-near' : 'is-safe';
   const lang = getLanguage();
+  const categoryName = lang.startsWith('ar') && b.category?.name_ar ? b.category.name_ar : (b.category?.name || '—');
+  const categoryColor = sanitizeColor(b.category?.color, '#176b73');
 
-  return `
-    <div class="card card-hover" style="padding:var(--sp-xl);">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--sp-lg);">
-        <div style="display:flex;align-items:center;gap:var(--sp-md);">
-          <div class="cat-icon" style="background:${b.category?.color && sanitizeColor(b.category.color).startsWith('#') ? `${sanitizeColor(b.category.color)}22` : 'var(--clr-canvas-raised)'};">
-            <span style="font-size:18px;">${renderIcon(b.category?.icon || 'package', 18)}</span>
-          </div>
-          <div>
-            <div class="font-semibold" style="font-size:var(--text-md);">${escapeHTML(b.name)}</div>
-            <div class="text-caption text-muted">${escapeHTML(lang.startsWith('ar') && b.category?.name_ar ? b.category.name_ar : (b.category?.name || '—'))} · ${t('period_' + (b.period === 'weekly' ? 'weekly' : 'monthly'))}</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:var(--sp-md);">
-          <span class="badge ${statusClass} badge-dot">${statusLabel}</span>
-          <button class="btn btn-outline btn-sm budget-action-edit" data-edit="${escapeHTML(b.id)}" type="button" title="${t('edit_budget')}" aria-label="${t('edit_budget')}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            <span>${t('edit')}</span>
-          </button>
-          <button class="btn btn-outline btn-sm budget-action-delete" data-delete="${escapeHTML(b.id)}" type="button" title="${t('delete_budget')}" aria-label="${t('delete_budget')}" style="color:var(--clr-error);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
-          </button>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:var(--sp-sm);">
-        <span class="text-caption sensitive-value"><strong>${formatCurrency(b.spent, userCurrency)}</strong> ${t('budget_of')} ${formatCurrency(b.amount, userCurrency)}</span>
-        <span class="text-caption font-semibold">${pct}%</span>
-      </div>
-      <div class="progress-bar" style="height:10px;">
-        <div class="progress-fill ${fillClass}" style="width:${Math.min(pct, 100)}%;"></div>
-      </div>
-      <div style="margin-top:var(--sp-sm);">
-        <span class="text-caption sensitive-value ${isOver ? 'text-error' : 'text-muted'}">
-          ${remaining >= 0 ? t('budget_remaining', { amount: formatCurrency(remaining, userCurrency) }) : t('overspent', { amount: formatCurrency(Math.abs(remaining), userCurrency) })}
-        </span>
-      </div>
-    </div>`;
+  return `<article class="budget-ledger-card ${statusClass}">
+    <div class="budget-ledger-main"><span class="budget-category-icon" style="--budget-category-color:${categoryColor}">${renderIcon(b.category?.icon || 'package', 18)}</span><div><h3>${escapeHTML(b.name)}</h3><p>${escapeHTML(categoryName)}<i aria-hidden="true">·</i>${t('period_' + (b.period === 'weekly' ? 'weekly' : 'monthly'))}</p></div></div>
+    <div class="budget-ledger-values"><div><span>${t('budget_spent')}</span><strong class="sensitive-value is-expense" dir="ltr">${formatCurrency(b.spent, userCurrency)}</strong></div><div><span>${t('budget_amount')}</span><strong class="sensitive-value" dir="ltr">${formatCurrency(b.amount, userCurrency)}</strong></div><div><span>${t('budget_remaining_label')}</span><strong class="sensitive-value ${remaining < 0 ? 'is-expense' : ''}" dir="ltr">${remaining < 0 ? '−' : ''}${formatCurrency(Math.abs(remaining), userCurrency)}</strong></div></div>
+    <div class="budget-ledger-progress"><div><span>${pct}%</span><b class="${statusClass}">${statusLabel}</b></div><div class="finance-progress-track"><span class="${statusClass}" style="width:${Math.min(pct, 100)}%"></span></div></div>
+    <div class="budget-ledger-actions"><button class="btn btn-quiet btn-sm budget-action-edit" data-edit="${escapeHTML(b.id)}" type="button" title="${t('edit_budget')}" aria-label="${t('edit_budget')}">${renderIcon('edit', 15)}<span>${t('edit')}</span></button><button class="icon-btn-danger budget-action-delete" data-delete="${escapeHTML(b.id)}" type="button" title="${t('delete_budget')}" aria-label="${t('delete_budget')}">${renderIcon('trash', 16)}</button></div>
+  </article>`;
 }
 
 function openAddModal() { editingBudget = null; buildModal(null); openModal('budget-modal'); }

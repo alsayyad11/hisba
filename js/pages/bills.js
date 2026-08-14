@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — BILLS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, getLanguage, escapeHTML } from '../utils.js?v=release-2.2.0';
+import { t, formatCurrency, validateRequired, validateAmount, getLanguage, escapeHTML } from '../utils.js?v=release-2.3.0';
 import { getBills, createBill, updateBill, deleteBill, getCategories } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.2.0';
-import { toast } from '../toast.js?v=release-2.2.0';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.3.0';
+import { toast } from '../toast.js?v=release-2.3.0';
 
 let userId, userCurrency = 'USD';
 let bills = [], categories = [];

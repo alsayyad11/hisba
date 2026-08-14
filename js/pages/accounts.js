@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — ACCOUNTS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.1';
+import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.3.0';
 import { getAccounts, createAccount, updateAccount, deleteAccount, setDefaultAccount } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.1';
-import { toast } from '../toast.js?v=release-2.0.1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.3.0';
+import { toast } from '../toast.js?v=release-2.3.0';
 
 let userId, userCurrency = 'USD';
 let accounts = [];
@@ -33,41 +33,49 @@ function renderPage() {
   const totalBalance = accounts.reduce((s, a) => s + Number(a.balance), 0);
 
   el.innerHTML = `
-    <div class="page-header">
+    <div class="page-header accounts-page-header">
       <div>
-        <h1 class="page-title">${t('accounts_title')}</h1>
+        <div class="workspace-eyebrow">${t('accounts_title')}</div>
+        <h1 class="page-title">${t('total_balance')}</h1>
         <p class="page-subtitle">${t('accounts_subtitle')}</p>
       </div>
       <div class="page-actions">
         <button class="btn btn-primary" id="btn-add-acc">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          ${renderIcon('plus', 16)}
           ${t('add_account')}
         </button>
       </div>
     </div>
-    <div class="card accounts-summary" style="margin-bottom:var(--sp-xl);padding:var(--sp-lg) var(--sp-xl);">
-      <div style="display:flex;align-items:center;gap:var(--sp-xl);flex-wrap:wrap;">
-        <div>
-          <div class="stat-card-label">${t('total_balance')}</div>
-          <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;">${formatCurrency(totalBalance, userCurrency)}</div>
+    <section class="accounts-overview" aria-label="${t('total_balance')}">
+      <div class="card accounts-summary">
+        <div class="accounts-summary-main">
+          <span class="stat-card-label">${t('total_balance')}</span>
+          <strong class="sensitive-value accounts-summary-total">${formatCurrency(totalBalance, userCurrency)}</strong>
         </div>
-        <div style="flex:1;"></div>
-        <div class="text-caption text-muted">${accounts.length} ${t('accounts_title').toLowerCase()}</div>
+        <div class="accounts-summary-meta">
+          <span class="accounts-count-value">${accounts.length}</span>
+          <span class="text-caption text-muted">${t('accounts_title')}</span>
+        </div>
       </div>
-    </div>
+    </section>
     ${accounts.length ? `
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--sp-lg);" id="accounts-grid">
-        ${accounts.map(accCard).join('')}
-      </div>
+      <section class="accounts-ledger" aria-label="${t('accounts_title')}">
+        <div class="section-heading">
+          <div><h2>${t('accounts_title')}</h2><p>${t('accounts_subtitle')}</p></div>
+        </div>
+        <div id="accounts-grid">
+          ${accounts.map(accCard).join('')}
+        </div>
+      </section>
     ` : `
-      <div class="card">
+      <section class="card accounts-empty-state">
         <div class="empty-state">
           <div class="empty-state-icon">${renderIcon('wallet', 28)}</div>
           <p class="empty-state-title">${t('no_accounts')}</p>
           <p class="empty-state-desc">${t('no_accounts_sub')}</p>
           <button class="btn btn-primary" id="btn-empty-add">${t('add_account')}</button>
         </div>
-      </div>
+      </section>
     `}
   `;
 
@@ -94,27 +102,24 @@ function onboardingProgress(current) {
 function accCard(acc) {
   const typeIcon = TYPE_ICONS[acc.type] || 'wallet';
   return `
-    <div class="card card-hover" style="position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${sanitizeColor(acc.color).startsWith('#') ? sanitizeColor(acc.color) : ACCOUNT_COLORS[0]};"></div>
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--sp-lg);margin-top:var(--sp-sm);">
-        <div style="display:flex;align-items:center;gap:var(--sp-md);">
-          <div style="width:44px;height:44px;border-radius:var(--radius-md);background:${sanitizeColor(acc.color).startsWith('#') ? `${sanitizeColor(acc.color)}22` : 'var(--clr-canvas-raised)'};display:flex;align-items:center;justify-content:center;font-size:22px;">
-            ${renderIcon(typeIcon, 22)}
-          </div>
+    <article class="card card-hover account-card" style="--account-color:${sanitizeColor(acc.color).startsWith('#') ? sanitizeColor(acc.color) : ACCOUNT_COLORS[0]};">
+      <div class="account-card-head">
+        <div class="account-card-identity">
+          <div class="account-card-icon">${renderIcon(typeIcon, 22)}</div>
           <div>
-            <div class="font-semibold" style="color:var(--clr-ink);">${escapeHTML(acc.name)}</div>
+            <div class="font-semibold account-card-name">${escapeHTML(acc.name)}</div>
             <div class="text-caption text-muted">${t('account_type_' + (ACCOUNT_TYPES.includes(acc.type) ? acc.type : 'cash'))}</div>
           </div>
         </div>
         ${acc.is_default ? `<span class="badge badge-primary">${t('default')}</span>` : ''}
       </div>
-      <div style="margin-bottom:var(--sp-lg);">
+      <div class="account-card-balance">
         <div class="stat-card-label">${t('account_balance')}</div>
-        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${Number(acc.balance) < 0 ? 'var(--clr-error)' : 'var(--clr-ink)'};">
+        <div class="sensitive-value ${Number(acc.balance) < 0 ? 'is-negative' : ''}">
           ${formatCurrency(acc.balance, acc.currency || userCurrency)}
         </div>
       </div>
-      <div class="account-card-actions" style="display:flex;gap:var(--sp-sm);flex-wrap:wrap;">
+      <div class="account-card-actions">
         ${!acc.is_default ? `<button class="btn btn-ghost btn-sm" data-default="${escapeHTML(acc.id)}">${t('set_default')}</button>` : ''}
         <button class="btn btn-ghost btn-sm account-action" data-edit="${escapeHTML(acc.id)}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -125,7 +130,7 @@ function accCard(acc) {
           ${t('delete')}
         </button>
       </div>
-    </div>`;
+    </article>`;
 }
 
 function openAddModal() { editingAcc = null; buildModal(null); openModal('acc-modal'); }

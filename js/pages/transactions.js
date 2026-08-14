@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — TRANSACTIONS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.2.0';
+import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.3.0';
 import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getAccounts, getCategories, getTags, createTag, setTransactionTags } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.2.0';
-import { toast } from '../toast.js?v=release-2.2.0';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.3.0';
+import { toast } from '../toast.js?v=release-2.3.0';
 
 let userId, userCurrency = 'USD';
 let transactions = [], accounts = [], categories = [], tags = [];

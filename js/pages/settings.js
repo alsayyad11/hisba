@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — SETTINGS PAGE
    ============================================================ */
-import { t, setLanguage, getLanguage, getTheme, setTheme, validateRequired, validatePassword, renderIcon } from '../utils.js?v=release-2.2.1';
+import { t, setLanguage, getLanguage, getTheme, setTheme, validateRequired, validatePassword, renderIcon } from '../utils.js?v=release-2.3.0';
 import { getProfile, updateProfile, updatePassword, uploadProfileAvatar, signOut } from '../services/auth.js';
-import { showConfirm } from '../components/modal.js?v=release-2.2.1';
-import { toast } from '../toast.js?v=release-2.2.1';
+import { showConfirm } from '../components/modal.js?v=release-2.3.0';
+import { toast } from '../toast.js?v=release-2.3.0';
 
 let userId, profile = {};
 
