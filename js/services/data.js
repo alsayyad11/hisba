@@ -34,6 +34,15 @@ async function remove(userId, table, id, deleter) {
 }
 function removeQueueFor(userId, op) { import('./offline.js').then(({ removeQueueItem }) => removeQueueItem(userId, op.opId)); }
 
+// A semantic event is emitted only after a financial mutation is complete. Pages
+// can refresh derived views (balances, budgets, reports) from the same local-first cache.
+export function notifyFinancialDataChanged(userId, entities = ['transactions', 'accounts']) {
+  if (!userId || typeof window === 'undefined') return;
+  const detail = { userId, entities, at: Date.now() };
+  window.dispatchEvent(new CustomEvent('hisba:financial-data-changed', { detail }));
+  try { localStorage.setItem('hisba_financial_data_changed', JSON.stringify(detail)); } catch {}
+}
+
 // Accounts
 export async function getAccounts(userId) { return readCached(userId, 'accounts', () => remote.getAccounts(userId)); }
 export async function createAccount(userId, account) { const row = ensureId({ ...account, user_id: userId, created_at: account.created_at || new Date().toISOString() }); return save(userId, 'accounts', row, () => remote.createAccount(userId, row), row); }
@@ -142,6 +151,7 @@ export async function createTransaction(userId, tx) {
   const row = ensureId({ ...tx, user_id: userId, created_at: tx.created_at || new Date().toISOString() });
   const saved = await save(userId, 'transactions', row, () => remote.createTransaction(userId, row), row);
   await adjustAccountBalance(userId, saved?.account_id || row.account_id, transactionImpact(saved || row));
+  notifyFinancialDataChanged(userId);
   return saved;
 }
 export async function updateTransaction(id, userId, updates) {
@@ -151,12 +161,14 @@ export async function updateTransaction(id, userId, updates) {
   if (current.account_id) await adjustAccountBalance(userId, current.account_id, -oldImpact);
   const saved = await patch(userId, 'transactions', id, updates, () => remote.updateTransaction(id, userId, updates));
   await adjustAccountBalance(userId, saved?.account_id || next.account_id, transactionImpact(saved || next));
+  notifyFinancialDataChanged(userId);
   return saved;
 }
 export async function deleteTransaction(id, userId) {
   const current = getTable(userId, 'transactions').find(x => x.id === id);
   const result = await remove(userId, 'transactions', id, () => remote.deleteTransaction(id, userId));
   if (current) await adjustAccountBalance(userId, current.account_id, -transactionImpact(current));
+  notifyFinancialDataChanged(userId);
   return result;
 }
 
