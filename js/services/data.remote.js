@@ -92,7 +92,7 @@ export async function deleteCategory(id, userId) {
 export async function getTransactions(userId, filters = {}) {
   let q = supabase
     .from('transactions')
-    .select(`*, account:accounts(id,name,color,currency), category:categories(id,name,name_ar,icon,color)`)
+    .select(`*, account:accounts(id,name,color,currency), category:categories(id,name,name_ar,icon,color), transaction_tags(tag:tags(id,name,color))`)
     .eq('user_id', userId);
 
   if (filters.type && filters.type !== 'all')  q = q.eq('type', filters.type);
@@ -120,7 +120,7 @@ export async function createTransaction(userId, tx) {
   const { data, error } = await supabase
     .from('transactions')
     .insert({ ...tx, user_id: userId })
-    .select(`*, account:accounts(id,name,color,currency), category:categories(id,name,name_ar,icon,color)`)
+    .select(`*, account:accounts(id,name,color,currency), category:categories(id,name,name_ar,icon,color), transaction_tags(tag:tags(id,name,color))`)
     .single();
   if (error) throw error;
   return data;
@@ -131,7 +131,7 @@ export async function updateTransaction(id, userId, updates) {
     .from('transactions')
     .update(updates)
     .eq('id', id).eq('user_id', userId)
-    .select(`*, account:accounts(id,name,color,currency), category:categories(id,name,name_ar,icon,color)`)
+    .select(`*, account:accounts(id,name,color,currency), category:categories(id,name,name_ar,icon,color), transaction_tags(tag:tags(id,name,color))`)
     .single();
   if (error) throw error;
   return data;
@@ -283,7 +283,61 @@ export async function deleteBill(id, userId) {
   if (error) throw error;
 }
 
-// ── Dashboard summary ──────────────────────────────────────
+// ── Tags ───────────────────────────────────────────────────
+export async function getTags(userId) {
+  const { data, error } = await supabase.from('tags').select('*').eq('user_id', userId).order('name');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createTag(userId, tag) {
+  const { data, error } = await supabase.from('tags').insert({ ...tag, user_id: userId }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateTag(id, userId, updates) {
+  const { data, error } = await supabase.from('tags').update(updates).eq('id', id).eq('user_id', userId).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTag(id, userId) {
+  const { error } = await supabase.from('tags').delete().eq('id', id).eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function replaceTransactionTags(transactionId, userId, tagIds) {
+  const ids = [...new Set((tagIds || []).filter(Boolean))];
+  const { error: deleteError } = await supabase
+    .from('transaction_tags').delete().eq('transaction_id', transactionId).eq('user_id', userId);
+  if (deleteError) throw deleteError;
+  if (!ids.length) return [];
+  const { data, error } = await supabase
+    .from('transaction_tags')
+    .insert(ids.map(tag_id => ({ transaction_id: transactionId, tag_id, user_id: userId })))
+    .select('transaction_id, tag:tags(id,name,color)');
+  if (error) throw error;
+  return data || [];
+}
+
+// ── Month closures ─────────────────────────────────────────
+export async function getMonthClosures(userId) {
+  const { data, error } = await supabase.from('month_closures').select('*').eq('user_id', userId).order('month_key', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveMonthClosure(userId, closure) {
+  const { data, error } = await supabase
+    .from('month_closures')
+    .upsert({ ...closure, user_id: userId }, { onConflict: 'user_id,month_key' })
+    .select().single();
+  if (error) throw error;
+  return data;
+}
+
+// ── Dashboard summary ─────────────────────────────────────
 export async function getDashboardSummary(userId, startDate, endDate) {
   const [txResult, accountsResult] = await Promise.all([
     supabase.from('transactions')

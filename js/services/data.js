@@ -131,6 +131,10 @@ async function materializeRecurring(userId, rows) {
 export async function getTransactions(userId, filters = {}) {
   let rows = await readCached(userId, 'transactions', () => remote.getTransactions(userId, {}), x => x);
   rows = await materializeRecurring(userId, rows);
+  rows = rows.map(row => ({
+    ...row,
+    tags: Array.isArray(row.tags) ? row.tags : (row.transaction_tags || []).map(link => link?.tag).filter(Boolean),
+  }));
   const accounts = getTable(userId, 'accounts'), categories = getTable(userId, 'categories');
   return decorate(applyFilters(rows, filters), accounts, categories);
 }
@@ -156,11 +160,51 @@ export async function deleteTransaction(id, userId) {
   return result;
 }
 
+// Tags
+export async function getTags(userId) { return readCached(userId, 'tags', () => remote.getTags(userId)); }
+export async function createTag(userId, tag) {
+  const row = ensureId({ ...tag, user_id: userId, created_at: tag.created_at || new Date().toISOString() });
+  return save(userId, 'tags', row, () => remote.createTag(userId, row), row);
+}
+export async function updateTag(id, userId, updates) { return patch(userId, 'tags', id, updates, () => remote.updateTag(id, userId, updates)); }
+export async function deleteTag(id, userId) {
+  const transactions = getTable(userId, 'transactions').map(tx => ({
+    ...tx,
+    tags: (tx.tags || []).filter(tag => tag.id !== id),
+    transaction_tags: (tx.transaction_tags || []).filter(link => link?.tag?.id !== id),
+  }));
+  replaceTable(userId, 'transactions', transactions);
+  return remove(userId, 'tags', id, () => remote.deleteTag(id, userId));
+}
+export async function setTransactionTags(transactionId, userId, tagIds) {
+  const ids = [...new Set((tagIds || []).filter(Boolean))];
+  const validTags = getTable(userId, 'tags').filter(tag => ids.includes(tag.id));
+  const current = getTable(userId, 'transactions').find(tx => tx.id === transactionId);
+  if (!current) throw new Error('Transaction not found');
+  const local = upsertLocal(userId, 'transactions', {
+    ...current,
+    tags: validTags,
+    transaction_tags: validTags.map(tag => ({ tag })),
+  });
+  const op = enqueue(userId, { action: 'replace_tags', table: 'transaction_tags', id: transactionId, payload: { tag_ids: ids } });
+  try { await remote.replaceTransactionTags(transactionId, userId, ids); removeQueueFor(userId, op); } catch {}
+  return local;
+}
+
 // Budgets
 export async function getBudgets(userId) { return readCached(userId, 'budgets', () => remote.getBudgets(userId)); }
 export async function createBudget(userId, budget) { const row = ensureId({ ...budget, user_id: userId, created_at: budget.created_at || new Date().toISOString() }); return save(userId, 'budgets', row, () => remote.createBudget(userId, row), row); }
 export async function updateBudget(id, userId, updates) { return patch(userId, 'budgets', id, updates, () => remote.updateBudget(id, userId, updates)); }
 export async function deleteBudget(id, userId) { return remove(userId, 'budgets', id, () => remote.deleteBudget(id, userId)); }
+
+// Monthly closing snapshots
+export async function getMonthClosures(userId) { return readCached(userId, 'month_closures', () => remote.getMonthClosures(userId)); }
+export async function saveMonthClosure(userId, closure) {
+  const existing = getTable(userId, 'month_closures').find(item => item.month_key === closure.month_key);
+  const row = ensureId({ ...existing, ...closure, user_id: userId, closed_at: closure.closed_at || new Date().toISOString() });
+  return save(userId, 'month_closures', row, () => remote.saveMonthClosure(userId, row), row);
+}
+
 function normalizeId(value) { return value === null || value === undefined || value === '' ? null : String(value).trim(); }
 function normalizeDate(value) { return String(value || '').slice(0, 10); }
 

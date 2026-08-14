@@ -1,6 +1,6 @@
 /* HISBA — Offline-first local store and sync queue */
 const PREFIX = 'hisba_offline_v1_';
-const TABLES = ['accounts','categories','transactions','budgets','goals','bills'];
+const TABLES = ['accounts','categories','transactions','budgets','goals','bills','tags','month_closures'];
 
 function key(userId) { return `${PREFIX}${userId}`; }
 function empty() { return { tables: Object.fromEntries(TABLES.map(t => [t, []])), queue: [], updatedAt: Date.now() }; }
@@ -48,10 +48,20 @@ export async function syncUser(userId, remote) {
   const queue = [...getQueue(userId)]; let synced = 0;
   for (const op of queue) {
     try {
-      let q = remote.from(op.table);
-      if (op.action === 'upsert') await q.upsert({ ...op.payload, user_id: userId }, { onConflict: 'id' });
-      if (op.action === 'update') await q.update(op.payload).eq('id', op.id).eq('user_id', userId);
-      if (op.action === 'delete') await q.delete().eq('id', op.id).eq('user_id', userId);
+      if (op.action === 'replace_tags') {
+        const tagIds = [...new Set((op.payload?.tag_ids || []).filter(Boolean))];
+        const { error: deleteError } = await remote.from('transaction_tags').delete().eq('transaction_id', op.id).eq('user_id', userId);
+        if (deleteError) throw deleteError;
+        if (tagIds.length) {
+          const { error: insertError } = await remote.from('transaction_tags').insert(tagIds.map(tag_id => ({ transaction_id: op.id, tag_id, user_id: userId })));
+          if (insertError) throw insertError;
+        }
+      } else {
+        const q = remote.from(op.table);
+        if (op.action === 'upsert') await q.upsert({ ...op.payload, user_id: userId }, { onConflict: 'id' });
+        if (op.action === 'update') await q.update(op.payload).eq('id', op.id).eq('user_id', userId);
+        if (op.action === 'delete') await q.delete().eq('id', op.id).eq('user_id', userId);
+      }
       removeQueueItem(userId, op.opId); synced++;
     } catch { break; }
   }
