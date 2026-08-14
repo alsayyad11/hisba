@@ -8,8 +8,8 @@ import { toast } from './toast.js?v=release-2.3.0';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=release-2.3.2'),
-  transactions: () => import('./pages/transactions.js?v=release-2.3.0'),
+  dashboard:    () => import('./pages/dashboard.js?v=release-2.3.3'),
+  transactions: () => import('./pages/transactions.js?v=release-2.3.3'),
   accounts:     () => import('./pages/accounts.js?v=release-2.3.0'),
   budgets:      () => import('./pages/budgets.js?v=release-2.3.0'),
   goals:        () => import('./pages/goals.js?v=release-2.3.0'),
@@ -24,6 +24,7 @@ let currentUser = null;
 let currentProfile = null;
 let currentPage = 'dashboard';
 let pageCache = {};
+let financialRefreshTimer = null;
 
 async function boot() {
   initI18n();
@@ -60,6 +61,24 @@ async function boot() {
   window.addEventListener('navigate', e => {
     const { page, action, returnTo, returnAction } = e.detail || {};
     navigateTo(page, { action, returnTo, returnAction });
+  });
+
+  // Refresh any active financial view after a transaction mutation. Every view
+  // recalculates from the same local-first cache, so balances, budgets and reports
+  // remain consistent even before a remote sync finishes.
+  const refreshFinancialView = detail => {
+    if (detail?.userId && detail.userId !== currentUser?.id) return;
+    window.clearTimeout(financialRefreshTimer);
+    financialRefreshTimer = window.setTimeout(() => {
+      // Let an active form finish its own save/render cycle rather than replacing it.
+      if (document.querySelector('.modal-backdrop:not(.hidden), .modal-overlay:not(.hidden)')) return;
+      navigateTo(currentPage);
+    }, 180);
+  };
+  window.addEventListener('hisba:financial-data-changed', event => refreshFinancialView(event.detail));
+  window.addEventListener('storage', event => {
+    if (event.key !== 'hisba_financial_data_changed' || !event.newValue) return;
+    try { refreshFinancialView(JSON.parse(event.newValue)); } catch {}
   });
 
   // Rebuild the shell and active page exactly once when the language changes.
