@@ -1,13 +1,14 @@
 /* ============================================================
    HISBA — BUDGETS PAGE
    ============================================================ */
-import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
-import { getBudgets, createBudget, updateBudget, deleteBudget, getCategories, getBudgetSpending } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
-import { toast } from '../toast.js?v=security-audit-v1';
+import { t, formatCurrency, formatPercent, validateRequired, validateAmount, getMonthRange, getCurrentMonth, getDateRange, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
+import { getBudgets, createBudget, updateBudget, deleteBudget, getCategories, getBudgetSpending, getTransactions, getMonthClosures, saveMonthClosure } from '../services/data.js';
+import { getDailyBudgetIndicator, getBudgetAlerts, buildMonthClosure, currentMonthKey, hasClosure } from '../services/budget-insights.js';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.0';
+import { toast } from '../toast.js?v=release-2.0.0';
 
 let userId, userCurrency = 'USD';
-let budgets = [], categories = [], spending = {};
+let budgets = [], categories = [], spending = {}, transactions = [], closures = [];
 let editingBudget = null;
 
 export async function initBudgets(uid, profile) {
@@ -23,11 +24,15 @@ async function loadData() {
   const weekRange = getDateRange('this_week');
   const weekKey = weekRange.start.slice(0, 10);
   const { start, end } = getMonthRange(year, month);
-  const [allBudgets, loadedCategories] = await Promise.all([
+  const [allBudgets, loadedCategories, loadedTransactions, loadedClosures] = await Promise.all([
     getBudgets(userId).catch(() => []),
     getCategories(userId).catch(() => []),
+    getTransactions(userId).catch(() => []),
+    getMonthClosures(userId).catch(() => []),
   ]);
   categories = loadedCategories;
+  transactions = loadedTransactions;
+  closures = loadedClosures;
   budgets = allBudgets.filter(b => b.period === 'weekly' ? (!b.week_key || b.week_key === weekKey) : (!b.month_key || b.month_key === monthKey));
   const hasWeekly = budgets.some(b => b.period === 'weekly');
   const spendRange = hasWeekly ? weekRange : { start, end };
@@ -42,6 +47,9 @@ function renderPage() {
   const totalBudgeted = budgets.reduce((s, b) => s + Number(b.amount), 0);
   const totalSpent = budgets.reduce((s, b) => s + Number(b.spent), 0);
   const overBudgetCount = budgets.filter(b => Number(b.spent) > Number(b.amount)).length;
+  const indicator = getDailyBudgetIndicator({ budgets, transactions });
+  const activeMonthKey = currentMonthKey();
+  const isClosed = hasClosure(closures, activeMonthKey);
 
   el.innerHTML = `
     <div class="page-header">
@@ -50,6 +58,9 @@ function renderPage() {
         <p class="page-subtitle">${t('budgets_subtitle')}</p>
       </div>
       <div class="page-actions">
+        <button class="btn btn-outline" id="btn-close-month" ${isClosed ? 'disabled' : ''} title="${t('close_month_subtitle')}">
+          ${isClosed ? t('month_closed') : t('close_month')}
+        </button>
         <button class="btn btn-primary" id="btn-add-budget">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           ${t('add_budget')}
@@ -57,15 +68,27 @@ function renderPage() {
       </div>
     </div>
 
+    <section class="card" style="margin-bottom:var(--sp-lg);padding:var(--sp-lg);">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-lg);flex-wrap:wrap;">
+        <div>
+          <div class="stat-card-label">${t('budget_daily_allowance')}</div>
+          <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${indicator.hasBudget ? formatCurrency(indicator.dailyAllowance, userCurrency) : '—'}</div>
+        </div>
+        <div class="text-muted" style="font-size:var(--text-sm);max-width:34rem;">
+          ${indicator.hasBudget ? `${t('budget_days_remaining', { days: indicator.daysRemaining })} · <span class="sensitive-value">${t('budget_daily_amount', { amount: formatCurrency(indicator.dailyAllowance, userCurrency) })}</span>` : t('budget_no_monthly_plan')}
+        </div>
+      </div>
+    </section>
+
     <!-- Summary -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-lg);margin-bottom:var(--sp-xl);">
       <div class="card">
         <div class="stat-card-label">${t('budget_amount')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${formatCurrency(totalBudgeted, userCurrency)}</div>
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${formatCurrency(totalBudgeted, userCurrency)}</div>
       </div>
       <div class="card">
         <div class="stat-card-label">${t('budget_spent')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-error);">${formatCurrency(totalSpent, userCurrency)}</div>
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-error);">${formatCurrency(totalSpent, userCurrency)}</div>
       </div>
       <div class="card">
         <div class="stat-card-label">${t('overspent_label')}</div>
@@ -95,6 +118,7 @@ function renderPage() {
 
   notifyBudgetAlerts();
   document.getElementById('btn-add-budget')?.addEventListener('click', openAddModal);
+  document.getElementById('btn-close-month')?.addEventListener('click', confirmCloseMonth);
   document.getElementById('btn-empty-add')?.addEventListener('click', openAddModal);
   document.getElementById('budgets-list')?.addEventListener('click', e => {
     const editBtn = e.target.closest('[data-edit]');
@@ -138,14 +162,14 @@ function budgetCard(b) {
         </div>
       </div>
       <div style="display:flex;justify-content:space-between;margin-bottom:var(--sp-sm);">
-        <span class="text-caption"><strong>${formatCurrency(b.spent, userCurrency)}</strong> ${t('budget_of')} ${formatCurrency(b.amount, userCurrency)}</span>
+        <span class="text-caption sensitive-value"><strong>${formatCurrency(b.spent, userCurrency)}</strong> ${t('budget_of')} ${formatCurrency(b.amount, userCurrency)}</span>
         <span class="text-caption font-semibold">${pct}%</span>
       </div>
       <div class="progress-bar" style="height:10px;">
         <div class="progress-fill ${fillClass}" style="width:${Math.min(pct, 100)}%;"></div>
       </div>
       <div style="margin-top:var(--sp-sm);">
-        <span class="text-caption ${isOver ? 'text-error' : 'text-muted'}">
+        <span class="text-caption sensitive-value ${isOver ? 'text-error' : 'text-muted'}">
           ${remaining >= 0 ? t('budget_remaining', { amount: formatCurrency(remaining, userCurrency) }) : t('overspent', { amount: formatCurrency(Math.abs(remaining), userCurrency) })}
         </span>
       </div>
@@ -273,22 +297,39 @@ function notifyBudgetAlerts() {
   let notified = {};
   try { notified = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch { notified = {}; }
 
-  budgets.forEach(budget => {
-    const amount = Number(budget.amount || 0);
-    const pct = amount > 0 ? (Number(budget.spent || 0) / amount) * 100 : 0;
-    const threshold = pct >= 100 ? 100 : pct >= 80 ? 80 : 0;
-    if (!threshold) return;
-    const key = `${budget.id}:${threshold}`;
+  getBudgetAlerts(budgets).forEach(alert => {
+    const key = `${alert.budgetId}:${alert.threshold}`;
     if (notified[key]) return;
-    const label = budget.name || t('budget_name');
-    if (threshold === 100) {
-      toast.budget('over', t('budget_alert_title'), t('budget_alert_over', { name: label }), pct, label);
-    } else {
-      toast.budget('warning', t('budget_alert_title'), t('budget_alert_risk', { name: label, percent: Math.round(pct) }), pct, label);
-    }
-    notified[key] = { notifiedAt: new Date().toISOString(), percent: Math.round(pct) };
+    const label = escapeHTML(alert.name || t('budget_name'));
+    const message = alert.threshold >= 100
+      ? t('overspent_label')
+      : alert.threshold >= 90
+        ? t('budget_alert_90', { name: label })
+        : t('budget_alert_70', { name: label });
+    toast.budget(alert.severity === 'over' ? 'over' : 'warning', t('budget_alert_title'), message, alert.percent, label);
+    notified[key] = { notifiedAt: new Date().toISOString(), percent: Math.round(alert.percent) };
   });
   try { localStorage.setItem(storageKey, JSON.stringify(notified)); } catch {}
+}
+
+function confirmCloseMonth() {
+  const monthKey = currentMonthKey();
+  if (hasClosure(closures, monthKey)) { toast.success(t('month_closed'), t('month_already_closed')); return; }
+  showConfirm({
+    title: t('close_month'),
+    message: t('close_month_confirm', { month: monthKey }),
+    confirmText: t('close_month'),
+    confirmClass: 'btn-primary',
+    onConfirm: async () => {
+      try {
+        const closure = buildMonthClosure({ monthKey, budgets, transactions });
+        await saveMonthClosure(userId, closure);
+        toast.success(t('month_closed'), t('carried_forward', { amount: formatCurrency(closure.carry_forward, userCurrency) }));
+        await loadData();
+        renderPage();
+      } catch (err) { toast.error(t('error'), err.message); }
+    },
+  });
 }
 
 function showErr(id, msg) { const el = document.getElementById(id); if (el) { el.textContent = msg; el.classList.remove('hidden'); } }

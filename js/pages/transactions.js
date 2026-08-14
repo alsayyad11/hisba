@@ -1,13 +1,13 @@
 /* ============================================================
    HISBA — TRANSACTIONS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
-import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getAccounts, getCategories } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
-import { toast } from '../toast.js?v=security-audit-v1';
+import { t, formatCurrency, formatDate, formatRelativeDate, getDateRange, todayISO, validateRequired, validateAmount, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
+import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getAccounts, getCategories, getTags, createTag, setTransactionTags } from '../services/data.js';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.0';
+import { toast } from '../toast.js?v=release-2.0.0';
 
 let userId, userCurrency = 'USD';
-let transactions = [], accounts = [], categories = [];
+let transactions = [], accounts = [], categories = [], tags = [];
 let filters = { type: 'all', period: 'this_month', search: '', category_id: '', account_id: '', status: '', sort: 'date_desc' };
 let editingTx = null;
 
@@ -21,9 +21,10 @@ export async function initTransactions(uid, profile, opts = {}) {
 }
 
 async function loadMeta() {
-  [accounts, categories] = await Promise.all([
+  [accounts, categories, tags] = await Promise.all([
     getAccounts(userId).catch(() => []),
     getCategories(userId).catch(() => []),
+    getTags(userId).catch(() => []),
   ]);
 }
 
@@ -60,15 +61,15 @@ function renderPage() {
     <div class="transactions-summary">
       <div class="card transaction-summary-card transaction-summary-income">
         <div class="stat-card-label">${t('filter_income')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-success);">+${formatCurrency(income, userCurrency)}</div>
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-success);">+${formatCurrency(income, userCurrency)}</div>
       </div>
       <div class="card transaction-summary-card transaction-summary-expense">
         <div class="stat-card-label">${t('filter_expense')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-error);">-${formatCurrency(expenses, userCurrency)}</div>
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-error);">-${formatCurrency(expenses, userCurrency)}</div>
       </div>
       <div class="card transaction-summary-card transaction-summary-net">
         <div class="stat-card-label">${t('net_savings')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${income - expenses >= 0 ? 'var(--clr-success)' : 'var(--clr-error)'};">
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${income - expenses >= 0 ? 'var(--clr-success)' : 'var(--clr-error)'};">
           ${income - expenses >= 0 ? '+' : ''}${formatCurrency(income - expenses, userCurrency)}
         </div>
       </div>
@@ -219,6 +220,7 @@ function txRow(tx) {
           <div>
             <div class="font-medium truncate transaction-description" style="max-width:200px;">${escapeHTML(tx.description || '—')}</div>
             ${tx.notes ? `<div class="text-fine text-muted truncate" style="max-width:200px;">${escapeHTML(tx.notes)}</div>` : ''}
+            ${Array.isArray(tx.tags) && tx.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;">${tx.tags.slice(0, 3).map(tag => `<span class="badge" style="background:var(--clr-primary-subtle);color:var(--clr-primary);border:1px solid var(--clr-primary-border);font-size:10px;">${escapeHTML(tag.name)}</span>`).join('')}</div>` : ''}
           </div>
         </div>
       </td>
@@ -233,7 +235,7 @@ function txRow(tx) {
         </span>
       </td>
       <td style="text-align:right;">
-        <span class="font-semibold ${tx.type === 'income' ? 'amount-income' : tx.type === 'expense' ? 'amount-expense' : 'amount-neutral'}">
+        <span class="font-semibold sensitive-value ${tx.type === 'income' ? 'amount-income' : tx.type === 'expense' ? 'amount-expense' : 'amount-neutral'}">
           ${tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}${formatCurrency(tx.amount, acc?.currency || userCurrency)}
         </span>
       </td>
@@ -335,6 +337,11 @@ function buildTxModal(tx) {
         <label class="form-label">${t('description')} <span class="field-optional">(${t('optional')})</span></label>
         <input type="text" class="form-input" id="tx-description" placeholder="${t('description_optional')}" value="${escapeHTML(tx?.description || '')}">
         <div class="form-error hidden" id="tx-desc-err"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">${t('tags')} <span class="field-optional">(${t('optional')})</span></label>
+        <input type="text" class="form-input" id="tx-tags" maxlength="255" placeholder="${t('add_tag')}" value="${escapeHTML((tx?.tags || []).map(tag => tag.name).filter(Boolean).join(', '))}">
+        <p class="text-fine text-muted" style="margin-top:6px;">${t('tag_name')}</p>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -441,12 +448,17 @@ async function saveTx(isEdit) {
   const notes = document.getElementById('tx-notes')?.value.trim() || '';
   const is_recurring = document.getElementById('tx-recurring')?.checked || false;
   const frequency = document.getElementById('tx-frequency')?.value;
+  const tagNames = [...new Set((document.getElementById('tx-tags')?.value || '')
+    .split(/[,،]/)
+    .map(name => name.trim().replace(/\s+/g, ' '))
+    .filter(name => name.length > 0))].slice(0, 8);
 
   let valid = true;
   if (!validateAmount(amount)) { showErr('tx-amount-err', t('invalid_amount')); valid = false; } else hideErr('tx-amount-err');
   if (!validateRequired(date)) { showErr('tx-date-err', t('required')); valid = false; } else hideErr('tx-date-err');
   hideErr('tx-desc-err');
   if (!account_id) { showErr('tx-account-err', t('required')); valid = false; } else hideErr('tx-account-err');
+  if (tagNames.some(name => name.length > 32)) { toast.error(t('error'), t('tag_name')); valid = false; }
   if (!valid) return;
 
   const btn = document.getElementById('tx-save');
@@ -461,11 +473,12 @@ async function saveTx(isEdit) {
   };
 
   try {
+    let savedTransaction;
     if (isEdit && editingTx) {
-      await updateTransaction(editingTx.id, userId, payload);
+      savedTransaction = await updateTransaction(editingTx.id, userId, payload);
       toast.success(t('success'), t('updated'));
     } else {
-      await createTransaction(userId, payload);
+      savedTransaction = await createTransaction(userId, payload);
       const language = getLanguage();
       const ar = language.startsWith('ar');
       const isFusha = language === 'ar-fusha';
@@ -473,6 +486,22 @@ async function saveTx(isEdit) {
         ? (isFusha ? 'تم التسجيل. سيسهل عليك تذكّر مصروفك عند مراجعة الشهر.' : (ar ? 'تمام، اتسجل. كده هتفتكر مصروفك بسهولة لما تراجع الشهر.' : 'Saved. It will be easier to understand your month when you review it.'))
         : (isFusha ? 'تم تسجيل الدخل. تزداد صورتك المالية وضوحاً مع كل معاملة.' : (ar ? 'تمام، اتسجل الدخل. الصورة بتوضح أكتر مع كل معاملة.' : 'Saved. Your picture becomes clearer with every transaction.'));
       toast.success(isFusha ? 'تم التسجيل' : (ar ? 'اتسجلت' : 'Saved'), humanNote);
+    }
+
+    if (savedTransaction?.id) {
+      const knownByName = new Map(tags.map(tag => [String(tag.name || '').trim().toLocaleLowerCase(), tag]));
+      const selectedTagIds = [];
+      for (const name of tagNames) {
+        const normalized = name.toLocaleLowerCase();
+        let tag = knownByName.get(normalized);
+        if (!tag) {
+          tag = await createTag(userId, { name, color: '#176b73' });
+          tags = [...tags, tag];
+          knownByName.set(normalized, tag);
+        }
+        if (tag?.id) selectedTagIds.push(tag.id);
+      }
+      await setTransactionTags(savedTransaction.id, userId, selectedTagIds);
     }
     closeModal('tx-modal');
     await loadTransactions();

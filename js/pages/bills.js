@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — BILLS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, getLanguage, escapeHTML } from '../utils.js?v=security-audit-v1';
+import { t, formatCurrency, validateRequired, validateAmount, getLanguage, escapeHTML } from '../utils.js?v=release-2.0.0';
 import { getBills, createBill, updateBill, deleteBill, getCategories } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
-import { toast } from '../toast.js?v=security-audit-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.0';
+import { toast } from '../toast.js?v=release-2.0.0';
 
 let userId, userCurrency = 'USD';
 let bills = [], categories = [];
@@ -51,7 +51,7 @@ function renderPage() {
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-lg);margin-bottom:var(--sp-xl);">
       <div class="card">
         <div class="stat-card-label">${t('monthly_total')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${formatCurrency(totalMonthly, userCurrency)}</div>
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${formatCurrency(totalMonthly, userCurrency)}</div>
       </div>
       <div class="card">
         <div class="stat-card-label">${t('total_bills')}</div>
@@ -118,7 +118,7 @@ function billRow(b) {
       <td><span class="text-caption">${t('day_number', { day: b.due_day })}</span></td>
       <td><span class="badge ${status.cls} badge-dot">${status.label}</span></td>
       <td style="text-align:right;">
-        <span class="font-semibold">${formatCurrency(b.amount, userCurrency)}</span>
+        <span class="font-semibold sensitive-value">${formatCurrency(b.amount, userCurrency)}</span>
       </td>
       <td>
         <div style="display:flex;gap:4px;justify-content:flex-end;">

@@ -1,11 +1,11 @@
 /* ============================================================
    HISBA — DASHBOARD PAGE
    ============================================================ */
-import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
+import { t, formatCurrency, formatRelativeDate, formatPercent, getMonthRange, getCurrentMonth, getLanguage, todayISO, validateAmount, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
 import { getDashboardSummary, getMonthlyTrend, getCategorySpending, getTransactions, getBudgets, getBudgetSpending, getAccounts, getCategories, createTransaction } from '../services/data.js';
-import { createModal, openModal, closeModal } from '../components/modal.js?v=security-audit-v1';
-import { toast } from '../toast.js?v=security-audit-v1';
-import { drawBarChart, drawDonutChart } from '../components/charts.js?v=legend-v3';
+import { createModal, openModal, closeModal } from '../components/modal.js?v=release-2.0.0';
+import { toast } from '../toast.js?v=release-2.0.0';
+import { drawBarChart, drawDonutChart } from '../components/charts.js?v=release-2.0.0';
 
 let userId, userCurrency = 'USD';
 let summaryData = {}, trendData = [], categoryData = [], recentTx = [], budgets = [], quickAccounts = [], quickCategories = [];
@@ -145,7 +145,7 @@ function render() {
               <canvas id="donut-chart" aria-label="${t('category_breakdown')}" role="img"></canvas>
             </div>
             <div class="category-total-label">${getLanguage().startsWith('ar') ? 'إجمالي الإنفاق' : 'Total spending'}</div>
-            <div class="category-total-value">${categoryData.length ? formatCurrency(categoryData.reduce((s, c) => s + c.total, 0), userCurrency) : formatCurrency(0, userCurrency)}</div>
+            <div class="category-total-value sensitive-value">${categoryData.length ? formatCurrency(categoryData.reduce((s, c) => s + c.total, 0), userCurrency) : formatCurrency(0, userCurrency)}</div>
           </div>
           <div class="category-legend" aria-label="${t('category_breakdown')}" role="list">
             ${categoryData.slice(0, 5).map(cat => `
@@ -154,7 +154,7 @@ function render() {
                   <span class="category-color-dot" style="background:${sanitizeColor(cat.color)};"></span>
                   <span class="category-legend-name">${escapeHTML(getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name)}</span>
                 </div>
-                <span class="category-legend-amount" dir="ltr">${formatCurrency(cat.total, userCurrency)}</span>
+                <span class="category-legend-amount sensitive-value" dir="ltr">${formatCurrency(cat.total, userCurrency)}</span>
               </div>
             `).join('') || `<p class="category-empty text-caption text-muted">${t('no_data')}</p>`}
           </div>
@@ -192,7 +192,7 @@ function render() {
                     <td><span class="text-caption text-muted">${escapeHTML(getLanguage().startsWith('ar') && tx.category?.name_ar ? tx.category.name_ar : (tx.category?.name || '—'))}</span></td>
                     <td><span class="text-caption text-muted">${formatRelativeDate(tx.date)}</span></td>
                     <td style="text-align:right;">
-                      <span class="${tx.type === 'income' ? 'amount-income' : tx.type === 'expense' ? 'amount-expense' : 'amount-neutral'}">
+                      <span class="sensitive-value ${tx.type === 'income' ? 'amount-income' : tx.type === 'expense' ? 'amount-expense' : 'amount-neutral'}">
                         ${tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}${formatCurrency(tx.amount, tx.account?.currency || userCurrency)}
                       </span>
                     </td>
@@ -236,8 +236,8 @@ function render() {
                 <div class="progress-fill ${status}" style="width:${Math.min(pct, 100)}%;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;margin-top:var(--sp-xs);">
-                <span class="text-fine text-muted">${formatCurrency(b.spent, userCurrency)} ${t('budget_of')} ${formatCurrency(b.amount, userCurrency)}</span>
-                <span class="text-fine ${status === 'error' ? 'text-error' : 'text-muted'}">
+                <span class="text-fine text-muted sensitive-value">${formatCurrency(b.spent, userCurrency)} ${t('budget_of')} ${formatCurrency(b.amount, userCurrency)}</span>
+                <span class="text-fine sensitive-value ${status === 'error' ? 'text-error' : 'text-muted'}">
                   ${remaining >= 0 ? t('budget_remaining', { amount: formatCurrency(remaining, userCurrency) }) : t('overspent', { amount: formatCurrency(Math.abs(remaining), userCurrency) })}
                 </span>
               </div>
@@ -334,6 +334,6 @@ function statCard(label, value, type, change, color) {
         <span class="stat-card-label">${label}</span>
         <div class="stat-card-icon" style="background:${color}22;color:${color};">${iconMap[type] || ''}</div>
       </div>
-      <div class="stat-card-value" style="color:${color};">${value}</div>
+      <div class="stat-card-value sensitive-value" style="color:${color};">${value}</div>
     </div>`;
 }

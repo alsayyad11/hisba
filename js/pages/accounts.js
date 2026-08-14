@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — ACCOUNTS PAGE
    ============================================================ */
-import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
+import { t, formatCurrency, validateRequired, validateAmount, ACCOUNT_COLORS, getLanguage, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
 import { getAccounts, createAccount, updateAccount, deleteAccount, setDefaultAccount } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
-import { toast } from '../toast.js?v=security-audit-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.0';
+import { toast } from '../toast.js?v=release-2.0.0';
 
 let userId, userCurrency = 'USD';
 let accounts = [];
@@ -46,7 +46,7 @@ function renderPage() {
       <div style="display:flex;align-items:center;gap:var(--sp-xl);flex-wrap:wrap;">
         <div>
           <div class="stat-card-label">${t('total_balance')}</div>
-          <div style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;">${formatCurrency(totalBalance, userCurrency)}</div>
+          <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;">${formatCurrency(totalBalance, userCurrency)}</div>
         </div>
         <div style="flex:1;"></div>
         <div class="text-caption text-muted">${accounts.length} ${t('accounts_title').toLowerCase()}</div>
@@ -99,7 +99,7 @@ function accCard(acc) {
       </div>
       <div style="margin-bottom:var(--sp-lg);">
         <div class="stat-card-label">${t('account_balance')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${Number(acc.balance) < 0 ? 'var(--clr-error)' : 'var(--clr-ink)'};">
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${Number(acc.balance) < 0 ? 'var(--clr-error)' : 'var(--clr-ink)'};">
           ${formatCurrency(acc.balance, acc.currency || userCurrency)}
         </div>
       </div>

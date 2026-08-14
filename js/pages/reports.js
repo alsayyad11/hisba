@@ -1,12 +1,12 @@
 /* ============================================================
    HISBA — REPORTS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, getDateRange, getLanguage, getMonthRange, getCurrentMonth, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
+import { t, formatCurrency, formatDate, getDateRange, getLanguage, getMonthRange, getCurrentMonth, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
 import { getTransactions, getAccounts, getDashboardSummary } from '../services/data.js';
-import { exportCSV, exportExcel, exportPDF } from '../services/export.js?v=security-audit-v1';
-import { drawBarChart, drawDonutChart } from '../components/charts.js?v=security-audit-v1';
+import { exportCSV, exportExcel, exportPDF } from '../services/export.js?v=release-2.0.0';
+import { drawBarChart, drawDonutChart } from '../components/charts.js?v=release-2.0.0';
 import { getCategorySpending } from '../services/data.js';
-import { toast } from '../toast.js?v=security-audit-v1';
+import { toast } from '../toast.js?v=release-2.0.0';
 
 let userId, userCurrency = 'USD';
 let accounts = [];
@@ -63,7 +63,34 @@ async function loadMonthlyComparison() {
 
 function renderMonthlyComparison(rows) {
   const max = Math.max(...rows.map(row => row.total), 1);
-  return `<div class="monthly-comparison" id="monthly-comparison-bars">${rows.map(row => `<button class="monthly-bar" type="button" data-total="${Number(row.total) || 0}" data-count="${Number(row.count) || 0}" data-label="${escapeHTML(row.label)}" style="--bar-height:${Math.max(6, Math.round((row.total / max) * 100))}%"><span class="monthly-bar-fill"></span><span class="monthly-bar-label">${escapeHTML(row.label)}</span></button>`).join('')}</div><div class="monthly-chart-detail text-caption" id="monthly-chart-detail">${t('chart_tap_month')}</div>`;
+  return `<div class="monthly-comparison" id="monthly-comparison-bars">${rows.map(row => `<button class="monthly-bar" type="button" data-total="${Number(row.total) || 0}" data-count="${Number(row.count) || 0}" data-label="${escapeHTML(row.label)}" style="--bar-height:${Math.max(6, Math.round((row.total / max) * 100))}%"><span class="monthly-bar-fill"></span><span class="monthly-bar-label">${escapeHTML(row.label)}</span></button>`).join('')}</div><div class="monthly-chart-detail text-caption sensitive-value" id="monthly-chart-detail">${t('chart_tap_month')}</div>`;
+}
+
+function renderSpendingCalendar(transactions, startDate) {
+  const reference = new Date(`${startDate || new Date().toISOString().slice(0, 10)}T12:00:00`);
+  const year = reference.getFullYear();
+  const month = reference.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const locale = getLanguage().startsWith('ar') ? 'ar-EG' : 'en-US';
+  const daily = new Map();
+  transactions.filter(tx => tx.type === 'expense').forEach(tx => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(tx.date || '')) return;
+    daily.set(tx.date, (daily.get(tx.date) || 0) + Number(tx.amount || 0));
+  });
+  const max = Math.max(...daily.values(), 1);
+  const headers = Array.from({ length: 7 }, (_, index) => new Date(2024, 0, index + 7).toLocaleDateString(locale, { weekday: 'narrow' }));
+  const blanks = Array.from({ length: firstWeekday }, () => '<span class="spending-calendar-blank" aria-hidden="true"></span>').join('');
+  const cells = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const amount = daily.get(date) || 0;
+    const level = amount ? Math.max(0.18, Math.min(1, amount / max)) : 0;
+    const label = new Date(year, month, day).toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    return `<button type="button" class="spending-calendar-day${amount ? ' has-spending' : ''}" data-date="${date}" data-amount="${amount}" style="--spending-level:${level}" aria-label="${escapeHTML(`${label}: ${formatCurrency(amount, userCurrency)}`)}"><span>${day}</span>${amount ? `<small class="sensitive-value">${formatCurrency(amount, userCurrency)}</small>` : ''}</button>`;
+  }).join('');
+  const monthLabel = new Date(year, month, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  return `<div class="card report-calendar-card"><div class="card-header"><div><span class="card-title">${t('spending_calendar')}</span><p class="text-caption text-muted" style="margin:4px 0 0;">${t('calendar_hint')}</p></div><span class="text-caption text-muted">${escapeHTML(monthLabel)}</span></div><div class="spending-calendar" role="grid"><div class="spending-calendar-weekdays">${headers.map(label => `<span>${escapeHTML(label)}</span>`).join('')}</div><div class="spending-calendar-days">${blanks}${cells}</div></div><p class="text-caption text-muted sensitive-value" id="spending-calendar-detail" style="margin:var(--sp-md) 0 0;">${t('calendar_hint')}</p></div>`;
 }
 
 function renderPage() {
@@ -127,15 +154,15 @@ function renderPage() {
     <div class="reports-summary">
       <div class="card report-summary-card report-summary-income">
         <div class="stat-card-label">${t('report_total_income')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-success);">${formatCurrency(summary.income || 0, userCurrency)}</div>
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-success);">${formatCurrency(summary.income || 0, userCurrency)}</div>
       </div>
       <div class="card report-summary-card report-summary-expense">
         <div class="stat-card-label">${t('report_total_expenses')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-error);">${formatCurrency(summary.expenses || 0, userCurrency)}</div>
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-error);">${formatCurrency(summary.expenses || 0, userCurrency)}</div>
       </div>
       <div class="card report-summary-card report-summary-net">
         <div class="stat-card-label">${t('report_net')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${(summary.net||0) >= 0 ? 'var(--clr-success)' : 'var(--clr-error)'};">
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${(summary.net||0) >= 0 ? 'var(--clr-success)' : 'var(--clr-error)'};">
           ${formatCurrency(summary.net || 0, userCurrency)}
         </div>
       </div>
@@ -150,6 +177,9 @@ function renderPage() {
       <div class="card-header"><span class="card-title">${t('monthly_comparison')}</span><span class="text-caption text-muted">${t('last_6_months')}</span></div>
       ${renderMonthlyComparison(reportData.monthlyComparison)}
     </div>
+
+    <!-- Spending calendar -->
+    ${renderSpendingCalendar(transactions, reportData.range?.start)}
 
     <!-- Chart + Category -->
     <div class="report-analysis-grid">
@@ -171,7 +201,7 @@ function renderPage() {
                     <span class="category-icon-render">${renderIcon(cat.icon || 'package', 18)}</span>
                     <span>${escapeHTML(getLanguage().startsWith('ar') && cat.name_ar ? cat.name_ar : cat.name)}</span>
                   </span>
-                  <span class="text-caption font-semibold">${formatCurrency(cat.total, userCurrency)}</span>
+                  <span class="text-caption font-semibold sensitive-value">${formatCurrency(cat.total, userCurrency)}</span>
                 </div>
                 <div class="progress-bar" style="height:6px;">
                   <div class="progress-fill" style="width:${Math.max(0, Math.min(100, pct))}%;background:${sanitizeColor(cat.color)};"></div>
@@ -233,7 +263,7 @@ function renderPage() {
                     </span>
                   </td>
                   <td style="text-align:right;">
-                    <span class="font-semibold ${tx.type === 'income' ? 'amount-income' : tx.type === 'expense' ? 'amount-expense' : 'amount-neutral'}">
+                    <span class="font-semibold sensitive-value ${tx.type === 'income' ? 'amount-income' : tx.type === 'expense' ? 'amount-expense' : 'amount-neutral'}">
                       ${tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}${formatCurrency(tx.amount, tx.account?.currency || userCurrency)}
                     </span>
                   </td>
@@ -272,6 +302,14 @@ function renderPage() {
     if (detail) detail.textContent = `${bar.dataset.label}: ${formatCurrency(Number(bar.dataset.total), userCurrency)} · ${bar.dataset.count} ${t('report_transactions_count')}`;
     document.querySelectorAll('.monthly-bar').forEach(item => item.classList.remove('is-selected'));
     bar.classList.add('is-selected');
+  }));
+
+  document.querySelectorAll('.spending-calendar-day').forEach(day => day.addEventListener('click', () => {
+    const detail = document.getElementById('spending-calendar-detail');
+    const date = new Date(`${day.dataset.date}T12:00:00`).toLocaleDateString(getLanguage().startsWith('ar') ? 'ar-EG' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (detail) detail.textContent = `${date}: ${formatCurrency(Number(day.dataset.amount || 0), userCurrency)}`;
+    document.querySelectorAll('.spending-calendar-day').forEach(item => item.classList.remove('is-selected'));
+    day.classList.add('is-selected');
   }));
 
   document.getElementById('btn-pdf')?.addEventListener('click', () => {

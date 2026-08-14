@@ -1,10 +1,10 @@
 /* ============================================================
    HISBA — SAVINGS GOALS PAGE
    ============================================================ */
-import { t, formatCurrency, formatDate, formatPercent, validateRequired, validateAmount, GOAL_ICONS, CATEGORY_COLORS, todayISO, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=security-audit-v1';
+import { t, formatCurrency, formatDate, formatPercent, validateRequired, validateAmount, GOAL_ICONS, CATEGORY_COLORS, todayISO, renderIcon, escapeHTML, sanitizeColor } from '../utils.js?v=release-2.0.0';
 import { getGoals, createGoal, updateGoal, deleteGoal, addGoalFunds } from '../services/data.js';
-import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=security-audit-v1';
-import { toast } from '../toast.js?v=security-audit-v1';
+import { createModal, openModal, closeModal, showConfirm } from '../components/modal.js?v=release-2.0.0';
+import { toast } from '../toast.js?v=release-2.0.0';
 
 let userId, userCurrency = 'USD';
 let goals = [];
@@ -42,11 +42,11 @@ function renderPage() {
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-lg);margin-bottom:var(--sp-xl);">
       <div class="card">
         <div class="stat-card-label">${t('goal_target')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${formatCurrency(totalTarget, userCurrency)}</div>
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;">${formatCurrency(totalTarget, userCurrency)}</div>
       </div>
       <div class="card">
         <div class="stat-card-label">${t('goal_current')}</div>
-        <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-success);">${formatCurrency(totalSaved, userCurrency)}</div>
+        <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:var(--clr-success);">${formatCurrency(totalSaved, userCurrency)}</div>
       </div>
       <div class="card">
         <div class="stat-card-label">${t('goal_completed')}</div>
@@ -106,13 +106,13 @@ function goalCard(g) {
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:var(--sp-sm);">
         <div>
           <div class="stat-card-label">${t('goal_current')}</div>
-          <div style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${color};">
+          <div class="sensitive-value" style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;color:${color};">
             ${formatCurrency(g.current_amount, userCurrency)}
           </div>
         </div>
         <div style="text-align:right;">
           <div class="stat-card-label">${t('goal_target')}</div>
-          <div class="text-caption font-semibold">${formatCurrency(g.target_amount, userCurrency)}</div>
+          <div class="text-caption font-semibold sensitive-value">${formatCurrency(g.target_amount, userCurrency)}</div>
         </div>
       </div>
 
