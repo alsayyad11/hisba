@@ -3,13 +3,13 @@
    Router + Shell + Session management
    ============================================================ */
 import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=currency-display-en-v2';
-import { getSession, getUser, waitForAuthenticatedUser, getProfile, signOut, onAuthChange } from './services/auth.js?v=auth-boot-deadline-v1';
-import { subscribeToUserDataChanges, unsubscribeFromUserDataChanges } from './services/data.js?v=cloud-queue-unblock-v1';
+import { getSession, getUser, waitForAuthenticatedUser, getProfile, signOut, onAuthChange } from './services/auth.js?v=session-storage-boot-v2';
+import { subscribeToUserDataChanges, unsubscribeFromUserDataChanges } from './services/data.js?v=supabase-local-v1';
 import { toast } from './toast.js?v=notification-v4';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=network-recovery-v1'),
+  dashboard:    () => import('./pages/dashboard.js?v=supabase-local-v1'),
   transactions: () => import('./pages/transactions.js?v=cloud-queue-unblock-v1'),
   accounts:     () => import('./pages/accounts.js?v=cloud-queue-unblock-v1'),
   budgets:      () => import('./pages/budgets.js?v=cloud-queue-unblock-v1'),
@@ -43,7 +43,11 @@ async function boot() {
 
   try {
     currentUser = await waitForAuthenticatedUser();
-  } catch {
+  } catch (error) {
+    if (error?.code === 'AUTH_SESSION_NOT_READY') {
+      window.location.replace('/login');
+      return;
+    }
     document.body.innerHTML = `<main class="auth-page"><section class="auth-card"><h1>${escapeHTML(t('dashboard_data_waiting'))}</h1><p>${escapeHTML(t('dashboard_data_waiting_sub'))}</p><button class="btn btn-primary" id="session-retry" type="button">${escapeHTML(t('reload'))}</button></section></main>`;
     document.getElementById('session-retry')?.addEventListener('click', () => window.location.reload());
     hideLoadingOverlay();

@@ -2,7 +2,7 @@
    HISBA — SUPABASE CONFIG
    Edit SUPABASE_URL and SUPABASE_ANON_KEY before deploying.
    ============================================================ */
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { createClient } from './vendor/supabase.js?v=supabase-local-v1';
 
 // These are injected from vercel environment variables at build time
 // For local dev, edit these directly (do not commit with real keys)
