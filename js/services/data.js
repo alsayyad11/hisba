@@ -1,23 +1,62 @@
 /* HISBA — OFFLINE-FIRST DATA SERVICE */
-import { supabase } from '../config.js';
+import { supabase } from '../config.js?v=mobile-cloud-read-v1';
 import * as remote from './data.remote.js';
-import { getTable, replaceTable, upsertLocal, removeLocal, enqueue, ensureId, applyFilters, decorate, syncUser, bindSync, getQueue } from './offline.js';
+import { getTable, replaceTable, upsertLocal, removeLocal, enqueue, ensureId, applyFilters, decorate, syncUser, bindSync, getQueue, hasHydratedTable, markTableHydrated } from './offline.js?v=cloud-queue-unblock-v1';
 
 const remoteClient = supabase;
-async function prepare(userId) { bindSync(userId, remoteClient); await syncUser(userId, remoteClient); }
+const REALTIME_TABLES = ['accounts', 'categories', 'transactions', 'transaction_tags', 'budgets', 'goals', 'bills', 'tags', 'month_closures'];
+let realtimeChannel = null;
+let realtimeUserId = null;
+const inFlightReads = new Map();
+const inFlightSyncs = new Map();
+
+function prepare(userId) {
+  bindSync(userId, remoteClient);
+  // Queue delivery is important, but it must not stop a new device from reading
+  // the cloud copy. Keep one background sync per user and always let reads begin.
+  if (!inFlightSyncs.has(userId)) {
+    const job = Promise.resolve()
+      .then(() => syncUser(userId, remoteClient))
+      .catch(() => null)
+      .finally(() => inFlightSyncs.delete(userId));
+    inFlightSyncs.set(userId, job);
+  }
+}
 async function readCached(userId, table, loader, transform = x => x) {
-  try {
-    await prepare(userId);
-    const rows = await loader();
-    const pending = getQueue(userId).filter(op => op.table === table);
-    if (pending.length) {
-      const local = getTable(userId, table);
-      const merged = [...(rows || [])];
-      local.forEach(localRow => { const i = merged.findIndex(r => r.id === localRow.id); if (i >= 0) merged[i] = { ...merged[i], ...localRow }; else merged.push(localRow); });
-      replaceTable(userId, table, merged); return merged;
+  const readKey = `${userId}:${table}`;
+  if (inFlightReads.has(readKey)) return inFlightReads.get(readKey);
+  const request = (async () => {
+    try {
+      prepare(userId);
+      const rows = await loader();
+      const pending = getQueue(userId).filter(op => op.table === table);
+      if (pending.length) {
+        const local = getTable(userId, table);
+        const merged = [...(rows || [])];
+        local.forEach(localRow => { const i = merged.findIndex(r => r.id === localRow.id); if (i >= 0) merged[i] = { ...merged[i], ...localRow }; else merged.push(localRow); });
+        replaceTable(userId, table, merged);
+        markTableHydrated(userId, table);
+        return merged;
+      }
+      replaceTable(userId, table, rows || []);
+      markTableHydrated(userId, table);
+      return rows || [];
+    } catch (cause) {
+      const cached = getTable(userId, table);
+      // A device with no successful remote read must never treat an empty cache as
+      // the user's real financial data. Callers can show a loading/retry state instead.
+      if (hasHydratedTable(userId, table) || cached.length) return transform(cached);
+      const error = new Error('INITIAL_DATA_UNAVAILABLE');
+      error.code = 'INITIAL_DATA_UNAVAILABLE';
+      error.cause = cause;
+      throw error;
     }
-    replaceTable(userId, table, rows || []); return rows || [];
-  } catch { return transform(getTable(userId, table)); }
+  })();
+  inFlightReads.set(readKey, request);
+  try { return await request; }
+  finally {
+    if (inFlightReads.get(readKey) === request) inFlightReads.delete(readKey);
+  }
 }
 async function save(userId, table, row, creator, payload = row) {
   const local = upsertLocal(userId, table, row); const op = enqueue(userId, { action: 'upsert', table, payload });
@@ -43,6 +82,49 @@ export function notifyFinancialDataChanged(userId, entities = ['transactions', '
   try { localStorage.setItem('hisba_financial_data_changed', JSON.stringify(detail)); } catch {}
 }
 
+/**
+ * Subscribes only to rows owned by the signed-in user. Remote events never
+ * carry financial values into the UI directly: listeners simply request a
+ * fresh local-first read so RLS remains the sole authorization boundary.
+ */
+export function subscribeToUserDataChanges(userId, onChange) {
+  unsubscribeFromUserDataChanges();
+  if (!userId || typeof onChange !== 'function' || typeof remoteClient?.channel !== 'function') return () => {};
+
+  let debounceTimer = null;
+  const notify = payload => {
+    const row = payload?.new || payload?.old || {};
+    if (row.user_id && row.user_id !== userId) return;
+    window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(() => {
+      onChange({ userId, table: payload?.table || null, at: Date.now() });
+    }, 350);
+  };
+
+  const channel = remoteClient.channel(`hisba-user-sync-${userId}`);
+  REALTIME_TABLES.forEach(table => {
+    channel.on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table,
+      filter: `user_id=eq.${userId}`,
+    }, notify);
+  });
+  channel.subscribe();
+
+  realtimeChannel = channel;
+  realtimeUserId = userId;
+  return () => unsubscribeFromUserDataChanges(userId);
+}
+
+export function unsubscribeFromUserDataChanges(userId) {
+  if (!realtimeChannel || (userId && realtimeUserId !== userId)) return;
+  try { realtimeChannel.unsubscribe(); } catch {}
+  try { remoteClient.removeChannel(realtimeChannel); } catch {}
+  realtimeChannel = null;
+  realtimeUserId = null;
+}
+
 // Accounts
 export async function getAccounts(userId) { return readCached(userId, 'accounts', () => remote.getAccounts(userId)); }
 export async function createAccount(userId, account) { const row = ensureId({ ...account, user_id: userId, created_at: account.created_at || new Date().toISOString() }); return save(userId, 'accounts', row, () => remote.createAccount(userId, row), row); }
@@ -56,26 +138,27 @@ export async function setDefaultAccount(id, userId) {
 
 // Categories
 const DEFAULT_CATEGORIES = [
-  ['المواصلات', 'Transportation', 'car', '#4f8cc9'],
-  ['الأكل خارج البيت', 'Eating out', 'food', '#d94f87'],
-  ['التسوق', 'Shopping', 'shop', '#8d6acb'],
-  ['الفواتير', 'Bills', 'bolt', '#e09a3e'],
-  ['السكن', 'Housing', 'home', '#1f6f68'],
-  ['الصحة', 'Health', 'health', '#238b5a'],
-  ['التعليم', 'Education', 'book', '#6b7fd7'],
-  ['الترفيه', 'Entertainment', 'entertainment', '#c35a8d'],
-  ['الاشتراكات', 'Subscriptions', 'phone', '#7d8796'],
-  ['العناية الشخصية', 'Personal care', 'star', '#b56a9f'],
+  ['المواصلات', 'Transportation', 'car', '#3ec3d5'],
+  ['الأكل خارج البيت', 'Eating out', 'food', '#ff5460'],
+  ['التسوق', 'Shopping', 'shop', '#23233c'],
+  ['الفواتير', 'Bills', 'bolt', '#c8c7cd'],
+  ['السكن', 'Housing', 'home', '#23233c'],
+  ['الصحة', 'Health', 'health', '#41dc65'],
+  ['التعليم', 'Education', 'book', '#3ec3d5'],
+  ['الترفيه', 'Entertainment', 'entertainment', '#ff5460'],
+  ['الاشتراكات', 'Subscriptions', 'phone', '#c8c7cd'],
+  ['العناية الشخصية', 'Personal care', 'star', '#3ec3d5'],
 ].map(([name_ar, name, icon, color]) => ({ name_ar, name, icon, color, type: 'expense', is_predefined: true }));
 
 export async function getCategories(userId) {
   const rows = await readCached(userId, 'categories', () => remote.getCategories(userId));
   if (rows.length) return rows;
-  const seeded = [];
-  for (const cat of DEFAULT_CATEGORIES) {
-    try { seeded.push(await createCategory(userId, cat)); } catch { seeded.push(ensureId({ ...cat, user_id: userId })); }
-  }
-  return seeded;
+  // Seed in parallel so a first run cannot add ten network waits to the
+  // dashboard's initial render on a mobile connection.
+  return Promise.all(DEFAULT_CATEGORIES.map(async cat => {
+    try { return await createCategory(userId, cat); }
+    catch { return ensureId({ ...cat, user_id: userId }); }
+  }));
 }
 export async function createCategory(userId, cat) { const row = ensureId({ ...cat, user_id: userId, is_predefined: cat.is_predefined ?? false }); return save(userId, 'categories', row, () => remote.createCategory(userId, row), row); }
 export async function updateCategory(id, userId, updates) { return patch(userId, 'categories', id, updates, () => remote.updateCategory(id, userId, updates)); }
@@ -220,12 +303,12 @@ export async function saveMonthClosure(userId, closure) {
 function normalizeId(value) { return value === null || value === undefined || value === '' ? null : String(value).trim(); }
 function normalizeDate(value) { return String(value || '').slice(0, 10); }
 
-export async function getBudgetSpending(userId, budgets = [], periodStart, periodEnd) {
+export async function getBudgetSpending(userId, budgets = [], periodStart, periodEnd, preloadedTransactions = null) {
   const start = normalizeDate(periodStart);
   const end = normalizeDate(periodEnd);
   // Use the complete cache, then normalize date values locally. This supports
   // offline rows, ISO timestamps, and UUID/string category IDs consistently.
-  const rows = await getTransactions(userId);
+  const rows = Array.isArray(preloadedTransactions) ? preloadedTransactions : await getTransactions(userId);
   const txs = rows.filter(tx => {
     const date = normalizeDate(tx.date || tx.created_at);
     const status = tx.status;
@@ -256,8 +339,9 @@ export async function createBill(userId, bill) { const row = ensureId({ ...bill,
 export async function updateBill(id, userId, updates) { return patch(userId, 'bills', id, updates, () => remote.updateBill(id, userId, updates)); }
 export async function deleteBill(id, userId) { return remove(userId, 'bills', id, () => remote.deleteBill(id, userId)); }
 
-// Derived dashboard data, always available from the local cache.
-export async function getDashboardSummary(userId, startDate, endDate) { const txs = await getTransactions(userId, { start_date: startDate, end_date: endDate }); const accounts = getTable(userId, 'accounts'); const completed = txs.filter(t => t.status === 'completed' || !t.status); const totalBalance = accounts.reduce((s, a) => s + Number(a.balance || 0), 0); const income = completed.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount || 0), 0); const expenses = completed.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount || 0), 0); return { totalBalance, income, expenses, net: income - expenses, transactions: completed }; }
+// Derived dashboard data. Hydrate accounts from Supabase before calculating totals so a
+// fresh device does not mistake an empty local cache for a real zero-balance account.
+export async function getDashboardSummary(userId, startDate, endDate) { const [txs, accounts] = await Promise.all([getTransactions(userId, { start_date: startDate, end_date: endDate }), getAccounts(userId)]); const completed = txs.filter(t => t.status === 'completed' || !t.status); const totalBalance = accounts.reduce((s, a) => s + Number(a.balance || 0), 0); const income = completed.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount || 0), 0); const expenses = completed.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount || 0), 0); return { totalBalance, income, expenses, net: income - expenses, transactions: completed }; }
 export async function getMonthlyTrend(userId, months = 6) { const all = await getTransactions(userId); const out = []; const now = new Date(); for (let i = months - 1; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; const rows = all.filter(t => String(t.date || '').startsWith(ym)); out.push({ month: d.toLocaleString('en', { month: 'short' }), year: d.getFullYear(), income: rows.filter(t => t.type === 'income').reduce((s,t) => s+Number(t.amount||0),0), expenses: rows.filter(t => t.type === 'expense').reduce((s,t) => s+Number(t.amount||0),0) }); } return out; }
 export async function getCategorySpending(userId, startDate, endDate) { const rows = await getTransactions(userId, { start_date: startDate, end_date: endDate, type: 'expense' }); const map = {}; rows.filter(t => t.status === 'completed' || !t.status).forEach(tx => { if (!tx.category) return; const id = tx.category.id; if (!map[id]) map[id] = { ...tx.category, total: 0 }; map[id].total += Number(tx.amount || 0); }); return Object.values(map).sort((a,b) => b.total - a.total); }
 
