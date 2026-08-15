@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — AUTH SERVICE
    ============================================================ */
-import { supabase } from '../config.js';
+import { supabase } from '../config.js?v=mobile-cloud-read-v1';
 
 export async function signUp(email, password, fullName) {
   const { data, error } = await supabase.auth.signUp({
@@ -48,6 +48,62 @@ export async function getSession() {
   }
 }
 
+/**
+ * Supabase restores persisted sessions asynchronously on some mobile browsers.
+ * Do not begin a financial read until a verified user is available for the
+ * restored session; otherwise a stale/null identity can produce an empty RLS
+ * result that looks like a real zero-data account.
+ */
+function withAuthDeadline(promise, deadline) {
+  const remaining = Math.max(1, deadline - Date.now());
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = window.setTimeout(() => {
+      const error = new Error('AUTH_BOOT_TIMEOUT');
+      error.code = 'AUTH_BOOT_TIMEOUT';
+      reject(error);
+    }, remaining);
+  });
+  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timer));
+}
+
+export async function waitForAuthenticatedUser({ attempts = 10, delayMs = 300, maxWaitMs = 10_000 } = {}) {
+  let lastError = null;
+  const deadline = Date.now() + maxWaitMs;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    if (Date.now() >= deadline) break;
+    try {
+      const { data: sessionData, error: sessionError } = await withAuthDeadline(supabase.auth.getSession(), deadline);
+      if (sessionError) throw sessionError;
+      if (!sessionData.session) {
+        lastError = new Error('AUTH_SESSION_NOT_READY');
+      } else {
+        const { data, error } = await withAuthDeadline(supabase.auth.getUser(), deadline);
+        if (error) throw error;
+        if (data.user) {
+          try { localStorage.setItem('hisba_cached_user', JSON.stringify(data.user)); } catch {}
+          return data.user;
+        }
+        lastError = new Error('AUTH_USER_NOT_READY');
+      }
+    } catch (error) {
+      lastError = error;
+    }
+
+    if (attempt < attempts - 1) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      await new Promise(resolve => window.setTimeout(resolve, Math.min(delayMs * (attempt + 1), remaining)));
+    }
+  }
+
+  const error = new Error(lastError?.code === 'AUTH_BOOT_TIMEOUT' ? 'AUTH_BOOT_TIMEOUT' : 'AUTH_USER_UNAVAILABLE');
+  error.code = error.message;
+  error.cause = lastError;
+  throw error;
+}
+
 export async function getUser() {
   try {
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -73,6 +129,34 @@ export async function updatePassword(newPassword) {
   if (error) throw error;
 }
 
+/**
+ * Requires the active account password before changing it. Re-authentication
+ * refreshes the session only after Supabase has verified the old password.
+ */
+export async function changePasswordWithCurrentPassword(currentPassword, newPassword) {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  const email = userData?.user?.email;
+  if (!email) {
+    const error = new Error('AUTH_USER_UNAVAILABLE');
+    error.code = 'AUTH_USER_UNAVAILABLE';
+    throw error;
+  }
+
+  const { error: verificationError } = await supabase.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  });
+  if (verificationError) {
+    const error = new Error('CURRENT_PASSWORD_INVALID');
+    error.code = 'CURRENT_PASSWORD_INVALID';
+    error.cause = verificationError;
+    throw error;
+  }
+
+  await updatePassword(newPassword);
+}
+
 export async function getProfile(userId) {
   try {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
@@ -87,11 +171,33 @@ export async function getProfile(userId) {
 
 export async function updateProfile(userId, updates) {
   const current = (() => { try { return JSON.parse(localStorage.getItem(`hisba_cached_profile_${userId}`) || '{}'); } catch { return {}; } })();
+  const { name_ar: nameArabic, name_en: nameEnglish, ...profileUpdates } = updates || {};
+  const hasLocalizedNames = nameArabic !== undefined || nameEnglish !== undefined;
+
   try {
-    const { data, error } = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
-    if (error) throw error;
-    const resolved = await resolveProfileAvatar(data);
-    localStorage.setItem(`hisba_cached_profile_${userId}`, JSON.stringify(resolved)); return resolved;
+    // Localized names belong to Auth metadata so they remain durable even for legacy
+    // accounts whose profiles row predates the optional localized-name columns.
+    if (hasLocalizedNames) {
+      const metadata = {};
+      if (nameArabic !== undefined) metadata.name_ar = nameArabic;
+      if (nameEnglish !== undefined) metadata.name_en = nameEnglish;
+      if (profileUpdates.full_name !== undefined) metadata.full_name = profileUpdates.full_name;
+      const { data: authData, error: authError } = await supabase.auth.updateUser({ data: metadata });
+      if (authError) throw authError;
+      if (authData?.user) {
+        try { localStorage.setItem('hisba_cached_user', JSON.stringify(authData.user)); } catch {}
+      }
+    }
+
+    let remote = {};
+    if (Object.keys(profileUpdates).length) {
+      const { data, error } = await supabase.from('profiles').update(profileUpdates).eq('id', userId).select().single();
+      if (error) throw error;
+      remote = await resolveProfileAvatar(data);
+    }
+    const resolved = { ...current, ...remote, ...updates, id: userId };
+    localStorage.setItem(`hisba_cached_profile_${userId}`, JSON.stringify(resolved));
+    return resolved;
   } catch {
     const local = { ...current, id: userId, ...updates };
     localStorage.setItem(`hisba_cached_profile_${userId}`, JSON.stringify(local));
