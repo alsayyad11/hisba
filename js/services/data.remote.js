@@ -2,7 +2,7 @@
    HISBA — DATA SERVICE
    Accounts, Categories, Transactions, Budgets, Goals, Bills
    ============================================================ */
-import { supabase } from '../config.js';
+import { supabase } from '../config.js?v=supabase-local-v1';
 
 // ── Accounts ───────────────────────────────────────────────
 export async function getAccounts(userId) {
@@ -36,17 +36,21 @@ export async function updateAccount(id, userId, updates) {
 }
 
 export async function deleteAccount(id, userId) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('accounts')
     .delete()
-    .eq('id', id).eq('user_id', userId);
+    .eq('id', id).eq('user_id', userId)
+    .select('id');
   if (error) throw error;
+  if (!data?.length) throw new Error('ACCOUNT_DELETE_NOT_CONFIRMED');
 }
 
 export async function setDefaultAccount(id, userId) {
-  await supabase.from('accounts').update({ is_default: false }).eq('user_id', userId);
-  const { error } = await supabase.from('accounts').update({ is_default: true }).eq('id', id).eq('user_id', userId);
+  const { error: clearError } = await supabase.from('accounts').update({ is_default: false }).eq('user_id', userId);
+  if (clearError) throw clearError;
+  const { data, error } = await supabase.from('accounts').update({ is_default: true }).eq('id', id).eq('user_id', userId).select('id');
   if (error) throw error;
+  if (!data?.length) throw new Error('DEFAULT_ACCOUNT_NOT_CONFIRMED');
 }
 
 // ── Categories ─────────────────────────────────────────────
@@ -81,11 +85,13 @@ export async function updateCategory(id, userId, updates) {
 }
 
 export async function deleteCategory(id, userId) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('categories')
     .delete()
-    .eq('id', id).eq('user_id', userId);
+    .eq('id', id).eq('user_id', userId)
+    .select('id');
   if (error) throw error;
+  if (!data?.length) throw new Error('CATEGORY_DELETE_NOT_CONFIRMED');
 }
 
 // ── Transactions ───────────────────────────────────────────
@@ -138,11 +144,13 @@ export async function updateTransaction(id, userId, updates) {
 }
 
 export async function deleteTransaction(id, userId) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('transactions')
     .delete()
-    .eq('id', id).eq('user_id', userId);
+    .eq('id', id).eq('user_id', userId)
+    .select('id');
   if (error) throw error;
+  if (!data?.length) throw new Error('TRANSACTION_DELETE_NOT_CONFIRMED');
 }
 
 // ── Budgets ────────────────────────────────────────────────
@@ -178,8 +186,9 @@ export async function updateBudget(id, userId, updates) {
 }
 
 export async function deleteBudget(id, userId) {
-  const { error } = await supabase.from('budgets').delete().eq('id', id).eq('user_id', userId);
+  const { data, error } = await supabase.from('budgets').delete().eq('id', id).eq('user_id', userId).select('id');
   if (error) throw error;
+  if (!data?.length) throw new Error('BUDGET_DELETE_NOT_CONFIRMED');
 }
 
 // Calculate budget spending for current period
@@ -192,7 +201,7 @@ export async function getBudgetSpending(userId, budgets, periodStart, periodEnd)
     .eq('type', 'expense')
     .gte('date', periodStart)
     .lte('date', periodEnd);
-  if (error) return {};
+  if (error) throw error;
 
   const spending = {};
   (data || []).forEach(tx => {
@@ -232,8 +241,9 @@ export async function updateGoal(id, userId, updates) {
 }
 
 export async function deleteGoal(id, userId) {
-  const { error } = await supabase.from('goals').delete().eq('id', id).eq('user_id', userId);
+  const { data, error } = await supabase.from('goals').delete().eq('id', id).eq('user_id', userId).select('id');
   if (error) throw error;
+  if (!data?.length) throw new Error('GOAL_DELETE_NOT_CONFIRMED');
 }
 
 export async function addGoalFunds(id, userId, amount) {
@@ -279,8 +289,9 @@ export async function updateBill(id, userId, updates) {
 }
 
 export async function deleteBill(id, userId) {
-  const { error } = await supabase.from('bills').delete().eq('id', id).eq('user_id', userId);
+  const { data, error } = await supabase.from('bills').delete().eq('id', id).eq('user_id', userId).select('id');
   if (error) throw error;
+  if (!data?.length) throw new Error('BILL_DELETE_NOT_CONFIRMED');
 }
 
 // ── Tags ───────────────────────────────────────────────────
@@ -303,8 +314,9 @@ export async function updateTag(id, userId, updates) {
 }
 
 export async function deleteTag(id, userId) {
-  const { error } = await supabase.from('tags').delete().eq('id', id).eq('user_id', userId);
+  const { data, error } = await supabase.from('tags').delete().eq('id', id).eq('user_id', userId).select('id');
   if (error) throw error;
+  if (!data?.length) throw new Error('TAG_DELETE_NOT_CONFIRMED');
 }
 
 export async function replaceTransactionTags(transactionId, userId, tagIds) {
@@ -351,6 +363,12 @@ export async function getDashboardSummary(userId, startDate, endDate) {
       .eq('user_id', userId),
   ]);
 
+  // A permission, network, or session error must never be converted into an
+  // empty financial snapshot. The caller can then show a retry state instead
+  // of presenting zero balances as if they were real data.
+  if (txResult.error) throw txResult.error;
+  if (accountsResult.error) throw accountsResult.error;
+
   const transactions = txResult.data || [];
   const accounts = accountsResult.data || [];
 
@@ -369,13 +387,14 @@ export async function getMonthlyTrend(userId, months = 6) {
     const start = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
     const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
     const end = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${lastDay}`;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('transactions')
       .select('type, amount')
       .eq('user_id', userId)
       .eq('status', 'completed')
       .gte('date', start)
       .lte('date', end);
+    if (error) throw error;
     const income = (data || []).filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
     const expenses = (data || []).filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
     results.push({ month: d.toLocaleString('en', { month: 'short' }), year: d.getFullYear(), income, expenses });
@@ -392,7 +411,7 @@ export async function getCategorySpending(userId, startDate, endDate) {
     .eq('status', 'completed')
     .gte('date', startDate)
     .lte('date', endDate);
-  if (error) return [];
+  if (error) throw error;
 
   const map = {};
   (data || []).forEach(tx => {

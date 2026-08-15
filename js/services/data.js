@@ -1,7 +1,7 @@
 /* HISBA — OFFLINE-FIRST DATA SERVICE */
-import { supabase } from '../config.js?v=mobile-cloud-read-v1';
-import * as remote from './data.remote.js';
-import { getTable, replaceTable, upsertLocal, removeLocal, enqueue, ensureId, applyFilters, decorate, syncUser, bindSync, getQueue, hasHydratedTable, markTableHydrated } from './offline.js?v=cloud-queue-unblock-v1';
+import { supabase } from '../config.js?v=supabase-local-v1';
+import * as remote from './data.remote.js?v=server-write-v2';
+import { getTable, replaceTable, upsertLocal, removeLocal, enqueue, ensureId, applyFilters, decorate, syncUser, bindSync, getQueue, getSyncMeta, hasHydratedTable, markTableHydrated, removeQueueItem, markQueueItemFailed, isOffline } from './offline.js?v=server-truth-v1';
 
 const remoteClient = supabase;
 const REALTIME_TABLES = ['accounts', 'categories', 'transactions', 'transaction_tags', 'budgets', 'goals', 'bills', 'tags', 'month_closures'];
@@ -31,9 +31,24 @@ async function readCached(userId, table, loader, transform = x => x) {
       const rows = await loader();
       const pending = getQueue(userId).filter(op => op.table === table);
       if (pending.length) {
-        const local = getTable(userId, table);
         const merged = [...(rows || [])];
-        local.forEach(localRow => { const i = merged.findIndex(r => r.id === localRow.id); if (i >= 0) merged[i] = { ...merged[i], ...localRow }; else merged.push(localRow); });
+        // The server is authoritative. Overlay only values touched by queued
+        // operations, never every stale cached row from this device.
+        pending.forEach(op => {
+          if (op.action === 'delete') {
+            const index = merged.findIndex(item => item.id === op.id);
+            if (index >= 0) merged.splice(index, 1);
+            return;
+          }
+          if (op.action !== 'upsert' && op.action !== 'update') return;
+          const rowId = op.id || op.payload?.id;
+          if (!rowId) return;
+          const local = getTable(userId, table).find(item => item.id === rowId) || {};
+          const overlay = op.action === 'upsert' ? { ...op.payload, ...local } : { ...op.payload, ...local };
+          const index = merged.findIndex(item => item.id === rowId);
+          if (index >= 0) merged[index] = { ...merged[index], ...overlay };
+          else merged.push({ id: rowId, user_id: userId, ...overlay });
+        });
         replaceTable(userId, table, merged);
         markTableHydrated(userId, table);
         return merged;
@@ -58,20 +73,67 @@ async function readCached(userId, table, loader, transform = x => x) {
     if (inFlightReads.get(readKey) === request) inFlightReads.delete(readKey);
   }
 }
+function notifySyncQueued(userId, operation, error = null) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('hisba:sync-queued', {
+    detail: {
+      userId,
+      operation,
+      error: error ? String(error?.message || error?.code || 'SYNC_FAILED') : null,
+      at: Date.now(),
+    },
+  }));
+}
+function pendingResult(row) { return { ...row, __syncPending: true }; }
+function queueAfterFailedWrite(userId, operation, error = null) {
+  const op = enqueue(userId, operation);
+  if (error) markQueueItemFailed(userId, op.opId, error);
+  notifySyncQueued(userId, operation, error);
+  return op;
+}
 async function save(userId, table, row, creator, payload = row) {
-  const local = upsertLocal(userId, table, row); const op = enqueue(userId, { action: 'upsert', table, payload });
-  try { const result = await creator(); removeQueueFor(userId, op); return upsertLocal(userId, table, result || row); } catch { return local; }
+  const local = upsertLocal(userId, table, row);
+  if (!isOffline()) {
+    try {
+      const result = await creator();
+      return upsertLocal(userId, table, result || row);
+    } catch (error) {
+      queueAfterFailedWrite(userId, { action: 'upsert', table, payload }, error);
+      return pendingResult(local);
+    }
+  }
+  queueAfterFailedWrite(userId, { action: 'upsert', table, payload });
+  return pendingResult(local);
 }
 async function patch(userId, table, id, updates, updater) {
   const current = getTable(userId, table).find(x => x.id === id) || { id, user_id: userId };
-  const local = upsertLocal(userId, table, { ...current, ...updates, id }); const op = enqueue(userId, { action: 'update', table, id, payload: updates });
-  try { const result = await updater(); removeQueueFor(userId, op); return upsertLocal(userId, table, result || local); } catch { return local; }
+  const local = upsertLocal(userId, table, { ...current, ...updates, id });
+  if (!isOffline()) {
+    try {
+      const result = await updater();
+      return upsertLocal(userId, table, result || local);
+    } catch (error) {
+      queueAfterFailedWrite(userId, { action: 'update', table, id, payload: updates }, error);
+      return pendingResult(local);
+    }
+  }
+  queueAfterFailedWrite(userId, { action: 'update', table, id, payload: updates });
+  return pendingResult(local);
 }
 async function remove(userId, table, id, deleter) {
-  removeLocal(userId, table, id); const op = enqueue(userId, { action: 'delete', table, id });
-  try { await deleter(); removeQueueFor(userId, op); } catch {}
+  removeLocal(userId, table, id);
+  if (!isOffline()) {
+    try {
+      await deleter();
+      return { id, __syncPending: false };
+    } catch (error) {
+      queueAfterFailedWrite(userId, { action: 'delete', table, id }, error);
+      return { id, __syncPending: true };
+    }
+  }
+  queueAfterFailedWrite(userId, { action: 'delete', table, id });
+  return { id, __syncPending: true };
 }
-function removeQueueFor(userId, op) { import('./offline.js').then(({ removeQueueItem }) => removeQueueItem(userId, op.opId)); }
 
 // A semantic event is emitted only after a financial mutation is complete. Pages
 // can refresh derived views (balances, budgets, reports) from the same local-first cache.
@@ -132,8 +194,15 @@ export async function updateAccount(id, userId, updates) { return patch(userId, 
 export async function deleteAccount(id, userId) { return remove(userId, 'accounts', id, () => remote.deleteAccount(id, userId)); }
 export async function setDefaultAccount(id, userId) {
   const rows = getTable(userId, 'accounts').map(a => ({ ...a, is_default: a.id === id })); replaceTable(userId, 'accounts', rows);
-  enqueue(userId, { action: 'update', table: 'accounts', id, payload: { is_default: true } });
-  try { await remote.setDefaultAccount(id, userId); await syncUser(userId, remoteClient); } catch {}
+  if (!isOffline()) {
+    try { await remote.setDefaultAccount(id, userId); return { id, __syncPending: false }; }
+    catch (error) {
+      rows.forEach(account => queueAfterFailedWrite(userId, { action: 'update', table: 'accounts', id: account.id, payload: { is_default: account.is_default } }, error));
+      return { id, __syncPending: true };
+    }
+  }
+  rows.forEach(account => queueAfterFailedWrite(userId, { action: 'update', table: 'accounts', id: account.id, payload: { is_default: account.is_default } }));
+  return { id, __syncPending: true };
 }
 
 // Categories
@@ -281,9 +350,17 @@ export async function setTransactionTags(transactionId, userId, tagIds) {
     tags: validTags,
     transaction_tags: validTags.map(tag => ({ tag })),
   });
-  const op = enqueue(userId, { action: 'replace_tags', table: 'transaction_tags', id: transactionId, payload: { tag_ids: ids } });
-  try { await remote.replaceTransactionTags(transactionId, userId, ids); removeQueueFor(userId, op); } catch {}
-  return local;
+  if (!isOffline()) {
+    try {
+      await remote.replaceTransactionTags(transactionId, userId, ids);
+      return local;
+    } catch (error) {
+      queueAfterFailedWrite(userId, { action: 'replace_tags', table: 'transaction_tags', id: transactionId, payload: { tag_ids: ids } }, error);
+      return pendingResult(local);
+    }
+  }
+  queueAfterFailedWrite(userId, { action: 'replace_tags', table: 'transaction_tags', id: transactionId, payload: { tag_ids: ids } });
+  return pendingResult(local);
 }
 
 // Budgets
@@ -345,4 +422,19 @@ export async function getDashboardSummary(userId, startDate, endDate) { const [t
 export async function getMonthlyTrend(userId, months = 6) { const all = await getTransactions(userId); const out = []; const now = new Date(); for (let i = months - 1; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; const rows = all.filter(t => String(t.date || '').startsWith(ym)); out.push({ month: d.toLocaleString('en', { month: 'short' }), year: d.getFullYear(), income: rows.filter(t => t.type === 'income').reduce((s,t) => s+Number(t.amount||0),0), expenses: rows.filter(t => t.type === 'expense').reduce((s,t) => s+Number(t.amount||0),0) }); } return out; }
 export async function getCategorySpending(userId, startDate, endDate) { const rows = await getTransactions(userId, { start_date: startDate, end_date: endDate, type: 'expense' }); const map = {}; rows.filter(t => t.status === 'completed' || !t.status).forEach(tx => { if (!tx.category) return; const id = tx.category.id; if (!map[id]) map[id] = { ...tx.category, total: 0 }; map[id].total += Number(tx.amount || 0); }); return Object.values(map).sort((a,b) => b.total - a.total); }
 
-export function getSyncStatus(userId) { return { pending: getQueue(userId).length }; }
+export async function forceSync(userId) {
+  const result = await syncUser(userId, remoteClient);
+  if (result.synced > 0) notifyFinancialDataChanged(userId);
+  return result;
+}
+export function getSyncStatus(userId) {
+  const queue = getQueue(userId);
+  const meta = getSyncMeta(userId);
+  return {
+    pending: queue.length,
+    failed: queue.filter(item => item.lastError).length,
+    lastError: meta.lastError || null,
+    lastAttemptAt: meta.lastAttemptAt || null,
+    lastSuccessAt: meta.lastSuccessAt || null,
+  };
+}
