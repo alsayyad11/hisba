@@ -1,7 +1,7 @@
 /* ============================================================
    HISBA — AUTH SERVICE
    ============================================================ */
-import { supabase } from '../config.js?v=mobile-cloud-read-v1';
+import { supabase } from '../config.js?v=supabase-local-v1';
 
 export async function signUp(email, password, fullName) {
   const { data, error } = await supabase.auth.signUp({
@@ -50,9 +50,10 @@ export async function getSession() {
 
 /**
  * Supabase restores persisted sessions asynchronously on some mobile browsers.
- * Do not begin a financial read until a verified user is available for the
- * restored session; otherwise a stale/null identity can produce an empty RLS
- * result that looks like a real zero-data account.
+ * A session recovered from its local, signed storage already contains the user
+ * identity needed for RLS-bound requests. Do not block the offline-first shell
+ * on getUser(), which performs a network verification and may time out on a
+ * weak mobile connection before cached financial data can render.
  */
 function withAuthDeadline(promise, deadline) {
   const remaining = Math.max(1, deadline - Date.now());
@@ -67,7 +68,31 @@ function withAuthDeadline(promise, deadline) {
   return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timer));
 }
 
+function readStoredSessionUser() {
+  try {
+    const key = Object.keys(localStorage).find(item => /^sb-[a-z0-9-]+-auth-token$/i.test(item));
+    if (!key) return null;
+    const stored = JSON.parse(localStorage.getItem(key) || 'null');
+    const session = stored?.currentSession || stored?.session || stored;
+    if (!session?.access_token || !session?.user?.id) return null;
+    return session.user;
+  } catch {
+    return null;
+  }
+}
+
 export async function waitForAuthenticatedUser({ attempts = 10, delayMs = 300, maxWaitMs = 10_000 } = {}) {
+  // Supabase persists its signed access token and user in localStorage. Reading
+  // that existing session first does not grant any new capability: every remote
+  // data request still carries the token and is enforced by Supabase RLS. It
+  // does let the offline-first interface begin before browser auth locks or a
+  // weak network delay getSession()/getUser().
+  const storedUser = readStoredSessionUser();
+  if (storedUser) {
+    try { localStorage.setItem('hisba_cached_user', JSON.stringify(storedUser)); } catch {}
+    return storedUser;
+  }
+
   let lastError = null;
   const deadline = Date.now() + maxWaitMs;
 
@@ -79,11 +104,17 @@ export async function waitForAuthenticatedUser({ attempts = 10, delayMs = 300, m
       if (!sessionData.session) {
         lastError = new Error('AUTH_SESSION_NOT_READY');
       } else {
-        const { data, error } = await withAuthDeadline(supabase.auth.getUser(), deadline);
-        if (error) throw error;
-        if (data.user) {
-          try { localStorage.setItem('hisba_cached_user', JSON.stringify(data.user)); } catch {}
-          return data.user;
+        const localUser = sessionData.session.user;
+        if (localUser?.id) {
+          try { localStorage.setItem('hisba_cached_user', JSON.stringify(localUser)); } catch {}
+          // Refresh the stored identity when a connection is available, but never
+          // make dashboard boot depend on that remote verification.
+          supabase.auth.getUser().then(({ data, error }) => {
+            if (!error && data?.user) {
+              try { localStorage.setItem('hisba_cached_user', JSON.stringify(data.user)); } catch {}
+            }
+          }).catch(() => {});
+          return localUser;
         }
         lastError = new Error('AUTH_USER_NOT_READY');
       }
@@ -98,7 +129,10 @@ export async function waitForAuthenticatedUser({ attempts = 10, delayMs = 300, m
     }
   }
 
-  const error = new Error(lastError?.code === 'AUTH_BOOT_TIMEOUT' ? 'AUTH_BOOT_TIMEOUT' : 'AUTH_USER_UNAVAILABLE');
+  const failureCode = lastError?.code === 'AUTH_BOOT_TIMEOUT'
+    ? 'AUTH_BOOT_TIMEOUT'
+    : (lastError?.message === 'AUTH_SESSION_NOT_READY' ? 'AUTH_SESSION_NOT_READY' : 'AUTH_USER_UNAVAILABLE');
+  const error = new Error(failureCode);
   error.code = error.message;
   error.cause = lastError;
   throw error;
