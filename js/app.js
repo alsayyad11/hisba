@@ -2,21 +2,22 @@
    HISBA — MAIN APP
    Router + Shell + Session management
    ============================================================ */
-import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=release-2.3.0';
-import { getSession, getUser, getProfile, signOut, onAuthChange } from './services/auth.js';
-import { toast } from './toast.js?v=release-2.3.0';
+import { initI18n, initTheme, setLanguage, setTheme, t, getLanguage, escapeHTML } from './utils.js?v=currency-display-en-v2';
+import { getSession, getUser, waitForAuthenticatedUser, getProfile, signOut, onAuthChange } from './services/auth.js?v=auth-boot-deadline-v1';
+import { subscribeToUserDataChanges, unsubscribeFromUserDataChanges } from './services/data.js?v=cloud-queue-unblock-v1';
+import { toast } from './toast.js?v=notification-v4';
 
 // Pages (lazy-loaded on first visit)
 const pageLoaders = {
-  dashboard:    () => import('./pages/dashboard.js?v=release-2.3.3'),
-  transactions: () => import('./pages/transactions.js?v=release-2.3.3'),
-  accounts:     () => import('./pages/accounts.js?v=release-2.3.0'),
-  budgets:      () => import('./pages/budgets.js?v=release-2.3.0'),
-  goals:        () => import('./pages/goals.js?v=release-2.3.0'),
-  reports:      () => import('./pages/reports.js?v=release-2.3.0'),
-  categories:   () => import('./pages/categories.js?v=release-2.3.0'),
-  bills:        () => import('./pages/bills.js?v=release-2.3.0'),
-  settings:     () => import('./pages/settings.js?v=release-2.3.0'),
+  dashboard:    () => import('./pages/dashboard.js?v=network-recovery-v1'),
+  transactions: () => import('./pages/transactions.js?v=cloud-queue-unblock-v1'),
+  accounts:     () => import('./pages/accounts.js?v=cloud-queue-unblock-v1'),
+  budgets:      () => import('./pages/budgets.js?v=cloud-queue-unblock-v1'),
+  goals:        () => import('./pages/goals.js?v=cloud-queue-unblock-v1'),
+  reports:      () => import('./pages/reports.js?v=cloud-queue-unblock-v1'),
+  categories:   () => import('./pages/categories.js?v=cloud-queue-unblock-v1'),
+  bills:        () => import('./pages/bills.js?v=cloud-queue-unblock-v1'),
+  settings:     () => import('./pages/settings.js?v=password-change-on-demand-v1'),
   help:         () => import('./pages/help.js?v=release-2.3.0'),
 };
 
@@ -25,6 +26,13 @@ let currentProfile = null;
 let currentPage = 'dashboard';
 let pageCache = {};
 let financialRefreshTimer = null;
+let stopRemoteDataSync = null;
+
+function profileNameForLanguage(profile = {}, user = currentUser, language = getLanguage()) {
+  const metadata = user?.user_metadata || {};
+  const fallback = profile.full_name || metadata.full_name || metadata.username || metadata.user_name || user?.email?.split('@')[0] || 'User';
+  return String(language === 'en' ? (profile.name_en || metadata.name_en || fallback) : (profile.name_ar || metadata.name_ar || fallback)).trim();
+}
 
 async function boot() {
   initI18n();
@@ -33,14 +41,17 @@ async function boot() {
 
   showLoadingOverlay();
 
-  const session = await getSession();
-  if (!session) {
-    window.location.href = '/login';
+  try {
+    currentUser = await waitForAuthenticatedUser();
+  } catch {
+    document.body.innerHTML = `<main class="auth-page"><section class="auth-card"><h1>${escapeHTML(t('dashboard_data_waiting'))}</h1><p>${escapeHTML(t('dashboard_data_waiting_sub'))}</p><button class="btn btn-primary" id="session-retry" type="button">${escapeHTML(t('reload'))}</button></section></main>`;
+    document.getElementById('session-retry')?.addEventListener('click', () => window.location.reload());
+    hideLoadingOverlay();
     return;
   }
-
-  currentUser = await getUser();
-  currentProfile = await getProfile(currentUser.id);
+  const remoteProfile = await getProfile(currentUser.id);
+  // Auth metadata is the durable source for localized names on both new and legacy profiles.
+  currentProfile = { ...(currentUser?.user_metadata || {}), ...(remoteProfile || {}) };
 
   // A language explicitly selected on this device takes precedence over a stale remote profile preference.
   const storedLanguage = localStorage.getItem('hisba_lang') || localStorage.getItem('Hisba_lang');
@@ -81,6 +92,22 @@ async function boot() {
     try { refreshFinancialView(JSON.parse(event.newValue)); } catch {}
   });
 
+  // Remote database changes (from another device) are handled exactly like a
+  // local financial change: refresh the active view through the protected data
+  // service rather than applying untrusted payload values to the page.
+  stopRemoteDataSync = subscribeToUserDataChanges(currentUser.id, refreshFinancialView);
+  const refreshWhenBack = () => {
+    if (document.visibilityState && document.visibilityState !== 'visible') return;
+    refreshFinancialView({ userId: currentUser?.id, at: Date.now() });
+  };
+  window.addEventListener('focus', refreshWhenBack);
+  window.addEventListener('online', refreshWhenBack);
+  document.addEventListener('visibilitychange', refreshWhenBack);
+  window.addEventListener('pagehide', () => {
+    stopRemoteDataSync?.();
+    unsubscribeFromUserDataChanges(currentUser?.id);
+  }, { once: true });
+
   // Rebuild the shell and active page exactly once when the language changes.
   // Individual pages do not register their own listeners, which prevents stale
   // labels, duplicated renders, and race conditions between settings and shell.
@@ -92,7 +119,11 @@ async function boot() {
 
   // Auth state changes
   onAuthChange((event, session) => {
-    if (event === 'SIGNED_OUT') window.location.href = '/login';
+    if (event === 'SIGNED_OUT') {
+      stopRemoteDataSync?.();
+      unsubscribeFromUserDataChanges(currentUser?.id);
+      window.location.href = '/login';
+    }
   });
 }
 
@@ -100,7 +131,7 @@ function renderShell() {
   const isArabic = getLanguage().startsWith('ar');
   const brandName = isArabic ? 'حِسبة' : 'Hisba';
   document.title = brandName;
-  const name = currentProfile?.full_name || currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.username || currentUser?.user_metadata?.user_name || currentUser?.email?.split('@')[0] || 'User';
+  const name = profileNameForLanguage(currentProfile || {}, currentUser, getLanguage());
   const initial = name.charAt(0).toUpperCase();
   const safeName = escapeHTML(name);
   const safeEmail = escapeHTML(currentUser?.email || '');
@@ -274,12 +305,19 @@ function renderShell() {
   });
   document.addEventListener('click', () => userMenu?.classList.add('hidden'));
 
-  // Refresh avatars after a profile photo upload
+  // Keep profile identity current after name or photo updates from Settings.
   window.addEventListener('profileupdated', e => {
-    const url = e.detail?.avatar_url;
-    if (!url) return;
+    const updates = e.detail || {};
+    currentProfile = { ...(currentProfile || {}), ...updates };
+    const name = profileNameForLanguage(currentProfile, currentUser, getLanguage());
+    const safeName = escapeHTML(name);
+    document.querySelectorAll('.sidebar-user-name, #user-menu .font-semibold').forEach(el => { el.textContent = name; });
     document.querySelectorAll('.sidebar-user .avatar, #user-menu-btn .avatar').forEach(el => {
-      el.innerHTML = `<img src="${escapeHTML(url)}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`;
+      if (updates.avatar_url) {
+        el.innerHTML = `<img src="${escapeHTML(updates.avatar_url)}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`;
+      } else if (!currentProfile?.avatar_url) {
+        el.textContent = safeName.charAt(0).toUpperCase();
+      }
     });
   });
 
@@ -388,20 +426,25 @@ function closeSidebar() {
 
 function applyPrivacyState(enabled) {
   document.body.classList.toggle('privacy-mask', Boolean(enabled));
+  const button = document.getElementById('privacy-toggle');
+  if (!button) return;
+  const isEnabled = Boolean(enabled);
+  button.setAttribute('aria-pressed', String(isEnabled));
+  button.setAttribute('aria-label', isEnabled ? t('privacy_visible') : t('privacy_hide'));
+  button.setAttribute('title', isEnabled ? t('privacy_visible') : t('privacy_hide'));
+  button.classList.toggle('is-active', isEnabled);
+  button.innerHTML = isEnabled ? privacyOffIcon() : privacyOnIcon();
 }
 
 function togglePrivacyMode() {
   const enabled = !document.body.classList.contains('privacy-mask');
   applyPrivacyState(enabled);
   localStorage.setItem('hisba_privacy', enabled ? '1' : '0');
-
-  const button = document.getElementById('privacy-toggle');
-  if (button) {
-    button.setAttribute('aria-pressed', String(enabled));
-    button.innerHTML = enabled ? privacyOffIcon() : privacyOnIcon();
-  }
+  window.dispatchEvent(new CustomEvent('hisba:privacy-change', { detail: { enabled } }));
   toast(enabled ? t('privacy_hidden') : t('privacy_visible'), 'info');
 }
+
+window.addEventListener('hisba:toggle-privacy', togglePrivacyMode);
 
 function showLoadingOverlay() {
   const body = document.body;
