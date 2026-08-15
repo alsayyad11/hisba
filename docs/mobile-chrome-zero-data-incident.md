@@ -25,3 +25,12 @@
 - The dashboard now coalesces concurrent table reads, performs queue delivery in the background, and reuses already-loaded monthly transactions when calculating the budget. This removes overlapping transaction/account hydrations from the first render.
 - The production dashboard was rechecked after deployment at `https://hisbba.web.app/dashboard`: the authenticated account rendered its non-zero balance (`E£ 965.00`), monthly income (`E£ 15,000.00`), monthly expenses (`E£ 14,035.00`), recent transactions, and account balance without remaining on the loading skeleton.
 - A physical Chrome-on-mobile check is still required to confirm the affected mobile session receives the same production result after closing and reopening the tab.
+
+## Follow-up mobile evidence — 2026-08-15
+
+- The affected Android Chrome session first returned `ERR_TIMED_OUT` for `hisbba.web.app`; the status bar showed near-zero transfer throughput at the time of the capture. This happens before the web application can request account data.
+- A subsequent capture reached the application but showed the bounded financial-data recovery card, confirming the indefinite dashboard skeleton is no longer the observed failure mode on that device.
+- Production configuration was changed from a blanket `no-store` policy to mandatory revalidation. This keeps the deployed HTML and JavaScript fresh while allowing browsers and Firebase edge caches to retain reusable static responses when the network is slow.
+- Dashboard recovery now retries a failed initial financial read at bounded intervals while the tab remains on the dashboard. The app-wide `online`, focus, and visibility handlers continue to trigger a fresh protected data read when the device reconnects.
+- The authenticated boot path is also limited to ten seconds. If session restoration cannot complete, it must replace the initial loader with the existing localized retry state instead of leaving a permanent spinner.
+- Production verification after the final deployment returned HTTP 200 for the dashboard. HTML continues to revalidate (`no-cache, max-age=0, must-revalidate`), while versioned JavaScript now returns `public, max-age=3600, stale-while-revalidate=86400`. This allows repeat visits to reuse the application modules on a weak mobile connection without letting the entry page become stale.
