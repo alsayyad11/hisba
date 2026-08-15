@@ -11,6 +11,8 @@ import { drawLineChart, drawDonutChart } from '../components/charts.js?v=palette
 let userId, userCurrency = 'USD', profileData = {};
 let summaryData = {}, categoryData = [], recentTx = [], monthTx = [], budgets = [], quickAccounts = [], quickCategories = [];
 let dataLoadError = null;
+let recoveryTimer = null;
+let recoveryAttempt = 0;
 
 // Analytics must distinguish categories even when older category records share one saved colour.
 // The sequence remains within Hisba's approved palette and preserves a user-selected colour when it is unique.
@@ -39,6 +41,9 @@ function assignDistinctSpendingColors(categories = []) {
 }
 
 export async function initDashboard(uid, profile) {
+  if (recoveryTimer) window.clearTimeout(recoveryTimer);
+  recoveryTimer = null;
+  recoveryAttempt = 0;
   userId = uid;
   profileData = profile || {};
   userCurrency = profile?.currency || 'USD';
@@ -66,6 +71,21 @@ function withLoadDeadline(promise, timeoutMs = 10_000) {
     }, timeoutMs);
   });
   return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timer));
+}
+
+function scheduleAutomaticRecovery() {
+  if (recoveryTimer || recoveryAttempt >= 3 || navigator.onLine === false) return;
+  const delays = [2_500, 7_500, 15_000];
+  const delay = delays[recoveryAttempt] || delays.at(-1);
+  recoveryAttempt += 1;
+  recoveryTimer = window.setTimeout(async () => {
+    recoveryTimer = null;
+    // Avoid changing the interface after the user has navigated away from this page.
+    if (navigator.onLine === false || !document.getElementById('dashboard-data-retry')) return;
+    renderSkeleton();
+    await loadData();
+    render();
+  }, delay);
 }
 
 async function loadData() {
@@ -222,11 +242,15 @@ function renderDataUnavailable(el) {
       <button class="btn btn-primary" id="dashboard-data-retry" type="button">${t('reload')}</button>
     </section>`;
   document.getElementById('dashboard-data-retry')?.addEventListener('click', async event => {
+    if (recoveryTimer) window.clearTimeout(recoveryTimer);
+    recoveryTimer = null;
+    recoveryAttempt = 0;
     event.currentTarget.disabled = true;
     renderSkeleton();
     await loadData();
     render();
   });
+  scheduleAutomaticRecovery();
 }
 
 function accountSummaryRow(account) {
