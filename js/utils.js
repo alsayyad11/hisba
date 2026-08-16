@@ -4,10 +4,10 @@
    ============================================================ */
 
 // ── i18n ───────────────────────────────────────────────────
-import { en } from '../locales/en.js?v=release-2.3.0';
-import { ar } from '../locales/ar.js?v=release-2.3.0';
-import { arEg } from '../locales/ar-eg.js?v=release-2.3.0';
-import { arFusha } from '../locales/ar-fusha.js?v=release-2.3.0';
+import { en } from '../locales/en.js?v=budget-funding-i18n-v2';
+import { ar } from '../locales/ar.js?v=budget-funding-i18n-v2';
+import { arEg } from '../locales/ar-eg.js?v=budget-funding-i18n-v2';
+import { arFusha } from '../locales/ar-fusha.js?v=budget-funding-i18n-v2';
 
 const locales = { en, ar: arEg, 'ar-eg': arEg, 'ar-fusha': arFusha };
 const LANGUAGE_STORAGE_KEY = 'hisba_lang';
@@ -107,15 +107,24 @@ export function getTheme() { return currentTheme; }
 // ── Format ─────────────────────────────────────────────────
 export function formatCurrency(amount, currency = 'USD', locale = null) {
   const loc = locale || (getLanguage().startsWith('ar') ? 'ar-EG' : 'en-US');
+  const code = String(currency || 'USD').toUpperCase();
+  const isEnglish = !loc.startsWith('ar');
   try {
-    return new Intl.NumberFormat(loc, {
+    let result = new Intl.NumberFormat(loc, {
       style: 'currency',
-      currency: currency,
+      currency: code,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
+
+    // Browser output for EGP is «ج.م.» in Arabic; Hisba uses «ج.م» consistently.
+    result = result.replace(/ج\.م\./g, 'ج.م');
+    // In English, use the familiar Egyptian-pound symbol rather than the ISO code.
+    if (isEnglish && code === 'EGP') result = result.replace(/\bEGP\b/g, 'E£');
+    return result;
   } catch {
-    return `${currency} ${Number(amount).toFixed(2)}`;
+    const displayCode = isEnglish && code === 'EGP' ? 'E£' : code;
+    return `${displayCode} ${Number(amount).toFixed(2)}`;
   }
 }
 
@@ -236,8 +245,32 @@ export function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// Keep password rules in one place so registration and password changes
+// apply the exact same protection before a request reaches Supabase.
+export const PASSWORD_POLICY = Object.freeze({
+  minLength: 8,
+  maxLength: 128,
+  requireLowercase: true,
+  requireUppercase: true,
+  requireNumber: true,
+  requireSymbol: true,
+});
+
+export function getPasswordValidation(pwd) {
+  const value = typeof pwd === 'string' ? pwd : '';
+  const checks = {
+    minLength: value.length >= PASSWORD_POLICY.minLength,
+    maxLength: value.length <= PASSWORD_POLICY.maxLength,
+    lowercase: /[a-z]/.test(value),
+    uppercase: /[A-Z]/.test(value),
+    number: /\d/.test(value),
+    symbol: /[^A-Za-z0-9\s]/.test(value),
+  };
+  return { ...checks, valid: Object.values(checks).every(Boolean) };
+}
+
 export function validatePassword(pwd) {
-  return pwd && pwd.length >= 6;
+  return getPasswordValidation(pwd).valid;
 }
 
 export function validateAmount(val) {
@@ -261,24 +294,25 @@ export function escapeHTML(value = '') {
   })[char]);
 }
 
-// Only allow simple color values used by the app's saved account/category palette.
+// Palette approved for Hisba. Dynamic account and category colours are constrained here
+// so legacy saved values cannot reintroduce colours outside the visual system.
+export const HISBA_PALETTE = ['#23233c', '#3ec3d5', '#ff5460', '#41dc65', '#c8c7cd', '#e1e0e6'];
+const HISBA_PALETTE_SET = new Set(HISBA_PALETTE);
+
+// Only allow palette colours or application colour tokens in dynamic inline styles.
 export function sanitizeColor(value, fallback = 'var(--clr-primary)') {
-  const color = String(value || '');
-  const isHex = /^#[0-9a-fA-F]{3,4}([0-9a-fA-F]{3,4})?$/.test(color);
+  const color = String(value || '').toLowerCase();
   const isCssVariable = /^var\(--[a-zA-Z0-9-]+\)$/.test(color);
-  return isHex || isCssVariable ? color : fallback;
+  return HISBA_PALETTE_SET.has(color) || isCssVariable ? color : fallback;
 }
 
 // ── Color helpers ──────────────────────────────────────────
 export const CATEGORY_COLORS = [
-  '#ff4d8b', '#1a3a3a', '#b8a4ed', '#ffb084',
-  '#e8b94a', '#a4d4c5', '#ff6b5a', '#22c55e',
-  '#0a0a0a', '#6a6a6a', '#3a3a3a', '#ef4444',
+  '#3ec3d5', '#ff5460', '#23233c', '#c8c7cd', '#e1e0e6',
 ];
 
 export const ACCOUNT_COLORS = [
-  '#0a0a0a', '#1a3a3a', '#a4d4c5', '#b8a4ed',
-  '#ffb084', '#e8b94a', '#ff6b5a', '#6a6a6a',
+  '#3ec3d5', '#23233c', '#41dc65', '#c8c7cd', '#e1e0e6',
 ];
 
 /* ── Unified SVG icon system (replaces emoji UI symbols) ───── */
