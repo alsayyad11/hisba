@@ -133,7 +133,7 @@ async function boot() {
 
 function renderShell() {
   const isArabic = getLanguage().startsWith('ar');
-  const brandName = isArabic ? 'حِسبة' : 'Hisbba';
+  const brandName = 'Hisbba';
   document.title = brandName;
   const name = profileNameForLanguage(currentProfile || {}, currentUser, getLanguage());
   const initial = name.charAt(0).toUpperCase();
@@ -452,7 +452,7 @@ window.addEventListener('hisba:toggle-privacy', togglePrivacyMode);
 
 function showLoadingOverlay() {
   const body = document.body;
-  const brandName = getLanguage().startsWith('ar') ? 'حِسبة' : 'Hisbba';
+  const brandName = 'Hisbba';
   body.innerHTML = `
     <div class="loading-overlay">
       <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisbba-official-logo.png" alt="${brandName}"><span class="hisba-logo-wordmark">${brandName}</span></div>

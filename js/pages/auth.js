@@ -17,7 +17,7 @@ export function initAuthPage() {
 function renderAuthPage() {
   const language = getLanguage();
   const isArabic = language.startsWith('ar');
-  const brandName = isArabic ? 'حِسبة' : 'Hisbba';
+  const brandName = 'Hisbba';
   const languageButtonLabel = isArabic ? 'EN' : 'ع';
 
   document.body.innerHTML = `

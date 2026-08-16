@@ -48,7 +48,7 @@ async function boot() {
     const overlay = document.getElementById('initial-loader') || document.getElementById('loading-overlay');
     if (!overlay || overlay.classList.contains('hidden')) return;
     const isArabic = getLanguage().startsWith('ar');
-    document.body.innerHTML = `<main class="auth-page"><section class="auth-card" style="text-align:center"><div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisbba-official-logo.png" alt="${isArabic ? 'حِسبة' : 'Hisbba'}"><span class="hisba-logo-wordmark">${isArabic ? 'حِسبة' : 'Hisbba'}</span></div><h1>${isArabic ? 'تعذر تحميل المساحة الآن' : 'Your workspace is taking too long to load'}</h1><p>${isArabic ? 'بياناتك المحلية محفوظة. تحقق من الاتصال وحاول مرة أخرى.' : 'Your local data is safe. Check your connection and try again.'}</p><button class="btn btn-primary" type="button" onclick="location.reload()">${isArabic ? 'إعادة المحاولة' : 'Try again'}</button><a class="btn btn-secondary" href="/login">${isArabic ? 'تسجيل الدخول' : 'Open sign in'}</a></section></main>`;
+    document.body.innerHTML = `<main class="auth-page"><section class="auth-card" style="text-align:center"><div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisbba-official-logo.png" alt="Hisbba"><span class="hisba-logo-wordmark">Hisbba</span></div><h1>${isArabic ? 'تعذر تحميل المساحة الآن' : 'Your workspace is taking too long to load'}</h1><p>${isArabic ? 'بياناتك المحلية محفوظة. تحقق من الاتصال وحاول مرة أخرى.' : 'Your local data is safe. Check your connection and try again.'}</p><button class="btn btn-primary" type="button" onclick="location.reload()">${isArabic ? 'إعادة المحاولة' : 'Try again'}</button><a class="btn btn-secondary" href="/login">${isArabic ? 'تسجيل الدخول' : 'Open sign in'}</a></section></main>`;
   }, 12000);
 
   try {
@@ -153,7 +153,7 @@ async function boot() {
 
 function renderShell() {
   const isArabic = getLanguage().startsWith('ar');
-  const brandName = isArabic ? 'حِسبة' : 'Hisbba';
+  const brandName = 'Hisbba';
   document.title = brandName;
   const name = profileNameForLanguage(currentProfile || {}, currentUser, getLanguage());
   const initial = name.charAt(0).toUpperCase();
@@ -472,7 +472,7 @@ window.addEventListener('hisba:toggle-privacy', togglePrivacyMode);
 function showLoadingOverlay() {
   const body = document.body;
   window.clearTimeout(bootLoadingTimer);
-  const brandName = getLanguage().startsWith('ar') ? 'حِسبة' : 'Hisbba';
+  const brandName = 'Hisbba';
   body.innerHTML = `
     <div class="loading-overlay">
       <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisbba-official-logo.png" alt="${brandName}"><span class="hisba-logo-wordmark">${brandName}</span></div>
@@ -514,7 +514,7 @@ function settingsIcon(){ return `<circle cx="12" cy="12" r="3"/><path d="M19.4 1
 boot().catch(err => {
   console.error('Boot failed:', err);
   const isArabic = getLanguage().startsWith('ar');
-  document.body.innerHTML = `<main class="auth-page"><section class="auth-card" style="text-align:center"><div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisbba-official-logo.png" alt="${isArabic ? 'حِسبة' : 'Hisbba'}"><span class="hisba-logo-wordmark">${isArabic ? 'حِسبة' : 'Hisbba'}</span></div><h1>${isArabic ? 'تعذر فتح مساحتك الآن' : 'We could not open your workspace'}</h1><p>${isArabic ? 'تحقق من الاتصال ثم حاول مرة أخرى. بياناتك المحلية محفوظة.' : 'Check your connection and try again. Your local data is safe.'}</p><button class="btn btn-primary" type="button" onclick="location.reload()">${isArabic ? 'إعادة المحاولة' : 'Try again'}</button><a class="btn btn-secondary" href="/login">${isArabic ? 'العودة لتسجيل الدخول' : 'Back to login'}</a></section></main>`;
+  document.body.innerHTML = `<main class="auth-page"><section class="auth-card" style="text-align:center"><div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisbba-official-logo.png" alt="Hisbba"><span class="hisba-logo-wordmark">Hisbba</span></div><h1>${isArabic ? 'تعذر فتح مساحتك الآن' : 'We could not open your workspace'}</h1><p>${isArabic ? 'تحقق من الاتصال ثم حاول مرة أخرى. بياناتك المحلية محفوظة.' : 'Check your connection and try again. Your local data is safe.'}</p><button class="btn btn-primary" type="button" onclick="location.reload()">${isArabic ? 'إعادة المحاولة' : 'Try again'}</button><a class="btn btn-secondary" href="/login">${isArabic ? 'العودة لتسجيل الدخول' : 'Back to login'}</a></section></main>`;
 });
 
 function catIcon()   { return `<tag><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></tag>`.replace(/tag/g,''); }
