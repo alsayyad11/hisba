@@ -1,9 +1,11 @@
 /* ============================================================
    HISBA — TOAST NOTIFICATIONS
    ============================================================ */
-import { t } from './utils.js?v=release-2.3.0';
+import { t } from './utils.js?v=sync-status-v1';
 
 let container = null;
+const recentConfirmedToasts = new Map();
+const DUPLICATE_WINDOW_MS = 900;
 
 function getContainer() {
   if (!container) {
@@ -35,7 +37,10 @@ function show(type, title, message = '', duration = 4200, meta = {}) {
   const el = document.createElement('article');
   const hasProgress = Number.isFinite(Number(meta.percent));
   const percent = Math.max(0, Math.min(100, Number(meta.percent || 0)));
-  const variant = meta.variant || type;
+  // A completed deletion is a successful outcome, never an error state.
+  // Normalize legacy callers that still pass `delete` so stale page modules
+  // cannot render a red destructive toast after the server confirms deletion.
+  const variant = meta.variant || (type === 'delete' ? 'success' : type);
   el.className = `toast toast-${variant}${hasProgress ? ' toast-with-progress' : ''}`;
   el.setAttribute('role', type === 'error' ? 'alert' : 'status');
   el.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
@@ -82,10 +87,25 @@ function show(type, title, message = '', duration = 4200, meta = {}) {
 }
 
 export const toast = {
-  success: (title, message, duration) => show('success', title, message, duration),
-  deleted: (title, message, duration) => show('delete', title, message, duration),
+  success: (title, message, duration) => showConfirmed('success', title, message, duration),
+  deleted: (title, message, duration) => showConfirmed('success', title, message, duration),
   error: (title, message, duration) => show('error', title, message, duration),
   warning: (title, message, duration) => show('warning', title, message, duration),
   info: (title, message, duration) => show('info', title, message, duration),
   budget: (type, title, message, percent, label, duration = 6500) => show(type, title, message, duration, { percent, label, variant: type === 'over' ? 'error' : 'warning' })
 };
+
+function showConfirmed(type, title, message, duration) {
+  const key = `${type}|${title || ''}|${message || ''}`;
+  const now = Date.now();
+  const previous = recentConfirmedToasts.get(key) || 0;
+  if (now - previous < DUPLICATE_WINDOW_MS) return null;
+  recentConfirmedToasts.set(key, now);
+  window.setTimeout(() => {
+    if ((recentConfirmedToasts.get(key) || 0) === now) recentConfirmedToasts.delete(key);
+  }, DUPLICATE_WINDOW_MS);
+  return show(type, title, message, duration);
+}
+
+// Sync remains automatic and silent. Errors are still shown by toast.error;
+// routine offline queueing is intentionally not surfaced as a warning card.
