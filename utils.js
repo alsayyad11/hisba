@@ -58,7 +58,7 @@ export function isRTL() { return currentLocale.startsWith('ar'); }
 let currentTheme = 'light';
 
 export function initTheme() {
-  // Hisba opens with the calm neutral light palette. The theme toggle remains
+  // Hisbba opens with the calm neutral light palette. The theme toggle remains
   // available for users who explicitly want dark mode during the current session.
   setTheme('light', false);
 }

@@ -400,6 +400,20 @@ export async function getBudgetSpending(userId, budgets = [], periodStart, perio
     if (categoryId) spending[categoryId] = (spending[categoryId] || 0) + amount;
     spending.__total__ += amount;
   });
+
+  // Calculate each budget independently. A linked budget must never include
+  // expenses from another account merely because the category matches.
+  budgets.forEach(budget => {
+    const budgetId = normalizeId(budget?.id);
+    if (!budgetId) return;
+    const linkedAccountId = normalizeId(budget.account_id);
+    const linkedCategoryId = normalizeId(budget.category_id);
+    spending[budgetId] = txs.reduce((sum, tx) => {
+      const sameAccount = !linkedAccountId || normalizeId(tx.account_id) === linkedAccountId;
+      const sameCategory = !linkedCategoryId || normalizeId(tx.category_id || tx.category?.id) === linkedCategoryId;
+      return sameAccount && sameCategory ? sum + Number(tx.amount || 0) : sum;
+    }, 0);
+  });
   return spending;
 }
 

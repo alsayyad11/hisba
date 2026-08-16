@@ -15,7 +15,7 @@ let recoveryTimer = null;
 let recoveryAttempt = 0;
 
 // Analytics must distinguish categories even when older category records share one saved colour.
-// The sequence remains within Hisba's approved palette and preserves a user-selected colour when it is unique.
+// The sequence remains within Hisbba's approved palette and preserves a user-selected colour when it is unique.
 const SPENDING_ANALYTICS_COLORS = ['#3ec3d5', '#ff5460', '#41dc65', '#23233c', '#c8c7cd', '#e1e0e6'];
 
 function assignDistinctSpendingColors(categories = []) {
@@ -135,7 +135,18 @@ function render() {
   const isFirstRun = !quickAccounts.length && !recentTx.length && !budgets.length;
   const openingBalance = Number(totalBalance) - Number(net);
   const cashflow = cashflowSeries(openingBalance);
-  const mainBudget = budgets.find(budget => !budget.category_id) || budgets[0] || null;
+  const mainBudgetRaw = budgets.find(budget => !budget.category_id) || budgets[0] || null;
+  const linkedBudgetAccount = mainBudgetRaw?.account_id
+    ? quickAccounts.find(account => String(account.id) === String(mainBudgetRaw.account_id))
+    : null;
+  const rawBudgetAmount = Number(mainBudgetRaw?.amount || 0);
+  const linkedBalance = linkedBudgetAccount ? Number(linkedBudgetAccount.balance || 0) : null;
+  const budgetAmount = mainBudgetRaw && linkedBudgetAccount
+    ? Math.min(rawBudgetAmount, Math.max(0, linkedBalance))
+    : rawBudgetAmount;
+  const mainBudget = mainBudgetRaw
+    ? { ...mainBudgetRaw, amount: budgetAmount, balanceCapped: Boolean(linkedBudgetAccount && rawBudgetAmount > linkedBalance) }
+    : null;
   const budgetPercentage = mainBudget ? formatPercent(mainBudget.spent, mainBudget.amount) : 0;
   const budgetRemaining = mainBudget ? Number(mainBudget.amount || 0) - Number(mainBudget.spent || 0) : 0;
   const topCategory = categoryData[0] || null;
@@ -209,7 +220,7 @@ function render() {
 
         <article class="dashboard-surface dashboard-budget-card" aria-label="${t('dashboard_budget_status')}">
           <div class="dashboard-card-heading dashboard-card-heading-split"><div><p class="dashboard-section-kicker">${t('dashboard_budget_status')}</p><h2>${t('top_budgets')}</h2></div><button class="dashboard-text-action" id="btn-view-all-budgets" type="button">${t('view_all')}</button></div>
-          ${mainBudget ? `<div class="dashboard-budget-amounts"><div><span>${t('budget_spent')}</span><strong class="sensitive-value is-expense" dir="ltr">${formatCurrency(mainBudget.spent, userCurrency)}</strong></div><div><span>${t('budget_remaining_label')}</span><strong class="sensitive-value ${budgetRemaining < 0 ? 'is-expense' : ''}" dir="ltr">${budgetRemaining < 0 ? '−' : ''}${formatCurrency(Math.abs(budgetRemaining), userCurrency)}</strong></div></div><div class="dashboard-budget-progress"><div><span>${budgetPercentage}% ${t('dashboard_budget_used')}</span><b class="${budgetState}">${budgetPercentage >= 100 ? t('overspent_label') : budgetPercentage >= 80 ? t('at_risk') : t('on_track')}</b></div><i><em class="${budgetState}" style="width:${Math.min(budgetPercentage, 100)}%"></em></i></div><p class="dashboard-budget-insight ${budgetState}">${escapeHTML(insight)}</p>` : `<div class="dashboard-rail-empty"><span aria-hidden="true">${renderIcon('target', 20)}</span><p>${t('dashboard_no_budgets')}</p><button class="btn btn-outline btn-sm" id="btn-create-budget" type="button">${t('dashboard_add_budget')}</button></div>`}
+          ${mainBudget ? `<div class="dashboard-budget-amounts"><div><span>${t('budget_spent')}</span><strong class="sensitive-value is-expense" dir="ltr">${formatCurrency(mainBudget.spent, userCurrency)}</strong></div><div><span>${t('budget_remaining_label')}</span><strong class="sensitive-value ${budgetRemaining < 0 ? 'is-expense' : ''}" dir="ltr">${budgetRemaining < 0 ? '−' : ''}${formatCurrency(Math.abs(budgetRemaining), userCurrency)}</strong></div></div><div class="dashboard-budget-progress"><div><span>${budgetPercentage}% ${t('dashboard_budget_used')}</span><b class="${budgetState}">${budgetPercentage >= 100 ? t('overspent_label') : budgetPercentage >= 80 ? t('at_risk') : t('on_track')}</b></div><i><em class="${budgetState}" style="width:${Math.min(budgetPercentage, 100)}%"></em></i></div>${mainBudget.balanceCapped ? `<p class="dashboard-budget-insight is-near">${escapeHTML(getBudgetBalanceNotice(linkedBalance))}</p>` : `<p class="dashboard-budget-insight ${budgetState}">${escapeHTML(insight)}</p>`}` : `<div class="dashboard-rail-empty"><span aria-hidden="true">${renderIcon('target', 20)}</span><p>${t('dashboard_no_budgets')}</p><button class="btn btn-outline btn-sm" id="btn-create-budget" type="button">${t('dashboard_add_budget')}</button></div>`}
         </article>
 
         <article class="dashboard-surface dashboard-spending-card" aria-label="${t('dashboard_top_spending')}">
@@ -270,6 +281,7 @@ function compactEmpty(icon, copy, action, id) { return `<div class="finance-empt
 
 function categoryRow(category) { const total = categoryData.reduce((sum, item) => sum + Number(item.total || 0), 0); const share = total ? Math.round(Number(category.total || 0) / total * 100) : 0; const name = getLanguage().startsWith('ar') && category.name_ar ? category.name_ar : category.name || '—'; const color = category.analyticsColor || sanitizeColor(category.color, '#3ec3d5'); return `<div class="dashboard-category-row" role="listitem"><span style="background:${color}" aria-hidden="true"></span><strong>${escapeHTML(name)}</strong><b class="sensitive-value" dir="ltr">${formatCurrency(category.total, userCurrency)}</b></div>`; }
 function getInsight(mainBudget, budgetRemaining, topCategory, topCategoryShare, isArabic) { if (mainBudget && budgetRemaining < 0) return t('dashboard_insight_over_budget', { amount: formatCurrency(Math.abs(budgetRemaining), userCurrency) }); if (mainBudget && formatPercent(mainBudget.spent, mainBudget.amount) >= 80) return t('dashboard_insight_budget_close', { amount: formatCurrency(Math.max(0, budgetRemaining), userCurrency) }); if (topCategory) { const name = isArabic && topCategory.name_ar ? topCategory.name_ar : topCategory.name; return t('dashboard_insight_top_category', { category: name, percent: topCategoryShare }); } return t('dashboard_insight_no_budget'); }
+function getBudgetBalanceNotice(balance) { const amount = formatCurrency(Math.max(0, Number(balance || 0)), userCurrency); const language = getLanguage(); if (language === 'en') return `Budget capped at ${amount} to match the linked account balance.`; if (language.startsWith('ar-eg')) return `اتحدد البادجت عند ${amount} عشان يطابق رصيد الحساب المرتبط.`; return `تم تحديد الميزانية عند ${amount} لتطابق رصيد الحساب المرتبط.`; }
 function transactionRow(transaction, isArabic) { const color = sanitizeColor(transaction.category?.color, '#3ec3d5'); const categoryName = isArabic && transaction.category?.name_ar ? transaction.category.name_ar : (transaction.category?.name || '—'); const prefix = transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '−' : ''; return `<article class="finance-activity-row"><span class="finance-activity-icon" style="--category-color:${color}">${renderIcon(transaction.category?.icon || 'receipt', 16)}</span><div class="finance-activity-copy"><strong>${escapeHTML(transaction.description || t('transaction_untitled'))}</strong><span>${escapeHTML(categoryName)}<i aria-hidden="true">·</i>${formatRelativeDate(transaction.date)}</span></div><strong class="finance-activity-amount sensitive-value ${transaction.type === 'income' ? 'is-income' : transaction.type === 'expense' ? 'is-expense' : ''}" dir="ltr">${prefix}${formatCurrency(transaction.amount, transaction.account?.currency || userCurrency)}</strong></article>`; }
 function cashflowSeries(openingBalance) {
   if (!monthTx.length) return [];

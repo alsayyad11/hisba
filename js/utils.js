@@ -40,7 +40,7 @@ export function setLanguage(lang, save = true) {
   const html = document.documentElement;
   html.lang = currentLocale;
   html.dir  = currentLocale.startsWith('ar') ? 'rtl' : 'ltr';
-  document.title = currentLocale.startsWith('ar') ? 'حِسبة' : 'Hisba';
+  document.title = currentLocale.startsWith('ar') ? 'حِسبة' : 'Hisbba';
   if (save) {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, currentLocale);
     localStorage.removeItem(LEGACY_LANGUAGE_STORAGE_KEY);
@@ -117,7 +117,7 @@ export function formatCurrency(amount, currency = 'USD', locale = null) {
       maximumFractionDigits: 2,
     }).format(amount);
 
-    // Browser output for EGP is «ج.م.» in Arabic; Hisba uses «ج.م» consistently.
+    // Browser output for EGP is «ج.م.» in Arabic; Hisbba uses «ج.م» consistently.
     result = result.replace(/ج\.م\./g, 'ج.م');
     // In English, use the familiar Egyptian-pound symbol rather than the ISO code.
     if (isEnglish && code === 'EGP') result = result.replace(/\bEGP\b/g, 'E£');
@@ -294,7 +294,7 @@ export function escapeHTML(value = '') {
   })[char]);
 }
 
-// Palette approved for Hisba. Dynamic account and category colours are constrained here
+// Palette approved for Hisbba. Dynamic account and category colours are constrained here
 // so legacy saved values cannot reintroduce colours outside the visual system.
 export const HISBA_PALETTE = ['#23233c', '#3ec3d5', '#ff5460', '#41dc65', '#c8c7cd', '#e1e0e6'];
 const HISBA_PALETTE_SET = new Set(HISBA_PALETTE);

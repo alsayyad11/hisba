@@ -1,4 +1,4 @@
-/* Hisba — Modern Standard Arabic locale */
+/* Hisbba — Modern Standard Arabic locale */
 import { ar } from './ar.js';
 
 export const arFusha = {

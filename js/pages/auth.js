@@ -17,7 +17,7 @@ export function initAuthPage() {
 function renderAuthPage() {
   const language = getLanguage();
   const isArabic = language.startsWith('ar');
-  const brandName = isArabic ? 'حِسبة' : 'Hisba';
+  const brandName = isArabic ? 'حِسبة' : 'Hisbba';
   const languageButtonLabel = isArabic ? 'EN' : 'ع';
 
   document.body.innerHTML = `
@@ -26,7 +26,7 @@ function renderAuthPage() {
       <div class="auth-container">
         <div class="auth-brand">
           <div class="auth-brand-name" lang="${isArabic ? 'ar' : 'en'}">${brandName}</div>
-          <img class="auth-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="${brandName}">
+          <img class="auth-brand-logo" src="/assets/hisbba-official-logo.png" alt="${brandName}">
         </div>
         <div id="auth-card" class="auth-card animate-scale-in"></div>
         <div id="auth-footer" class="auth-footer"></div>

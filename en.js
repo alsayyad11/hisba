@@ -3,7 +3,7 @@
    ============================================================ */
 export const en = {
   // Brand
-  brand: 'Hisba',
+  brand: 'Hisbba',
   brand_tagline: 'Where did my money go?',
 
   // Auth
@@ -22,7 +22,7 @@ export const en = {
   no_account: "Don't have an account?",
   have_account: 'Already have an account?',
   auth_welcome: 'Welcome back',
-  auth_welcome_sub: 'Log in to your Hisba account',
+  auth_welcome_sub: 'Log in to your Hisbba account',
   auth_signup_title: 'Create your account',
   auth_signup_sub: 'Start managing your finances smarter',
   auth_reset_title: 'Forgot your password?',
@@ -76,7 +76,7 @@ export const en = {
   last_3_months: 'Last 3 months',
   chart_tap_month: 'Tap a month to see details',
   onboarding_title: 'Start with three simple steps',
-  onboarding_subtitle: 'Set up Hisba once, then recording your daily spending takes a few seconds.',
+  onboarding_subtitle: 'Set up Hisbba once, then recording your daily spending takes a few seconds.',
   onboarding_step_account: 'Add your first account',
   onboarding_step_account_sub: 'Choose cash, bank, or card so balances stay accurate.',
   onboarding_step_transaction: 'Record your first transaction',

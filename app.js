@@ -77,7 +77,7 @@ async function boot() {
 
 function renderShell() {
   const isArabic = getLanguage().startsWith('ar');
-  const brandName = isArabic ? 'حِسبة' : 'Hisba';
+  const brandName = isArabic ? 'حِسبة' : 'Hisbba';
   document.title = brandName;
   const name = currentProfile?.full_name || currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.username || currentUser?.user_metadata?.user_name || currentUser?.email?.split('@')[0] || 'User';
   const initial = name.charAt(0).toUpperCase();
@@ -91,7 +91,7 @@ function renderShell() {
   document.body.innerHTML = `
     <div id="toast-container"></div>
     <div id="loading-overlay" class="loading-overlay hidden">
-      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisba-logo-transparent-gold-final.png" alt="${brandName}"><span class="hisba-logo-wordmark">${brandName}</span></div>
+      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisbba-official-logo.png" alt="${brandName}"><span class="hisba-logo-wordmark">${brandName}</span></div>
       <div class="loading-spinner"></div>
     </div>
 
@@ -100,7 +100,7 @@ function renderShell() {
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <a class="sidebar-brand" href="#" data-nav="dashboard">
-            <img class="sidebar-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="${brandName}">
+            <img class="sidebar-brand-logo" src="/assets/hisbba-official-logo.png" alt="${brandName}">
             <span class="sidebar-brand-name">${brandName}</span>
           </a>
           <button class="sidebar-collapse-toggle" id="sidebar-collapse-toggle" type="button" aria-label="${sidebarCollapsed ? expandLabel : collapseLabel}" aria-expanded="${!sidebarCollapsed}" title="${sidebarCollapsed ? expandLabel : collapseLabel}">
@@ -345,10 +345,10 @@ function closeSidebar() {
 
 function showLoadingOverlay() {
   const body = document.body;
-  const brandName = getLanguage().startsWith('ar') ? 'حِسبة' : 'Hisba';
+  const brandName = getLanguage().startsWith('ar') ? 'حِسبة' : 'Hisbba';
   body.innerHTML = `
     <div class="loading-overlay">
-      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisba-logo-transparent-gold-final.png" alt="${brandName}"><span class="hisba-logo-wordmark">${brandName}</span></div>
+      <div class="loading-logo"><img class="hisba-logo-image" src="/assets/hisbba-official-logo.png" alt="${brandName}"><span class="hisba-logo-wordmark">${brandName}</span></div>
       <div class="loading-spinner"></div>
     </div>`;
 }

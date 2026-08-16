@@ -8,7 +8,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "Hisba — localized offline-first expense and budget tracker",
+  "description": "Hisbba — localized offline-first expense and budget tracker",
   "devDependencies": {
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",

@@ -1,4 +1,4 @@
-/* Hisba — Egyptian Arabic locale */
+/* Hisbba — Egyptian Arabic locale */
 import { ar } from './ar.js';
 
 export const arEg = {

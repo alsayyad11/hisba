@@ -3,7 +3,7 @@
    ============================================================ */
 export const en = {
   // Brand
-  brand: 'Hisba',
+  brand: 'Hisbba',
   brand_tagline: 'Where did my money go?',
 
   // Auth
@@ -22,7 +22,7 @@ export const en = {
   no_account: "Don't have an account?",
   have_account: 'Already have an account?',
   auth_welcome: 'Welcome back',
-  auth_welcome_sub: 'Log in to your Hisba account',
+  auth_welcome_sub: 'Log in to your Hisbba account',
   auth_signup_title: 'Create your account',
   auth_signup_sub: 'Start managing your finances smarter',
   auth_reset_title: 'Forgot your password?',
@@ -78,7 +78,7 @@ export const en = {
   last_3_months: 'Last 3 months',
   chart_tap_month: 'Tap a month to see details',
   onboarding_title: 'Start with three simple steps',
-  onboarding_subtitle: 'Set up Hisba once, then recording your daily spending takes a few seconds.',
+  onboarding_subtitle: 'Set up Hisbba once, then recording your daily spending takes a few seconds.',
   onboarding_step_account: 'Add your first account',
   onboarding_step_account_sub: 'Choose cash, bank, or card so balances stay accurate.',
   onboarding_step_transaction: 'Record your first transaction',
@@ -417,7 +417,7 @@ export const en = {
   syncing: 'Syncing...',
   synced: 'Synced',
   sync_status: 'Data sync',
-  sync_status_subtitle: 'Hisba confirms your financial changes with your secure account before they appear on your other devices.',
+  sync_status_subtitle: 'Hisbba confirms your financial changes with your secure account before they appear on your other devices.',
   sync_up_to_date: 'All changes are synced',
   sync_pending_count: '{count} change waiting to sync',
   sync_pending_count_plural: '{count} changes waiting to sync',
@@ -429,7 +429,7 @@ export const en = {
   sync_offline: 'You are offline. Your changes will sync when your connection returns.',
   reload: 'Reload',
   dashboard_data_waiting: 'Your financial data is still loading',
-  dashboard_data_waiting_sub: 'We could not confirm your latest data yet. Check your connection and try again—Hisba will not show zero values in its place.',
+  dashboard_data_waiting_sub: 'We could not confirm your latest data yet. Check your connection and try again—Hisbba will not show zero values in its place.',
   account_created_check_email: 'Account created. Check your email to confirm it.',
 
   // Budget planning and privacy

@@ -326,13 +326,13 @@ function renderPage() {
 
   document.getElementById('btn-csv')?.addEventListener('click', () => {
     if (!transactions.length) { toast.warning(t('warning'), t('no_report_data')); return; }
-    exportCSV(transactions, `Hisba-${filters.period}`);
+    exportCSV(transactions, `Hisbba-${filters.period}`);
     toast.success(t('success'), t('export_csv'));
   });
 
   document.getElementById('btn-excel')?.addEventListener('click', () => {
     if (!transactions.length) { toast.warning(t('warning'), t('no_report_data')); return; }
-    exportExcel(transactions, summary, `Hisba-${filters.period}`, reportData.categories);
+    exportExcel(transactions, summary, `Hisbba-${filters.period}`, reportData.categories);
     toast.success(t('success'), t('export_excel'));
   });
 

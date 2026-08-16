@@ -19,8 +19,8 @@ function renderAuthPage() {
     <div class="auth-page">
       <div class="auth-container">
         <div class="auth-brand">
-          <img class="auth-brand-logo" src="/assets/hisba-logo-transparent-gold-final.png" alt="حِسبة | Hisba">
-          <div class="auth-brand-name"><span lang="ar">حِسبة</span><span class="brand-divider" aria-hidden="true">|</span><span lang="en">Hisba</span></div>
+          <img class="auth-brand-logo" src="/assets/hisbba-official-logo.png" alt="حِسبة | Hisbba">
+          <div class="auth-brand-name"><span lang="ar">حِسبة</span><span class="brand-divider" aria-hidden="true">|</span><span lang="en">Hisbba</span></div>
         </div>
         <div id="auth-card" class="auth-card animate-scale-in"></div>
         <div id="auth-footer" class="auth-footer"></div>
