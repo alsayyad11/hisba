@@ -12,7 +12,7 @@ const pageLoaders = {
   dashboard:    () => import('./pages/dashboard-v39.js?v=currency-display-v3'),
   transactions: () => import('./pages/transactions-v44.js?v=transaction-form-v5'),
   accounts:     () => import('./pages/accounts-v41.js?v=currency-display-v3'),
-  budgets:      () => import('./pages/budgets-v41.js?v=budget-funding-account-v2'),
+  budgets:      () => import('./pages/budgets-v41.js?v=budget-funding-account-v3'),
   goals:        () => import('./pages/goals-v39.js?v=currency-display-v3'),
   reports:      () => import('./pages/reports-v41.js?v=net-balance-v2'),
   categories:   () => import('./pages/categories.js?v=category-personal-v1'),
