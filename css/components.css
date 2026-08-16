@@ -2092,11 +2092,13 @@ body:has(#settings-layout) #settings-layout .lang-option.selected { border-color
 
 /* Semantic toast colors use the shared financial palette. */
 .toast-success { --toast-accent: var(--clr-success); --toast-soft: var(--clr-success-bg); }
-.toast-delete, .toast-error { --toast-accent: var(--clr-error); --toast-soft: var(--clr-error-bg); }
+.toast-delete { --toast-accent: var(--clr-success); --toast-soft: var(--clr-success-bg); }
+.toast-error { --toast-accent: var(--clr-error); --toast-soft: var(--clr-error-bg); }
 .toast-warning { --toast-accent: var(--clr-warning); --toast-soft: var(--clr-warning-bg); }
 .toast-info { --toast-accent: var(--clr-info); --toast-soft: var(--clr-info-bg); }
 [data-theme="dark"] .toast-success { --toast-accent: var(--clr-success); --toast-soft: var(--clr-success-bg); }
-[data-theme="dark"] .toast-delete, [data-theme="dark"] .toast-error { --toast-accent: var(--clr-error); --toast-soft: var(--clr-error-bg); }
+[data-theme="dark"] .toast-delete { --toast-accent: var(--clr-success); --toast-soft: var(--clr-success-bg); }
+[data-theme="dark"] .toast-error { --toast-accent: var(--clr-error); --toast-soft: var(--clr-error-bg); }
 [data-theme="dark"] .toast-warning { --toast-accent: var(--clr-warning); --toast-soft: var(--clr-warning-bg); }
 [data-theme="dark"] .toast-info { --toast-accent: var(--clr-info); --toast-soft: var(--clr-info-bg); }
 .toast-delete { border-inline-start-color: var(--toast-accent); }
@@ -3662,7 +3664,8 @@ html[dir="rtl"] .bill-amount {
 .toast-progress { height: 5px; margin-top: 6px; background: color-mix(in srgb, var(--toast-accent) 14%, transparent); }
 .toast-progress span { background: var(--toast-accent); }
 .toast-success { --toast-accent: var(--clr-success); --toast-soft: var(--clr-success-bg); }
-.toast-delete, .toast-error { --toast-accent: var(--clr-error); --toast-soft: var(--clr-error-bg); }
+.toast-delete { --toast-accent: var(--clr-success); --toast-soft: var(--clr-success-bg); }
+.toast-error { --toast-accent: var(--clr-error); --toast-soft: var(--clr-error-bg); }
 .toast-warning { --toast-accent: var(--clr-warning); --toast-soft: var(--clr-warning-bg); }
 .toast-info { --toast-accent: var(--clr-info); --toast-soft: var(--clr-info-bg); }
 [dir="rtl"] .toast {
@@ -3676,7 +3679,8 @@ html[data-theme="dark"] .toast {
   box-shadow: 0 12px 30px rgba(0, 0, 0, .34), 0 2px 7px rgba(0, 0, 0, .2) !important;
 }
 html[data-theme="dark"] .toast-success { --toast-accent: var(--clr-success); --toast-soft: var(--clr-success-bg); }
-html[data-theme="dark"] .toast-delete, html[data-theme="dark"] .toast-error { --toast-accent: var(--clr-error); --toast-soft: var(--clr-error-bg); }
+html[data-theme="dark"] .toast-delete { --toast-accent: var(--clr-success); --toast-soft: var(--clr-success-bg); }
+html[data-theme="dark"] .toast-error { --toast-accent: var(--clr-error); --toast-soft: var(--clr-error-bg); }
 html[data-theme="dark"] .toast-warning { --toast-accent: var(--clr-warning); --toast-soft: var(--clr-warning-bg); }
 html[data-theme="dark"] .toast-info { --toast-accent: var(--clr-info); --toast-soft: var(--clr-info-bg); }
 @keyframes hisba-toast-in {
