@@ -4,7 +4,15 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+"**/*.md",
+"**/*.sql",
+"docs/**",
+"package.json",
+"package-lock.json",
+"pnpm-lock.yaml",
+"vercel.json",
+"capacitor.config.json"
     ],
     "cleanUrls": true,
     "trailingSlash": false,
