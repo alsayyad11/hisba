@@ -1,0 +1,146 @@
+/* ============================================================
+   HISBA — Design polish layer (loads LAST)
+   One consolidated layer: rhythm, depth, type, states, mobile.
+   Built only on live tokens (var(--clr-*)) so it follows any theme.
+   ============================================================ */
+
+:root {
+  --px-radius-card: 16px;
+  --px-radius-control: 12px;
+  --px-hairline: color-mix(in srgb, var(--clr-border) 70%, transparent);
+  --px-hairline-strong: color-mix(in srgb, var(--clr-border-strong, var(--clr-border)) 85%, transparent);
+  --px-highlight: inset 0 1px 0 rgba(255, 255, 255, .045);
+  --px-elev-1: var(--px-highlight), 0 1px 2px rgba(0, 0, 0, .22);
+  --px-elev-2: var(--px-highlight), 0 1px 2px rgba(0, 0, 0, .2), 0 14px 32px -18px rgba(0, 0, 0, .55);
+  --px-focus: 0 0 0 2px var(--clr-canvas), 0 0 0 4px color-mix(in srgb, var(--clr-primary) 70%, transparent);
+}
+
+[data-theme="light"] {
+  --px-highlight: inset 0 1px 0 rgba(255, 255, 255, .7);
+  --px-elev-1: 0 1px 2px rgba(29, 36, 48, .06);
+  --px-elev-2: 0 1px 2px rgba(29, 36, 48, .05), 0 14px 30px -18px rgba(29, 36, 48, .22);
+}
+
+/* ---------- Global feel ---------- */
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+h1, h2, h3, .page-title { text-wrap: balance; }
+.sensitive-value, .stat-card-label + *, .dashboard-kpi-card strong, .budget-ledger-values strong,
+.account-card-balance, .accounts-summary-total, .finance-activity-amount {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+:focus-visible { outline: none; box-shadow: var(--px-focus); border-radius: inherit; }
+::selection { background: color-mix(in srgb, var(--clr-primary) 35%, transparent); }
+
+/* ---------- Page header: one clear hierarchy ---------- */
+.page-header { align-items: flex-end; gap: 16px; margin-bottom: 24px; }
+.finance-eyebrow, .workspace-eyebrow, .dashboard-welcome-kicker, .finance-section-kicker, .dashboard-section-kicker {
+  margin: 0 0 6px; color: var(--clr-primary); font-size: 11px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.page-title { margin: 0; font-size: clamp(1.55rem, 1.2rem + 1.1vw, 2rem); font-weight: 750; letter-spacing: -.02em; line-height: 1.15; color: var(--clr-ink); }
+.page-subtitle { margin: 6px 0 0; color: var(--clr-body-mid); font-size: var(--text-sm); line-height: 1.5; }
+
+/* ---------- Surfaces: one elevation language ---------- */
+.card, .dashboard-surface, .dashboard-kpi-card, .budget-ledger-card, .budget-health-panel,
+.account-card, .accounts-summary, .finance-empty-state {
+  border: 1px solid var(--px-hairline);
+  border-radius: var(--px-radius-card);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .035), rgba(255, 255, 255, 0) 55%);
+  box-shadow: var(--px-elev-1);
+}
+[data-theme="light"] .card, [data-theme="light"] .dashboard-surface, [data-theme="light"] .dashboard-kpi-card,
+[data-theme="light"] .budget-ledger-card, [data-theme="light"] .budget-health-panel,
+[data-theme="light"] .account-card, [data-theme="light"] .accounts-summary { background-image: none; }
+.card-hover, .budget-ledger-card, .account-card { transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base); }
+.card-hover:hover, .budget-ledger-card:hover, .account-card:hover {
+  border-color: var(--px-hairline-strong); box-shadow: var(--px-elev-2); transform: translateY(-1px);
+}
+
+/* ---------- KPI cards: neutral frame + a single accent edge ---------- */
+.dashboard-kpi-card { position: relative; overflow: hidden; border-width: 1px !important; border-color: var(--px-hairline) !important; }
+.dashboard-kpi-card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; opacity: .9;
+  background: linear-gradient(90deg, var(--kpi-accent, var(--clr-primary)), transparent 75%);
+}
+.dashboard-kpi-card.is-balance { --kpi-accent: var(--clr-primary); }
+.dashboard-kpi-card.is-income  { --kpi-accent: var(--clr-success, #5ed1a3); }
+.dashboard-kpi-card.is-expense { --kpi-accent: var(--clr-error, #ff98a1); }
+.dashboard-kpi-card.is-budget  { --kpi-accent: var(--clr-warning, #f2b46e); }
+.dashboard-kpi-card strong { letter-spacing: -.015em; }
+
+/* ---------- Buttons ---------- */
+.btn { min-height: 40px; border-radius: var(--px-radius-control); font-weight: 650; letter-spacing: .005em;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast); }
+.btn:active { transform: translateY(1px) scale(.995); }
+.btn-primary { background-image: linear-gradient(180deg, color-mix(in srgb, #fff 14%, var(--clr-primary)), var(--clr-primary)) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.22) inset, 0 8px 18px -10px color-mix(in srgb, var(--clr-primary) 80%, transparent) !important; }
+.btn-primary:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.btn-outline, .btn-quiet, .btn-ghost { border-color: var(--px-hairline-strong); }
+.btn-outline:hover, .btn-quiet:hover { border-color: color-mix(in srgb, var(--clr-primary) 55%, var(--clr-border)); background: color-mix(in srgb, var(--clr-primary) 8%, transparent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ---------- Inputs ---------- */
+.form-input, .form-select, textarea.form-input { min-height: 44px; border-radius: var(--px-radius-control); border-color: var(--px-hairline-strong); transition: border-color var(--transition-fast), box-shadow var(--transition-fast); }
+.form-input:hover, .form-select:hover { border-color: color-mix(in srgb, var(--clr-primary) 40%, var(--clr-border)); }
+.form-input:focus, .form-select:focus { border-color: var(--clr-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clr-primary) 22%, transparent); }
+.form-label { font-size: 12.5px; font-weight: 650; letter-spacing: .01em; color: var(--clr-ink-mid, var(--clr-body)); }
+
+/* ---------- Sidebar & topbar ---------- */
+.sidebar { border-inline-end: 1px solid var(--px-hairline); }
+.sidebar-brand-logo { width: 34px; height: 34px; object-fit: contain; flex: 0 0 auto; }
+.sidebar-section-label { margin-top: 14px; font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--clr-mute); }
+.nav-item { position: relative; border-radius: var(--px-radius-control); transition: background-color var(--transition-fast), color var(--transition-fast); }
+.nav-item:hover { background: color-mix(in srgb, var(--clr-ink) 5%, transparent); }
+.nav-item.active { background: color-mix(in srgb, var(--clr-primary) 14%, transparent); color: var(--clr-ink); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--clr-primary) 22%, transparent); }
+.nav-item.active .nav-item-icon { color: var(--clr-primary); }
+.topbar, .app-topbar { backdrop-filter: saturate(140%) blur(14px); -webkit-backdrop-filter: saturate(140%) blur(14px); border-bottom: 1px solid var(--px-hairline); }
+
+/* ---------- Budgets: fix overlap + clearer ledger ---------- */
+.budget-ledger-card { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.5fr) minmax(150px, .8fr) auto; gap: 20px; padding: 18px 20px; }
+.budget-ledger-main > div { min-width: 0; flex: 1 1 auto; }
+.budget-ledger-main p { min-width: 0; }
+.budget-ledger-main p .budget-funding-account { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.budget-ledger-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; min-width: 0; }
+.budget-ledger-values > div { min-width: 0; }
+.budget-ledger-values span { display: block; font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--clr-mute); }
+.budget-ledger-values strong { display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.budget-category-icon { border-radius: 12px; }
+.budget-health-panel { overflow: hidden; }
+.finance-progress-track { height: 8px; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--clr-ink) 8%, transparent); }
+.finance-progress-track > span { display: block; height: 100%; border-radius: inherit; transition: width .5s var(--ease-out); }
+
+/* ---------- Empty states ---------- */
+.finance-empty-state, .empty-state { border-style: solid; border-color: var(--px-hairline); background-color: color-mix(in srgb, var(--clr-surface) 70%, transparent); }
+.empty-state-icon, .empty-icon { border-radius: 14px; }
+
+/* ---------- Modals & toasts ---------- */
+.modal { border: 1px solid var(--px-hairline-strong); border-radius: 20px; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .65); }
+.modal-overlay { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.toast { border-radius: 14px; box-shadow: var(--px-elev-2); }
+
+/* ---------- Tables / lists ---------- */
+.dashboard-transaction-row, .finance-activity-row { transition: background-color var(--transition-fast); border-radius: 10px; }
+.dashboard-transaction-row:hover, .finance-activity-row:hover { background: color-mix(in srgb, var(--clr-ink) 4%, transparent); }
+
+/* ---------- Scrollbars ---------- */
+* { scrollbar-width: thin; scrollbar-color: var(--clr-border-strong, var(--clr-border)) transparent; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  .budget-ledger-card { grid-template-columns: minmax(0, 1fr) auto; }
+  .budget-ledger-values { grid-column: 1 / -1; order: 3; }
+  .budget-ledger-progress { grid-column: 1 / -1; order: 4; }
+}
+@media (max-width: 640px) {
+  .page-header { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 18px; }
+  .page-actions, .budget-page-actions { width: 100%; display: flex; gap: 8px; }
+  .page-actions .btn, .budget-page-actions .btn { flex: 1 1 0; justify-content: center; }
+  .budget-ledger-card { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 14px; }
+  .budget-ledger-actions { justify-content: flex-end; }
+  .budget-ledger-values { gap: 10px; }
+  .budget-ledger-values strong { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn, .card-hover, .budget-ledger-card, .account-card, .finance-progress-track > span { transition: none !important; transform: none !important; }
+}
